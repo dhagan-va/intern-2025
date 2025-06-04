@@ -10,7 +10,7 @@ ISA06 = "83-1002022"
 ISA08 = "841439824"
 
 now = datetime.now()
-isa13 = now.strftime("%Y%m%d1")
+ISA13 = now.strftime("%Y%m%d1")
 ccyymmdd = now.strftime("%Y%m%d")
 yymmdd = now.strftime("%y%m%d")
 hhmm = now.strftime("%H%M")
@@ -21,17 +21,18 @@ if not os.path.exists(file_directory):
     os.mkdir(file_directory)
     print("New file directory created for: 834 EDI files")
 
-file_name = f"834.VFMP.{now.year}.{yymmdd}.{hhmm}.{isa13}.edi"
+file_name = f"834.VFMP.{now.year}.{yymmdd}.{hhmm}.{ISA13}.edi"
 file_path = os.path.join(file_directory, file_name)
 
 f = open(file_path, "w")
 
 ISA = (f"ISA*00*          *00*          *{ISA05_07}*{ISA06:<15}*{ISA05_07}*{ISA08:<15}*{yymmdd}*{hhmm}*$*00501"
-       f"*000000061*0*T*:~\n")
+       f"*{ISA13}*0*T*:~\n")
 GS = f"GS*BE*{ISA06}*{ISA08}*{ccyymmdd}*{hhmmssss}*61*X*005010X220A1~\n"
 f.write(ISA)
 f.write(GS)
 
+# number of tests
 n = 10
 
 for interval in range(1, n+1):

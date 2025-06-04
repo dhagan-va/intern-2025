@@ -29,20 +29,9 @@ file_path = os.path.join(file_directory, file_name)
 
 for interval in range(10):
     with open(file_path, 'w') as f:
-        f.write("ISA*00*          ")  # ISA01/ISA02
-        f.write("*00*          ")  # ISA03/ISA04
-        f.write("*" + ISA05_07)  # ISA05
-        f.write("*" + ISA06 + "     ")  # ISA06
-        f.write("*" + ISA05_07)  # ISA07
-        f.write("*" + ISA08 + "      ")  # ISA08
-        f.write("*" + yymmdd)  # ISA09
-        f.write("*" + hhmm)  # ISA10
-        f.write("*$")  # ISA11
-        f.write("*00501")  # ISA12
-        f.write("*000000061")  # ISA13
-        f.write("*0")  # ISA14
-        f.write("*T")  # ISA15
-        f.write("*:~\n")  # ISA16
+        beginISA = (f"ISA*00*          *00*          *{ISA05_07}*{ISA06:<15}*{ISA05_07}*{ISA08:<15}"
+                f"*{yymmdd}*{hhmm}*$*00501*000000061*0*T*:~\n")
+        f.write(beginISA)
         f.write("GS*BE")  # GS01
         f.write("*" + ISA06)  # GS02
         f.write("*" + ISA08)  # GS03

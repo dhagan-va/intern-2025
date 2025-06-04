@@ -32,7 +32,9 @@ GS = f"GS*BE*{ISA06}*{ISA08}*{ccyymmdd}*{hhmmssss}*61*X*005010X220A1~\n"
 f.write(ISA)
 f.write(GS)
 
-for interval in range(1, 100000):
+n = 10
+
+for interval in range(1, n+1):
     ST = f"ST*834*{interval:04}~\n"
     message = """\
 BGN*00*0D0AACD687DA4FDEA7B90769916E6B06*20210427*203926*MT***2~
@@ -62,7 +64,7 @@ DTP*348*D8*20040726~\n"""
     if interval % 10_000 == 0:
         print(f"Generated Message Number {interval}")
 
-GE = f"GE*1*61~\n"
+GE = f"GE*{n}*61~\n"
 IEA = f"IEA*1*000000061~"
 f.write(GE)
 f.write(IEA)

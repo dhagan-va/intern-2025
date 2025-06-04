@@ -14,7 +14,7 @@ isa13 = now.strftime("%Y%m%d1")
 ccyymmdd = now.strftime("%Y%m%d")
 yymmdd = now.strftime("%y%m%d")
 hhmm = now.strftime("%H%M")
-hhmmssss = f"{hhmm}{now.second}{int(now.microsecond / 10_000):02}"
+hhmmssss = f"{hhmm}{now.second}"
 
 file_directory = '834Test_Files'
 if not os.path.exists(file_directory):
@@ -26,13 +26,13 @@ file_path = os.path.join(file_directory, file_name)
 
 f = open(file_path, "w")
 
-ISA = (f"ISA*00*          *00*          *{ISA05_07}*{ISA06:<15}*{ISA05_07}*{ISA08:<15}"
-       f"*{yymmdd}*{hhmm}*$*00501*000000061*0*T*:~\n")
+ISA = (f"ISA*00*          *00*          *{ISA05_07}*{ISA06:<15}*{ISA05_07}*{ISA08:<15}*{yymmdd}*{hhmm}*$*00501"
+       f"*000000061*0*T*:~\n")
 GS = f"GS*BE*{ISA06}*{ISA08}*{ccyymmdd}*{hhmmssss}*61*X*005010X220A1~\n"
 f.write(ISA)
 f.write(GS)
 
-for interval in range(1):
+for interval in range(1, 100000):
     ST = f"ST*834*{interval:04}~\n"
     message = """\
 BGN*00*0D0AACD687DA4FDEA7B90769916E6B06*20210427*203926*MT***2~
@@ -53,7 +53,7 @@ AMT*P3*3~
 AMT*B9*5~
 HD*001**MM*MCVA1003~
 DTP*348*D8*20040726~\n"""
-    SE = f"SE*20*{interval:04}\n"
+    SE = f"SE*20*{interval:04}~\n"
 
     f.write(ST)
     f.write(message)
@@ -63,7 +63,7 @@ DTP*348*D8*20040726~\n"""
         print(f"Generated Message Number {interval}")
 
 GE = f"GE*1*61~\n"
-IEA = f"IEA*1*000000061\n"
+IEA = f"IEA*1*000000061~"
 f.write(GE)
 f.write(IEA)
 

@@ -24,8 +24,9 @@ This tool generates EDI X12 healthcare data for various transaction types, inclu
 ---
 
 ## Sample
-ISA&ast;**00**&ast;          &ast;00&ast;          &ast;ZZ&ast;83-1002022     &ast;ZZ&ast;841439824      &ast;210427&ast;2039&ast;$&ast;00501&ast;000000061&ast;0&ast;T&ast;:~
-GS&ast;BE&ast;83-1002042&ast;841439824&ast;20210427&ast;20392689&ast;61&ast;X&ast;005010X220A1~
+
+ISA&ast;**00**&ast;          &ast;**00**&ast;          &ast;**ZZ**&ast;**83-1002022     **&ast;**ZZ**&ast;**841439824      **&ast;210427&ast;2039&ast;**$**&ast;00501&ast;000000061&ast;**0**&ast;**T**&ast;**:**~
+GS&ast;**BE**&ast;**83-1002022**&ast;**841439824**&ast;20210427&ast;20392689&ast;61&ast;**X**&ast;**005010X220A1**~
 ST&ast;834&ast;0001~
 BGN&ast;00&ast;0D0AACD687DA4FDEA7B90769916E6B06&ast;20210427&ast;203926&ast;MT&ast;&ast;&ast;2~
 N1&ast;P5&ast;OCC&ast;FI&ast;123456678~
@@ -68,6 +69,7 @@ DTP&ast;348&ast;D8&ast;20040726~
 SE&ast;20&ast;0002~
 GE&ast;2&ast;61~
 IEA&ast;1&ast;000000061~
+
 ---
 
 ## Architecture

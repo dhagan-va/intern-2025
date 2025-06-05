@@ -10,6 +10,7 @@ random.seed(52)
 ISA05_07 = "ZZ"
 ISA06 = "83-1002022"
 ISA08 = "841439824"
+AMT_CODES = ['D2', 'FK', 'R', 'C1', 'P3', 'B9']
 
 # Date vars
 now = datetime.now()
@@ -42,49 +43,50 @@ f.write(ISA)
 f.write(GS)
 
 # number of tests
-n = 1
+n = 100_000
 
 for interval in range(1, n + 1):
+    amt_segments = []
+    segment_count = 0
     ssn = fake.ssn()
     phone = fake.basic_phone_number()
 
-    ST = f"ST*834*{interval:04}~\n"
-    bgn = f"BGN*00*{uuid.uuid4().hex.upper()}*{ccyymmdd}*{hhmmss}*UT***2~\n"
-    n1_1 = f"N1*P5*{fake.company()}*FI*{random.randint(100_000_000, 999_999_999)}~\n"
-    n1_2 = f"N1*IN*{fake.company()}*FI*{random.randint(100_000_000, 999_999_999)}~\n"
+    # Lookup uses ID instead of SSN
+
     # INS01 always yes?
     # INS02 18, 19, 01?
     # INS03 001, 021?
     # INS05 always A?
     # INS08 always AC?
-    ins = f"INS*Y*18*001**A***AC~\n"
-    ref_1 = f"REF*0F*{random.randint(100_000_000, 999_999_999)}V{random.randint(100_000_000, 999_999_999)}~\n"
-    ref_2 = f"REF*6O*{random.randint(100_000_000, 999_999_999)}V{random.randint(100_000_000, 999_999_999)}~\n"
-    nm1 = f"NM1*IL*1*{fake.last_name().upper()}*{fake.first_name().upper()}*{fake.first_name().upper()}***34*{ssn.replace("-", "")}~\n"
-    per = f"PER*IP**TE*{phone.replace("-", "")}~\n"
     # can add apartment number for N302
-    n3 = f"N3*{fake.street_address().upper()}*~\n"
-    n4 = f"N4*{fake.city().upper()}*{fake.state_abbr().upper()}*{fake.zipcode()}~\n"
+    segments = [f"ST*834*{interval:04}~\n",
+                f"BGN*00*{uuid.uuid4().hex.upper()}*{ccyymmdd}*{hhmmss}*UT***2~\n",
+                f"N1*P5*{fake.company()}*FI*{random.randint(100_000_000, 999_999_999)}~\n",
+                f"N1*IN*{fake.company()}*FI*{random.randint(100_000_000, 999_999_999)}~\n",
+                f"INS*Y*18*001**A***AC~\n",
+                f"REF*0F*{random.randint(100_000_000, 999_999_999)}V{random.randint(100_000_000, 999_999_999)}~\n",
+                f"REF*6O*{random.randint(100_000_000, 999_999_999)}V{random.randint(100_000_000, 999_999_999)}~\n",
+                f"NM1*IL*1*{fake.last_name().upper()}*{fake.first_name().upper()}*{fake.first_name().upper()}***34*{ssn.replace("-", "")}~\n",
+                f"PER*IP**TE*{phone.replace("-", "")}~\n",
+                f"N3*{fake.street_address().upper()}*~\n",
+                f"N4*{fake.city().upper()}*{fake.state_abbr().upper()}*{fake.zipcode()}~\n"
+                ]
+    # add AMT values
+    for code in AMT_CODES:
+        value = random.randint(0, 9)
+        if value == 0:
+            continue
+        amt_segments.append(f"AMT*{code}*{value}~\n")
+    segments += amt_segments
+    # is HD03 always MM
+    # add rest of  message
+    segment_count += len(segments)
+    segments += [f"HD*001**MM*MCVA1003~\n",
+                 f"DTP*348*D8*{ccyymmdd}~\n",
+                 f"SE*{segment_count + 3}*{interval:04}~\n"
+                 ]
 
-    message = bgn + n1_1 + n1_2 + ins + ref_1 + ref_2 + nm1 + per + n3 + n4 + """\
-AMT*D2*4~
-AMT*FK*0~
-AMT*R*7~
-AMT*C1*6~
-AMT*P3*3~
-AMT*B9*5~
-HD*001**MM*MCVA1003~
-DTP*348*D8*20040726~\n"""
-
-    # NM108 uses SSN
-    # Lookup uses ID instead of SSN
-    # AMT can have a maximum of 6 (so entire message length can vary)
-    # SE01 can vary based on length of message
-    SE = f"SE*20*{interval:04}~\n"
-
-    f.write(ST)
-    f.write(message)
-    f.write(SE)
+    f.writelines(segments)
 
     if interval % 10_000 == 0:
         print(f"Generated Message Number {interval}")

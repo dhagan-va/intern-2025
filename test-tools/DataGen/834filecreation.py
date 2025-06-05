@@ -49,7 +49,7 @@ for interval in range(1, n + 1):
     phone = fake.basic_phone_number()
 
     ST = f"ST*834*{interval:04}~\n"
-    bgn = f"BGN*00*{uuid.uuid4().hex}*{ccyymmdd}*{hhmmss}*UT***2~\n"
+    bgn = f"BGN*00*{uuid.uuid4().hex.upper()}*{ccyymmdd}*{hhmmss}*UT***2~\n"
     n1_1 = f"N1*P5*{fake.company()}*FI*{random.randint(100_000_000, 999_999_999)}~\n"
     n1_2 = f"N1*IN*{fake.company()}*FI*{random.randint(100_000_000, 999_999_999)}~\n"
     # INS01 always yes?
@@ -59,12 +59,12 @@ for interval in range(1, n + 1):
     # INS08 always AC?
     ins = f"INS*Y*18*001**A***AC~\n"
     ref_1 = f"REF*0F*{random.randint(100_000_000, 999_999_999)}V{random.randint(100_000_000, 999_999_999)}~\n"
-    ref_2 = f"REF*60*{random.randint(100_000_000, 999_999_999)}V{random.randint(100_000_000, 999_999_999)}~\n"
-    nm1 = f"NM1*IL*1*{fake.last_name()}*{fake.first_name()}*{fake.first_name()}***34*{ssn.replace("-", "")}~\n"
+    ref_2 = f"REF*6O*{random.randint(100_000_000, 999_999_999)}V{random.randint(100_000_000, 999_999_999)}~\n"
+    nm1 = f"NM1*IL*1*{fake.last_name().upper()}*{fake.first_name().upper()}*{fake.first_name().upper()}***34*{ssn.replace("-", "")}~\n"
     per = f"PER*IP**TE*{phone.replace("-", "")}~\n"
     # can add apartment number for N302
-    n3 = f"N3*{fake.street_address()}*~\n"
-    n4 = f"N4*{fake.city()}*{fake.state_abbr()}*{fake.zipcode()}~\n"
+    n3 = f"N3*{fake.street_address().upper()}*~\n"
+    n4 = f"N4*{fake.city().upper()}*{fake.state_abbr().upper()}*{fake.zipcode()}~\n"
 
     message = bgn + n1_1 + n1_2 + ins + ref_1 + ref_2 + nm1 + per + n3 + n4 + """\
 AMT*D2*4~

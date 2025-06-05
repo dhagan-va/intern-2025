@@ -20,7 +20,32 @@ This tool generates EDI X12 healthcare data for various transaction types, inclu
 - **Data Connectivity:** Ensures data relationships between transactions.
 - **S3 File Storage:** Saves generated files directly to Amazon S3. (FUTURE if possible)
 - **Configurable:** Parameters for transaction volume, concurrency, and file storage.
+- **Simulate Production Volume and Data Profile:** Volume will match 
+  - Support Basic and Extended Character Sets
 
+Production amounts for Daily 834 batches:
+  - Max: 246,778
+  - Min: 1
+  - Average: 10,627
+  - Standard Deviation: 13,948
+  - Transaction Data Scenario Edge Case Occurrance Rates (not all 3 at once):
+    - Missing Value: 0 < value < .5%
+    - Format Error (SNIP 1): 0 < value < .5%
+    - Invalid Value: 0 < value < .5%
+    - Negative Value: 0 < value < 1%
+- **Simulate Production Member Profile:** Unique Beneficiaries:
+  - Use 350,000 Unique Sponsors
+  - Use 500,000 Unique Beneficiaries
+  - Sponsors ussually have 1 Beneficiary but can have up to 16 Beneficiaries
+  - Beneficiary to Sponsor Distribution looks like Standard (80%+ have 2 or less) 
+  - Demographic information like DOB should never change ( or very rarely - simulate correction of error) Some demographic information like last name or address can change, but should change at the rate of general public.
+  - Accumulators: (Visits are integers, $ are Dollar amounts 0.00)
+    - D2 - Individual deductible ($)
+    - FK - Family deductible ($)
+    - R - Cat Cap ($)
+    - C1 - Mental Health Counseling Visits
+    - P3 - Substance abuse counsiling Visits
+    - B9 - Family Therapy Visit count 
 ---
 
 ## Sample

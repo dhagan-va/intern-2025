@@ -17,6 +17,9 @@ ISA06 = "83-1002022"
 ISA08 = "841439824"
 AMT_CODES = ['D2', 'FK', 'R', 'C1', 'P3', 'B9']
 INS02_VALUES = ['18', '19', '25', '26', '01', 'G8', 'null']
+# add a test distribution
+
+# INS02 value distribution
 weights = [0.8] + [0.2 / (len(INS02_VALUES) - 1)] * (len(INS02_VALUES) - 1)
 
 # Date vars

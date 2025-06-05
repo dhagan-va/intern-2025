@@ -79,7 +79,6 @@ for interval in range(1, n + 1):
                 f"REF*6O*1111111111V{random.randint(10_000_000, 99_999_999)}~\n",
                 f"NM1*IL*1*{fake.last_name().upper()}*{fake.first_name().upper()}*{fake.first_name().upper()}***34*{ssn}~\n",
                 f"PER*IP**TE*{re.sub('[^0-9]+', '', fake.basic_phone_number())}~\n",
-                # Building number produces leading 0, need to be removed?
                 f"N3*{fake.building_number()} {fake.street_name()}*{n302}~\n",
                 f"N4*{fake.city().upper()}*{fake.state_abbr().upper()}*{fake.zipcode()}~\n"
                 ]
@@ -90,7 +89,6 @@ for interval in range(1, n + 1):
             continue
         amt_segments.append(f"AMT*{code}*{value}~\n")
     segments += amt_segments
-    # add rest of  message
     segment_count += len(segments)
     segments += [f"HD*001**MM*MCVA1003~\n",
                  f"DTP*348*D8*{ccyymmdd}~\n",
@@ -109,9 +107,7 @@ f.write(IEA)
 
 # keep track of sponsor ID, first, middle, last name, address, SSN, beneficiary ID, phone
 
-# close out of file
 f.close()
-# display amount of time it takes to create
 END_TIME = datetime.now() - now
 print("It took: ", end='')
 print(END_TIME)

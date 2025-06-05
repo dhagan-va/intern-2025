@@ -1,6 +1,10 @@
 import os
+import random
 from datetime import datetime
 from faker import Faker
+import uuid
+
+random.seed(52)
 
 # Reused vars
 ISA05_07 = "ZZ"
@@ -13,11 +17,13 @@ ISA13 = now.strftime("%Y%m%d1")
 ccyymmdd = now.strftime("%Y%m%d")
 yymmdd = now.strftime("%y%m%d")
 hhmm = now.strftime("%H%M")
-hhmmssss = f"{hhmm}{now.second}"
+hhmmss = now.strftime("%H%M%S")
 
 # Faker vars
+fake = Faker()
+Faker.seed(49245)
 
-
+# Create new file directory for tests if not there before
 file_directory = '834Test_Files'
 if not os.path.exists(file_directory):
     os.mkdir(file_directory)
@@ -26,30 +32,41 @@ if not os.path.exists(file_directory):
 file_name = f"834.VFMP.{now.year}.{yymmdd}.{hhmm}.{ISA13}.edi"
 file_path = os.path.join(file_directory, file_name)
 
+# Write to file
 f = open(file_path, "w")
 
 ISA = (f"ISA*00*          *00*          *{ISA05_07}*{ISA06:<15}*{ISA05_07}*{ISA08:<15}*{yymmdd}*{hhmm}*$*00501"
        f"*{ISA13}*0*T*:~\n")
-GS = f"GS*BE*{ISA06}*{ISA08}*{ccyymmdd}*{hhmmssss}*61*X*005010X220A1~\n"
+GS = f"GS*BE*{ISA06}*{ISA08}*{ccyymmdd}*{hhmmss}*61*X*005010X220A1~\n"
 f.write(ISA)
 f.write(GS)
 
 # number of tests
-n = 10
+n = 1
 
-for interval in range(1, n+1):
+for interval in range(1, n + 1):
+    ssn = fake.ssn()
+    phone = fake.basic_phone_number()
+
     ST = f"ST*834*{interval:04}~\n"
-    message = """\
-BGN*00*0D0AACD687DA4FDEA7B90769916E6B06*20210427*203926*MT***2~
-N1*P5*OCC*FI*123456678~
-N1*IN*XX*FI*123356678~
-INS*Y*18*001**A***AC~
-REF*0F*0032938645V20940530~
-REF*6O*0048933446V10367343~
-NM1*IL*1*BLACK*DEBORAH*AMANDA***34*900823589~
-PER*IP**TE*6735697183~
-N3*4898 PINE BLVD*APARTMENT 6381~
-N4*ARLINGTON*GA*12956~
+    bgn = f"BGN*00*{uuid.uuid4().hex}*{ccyymmdd}*{hhmmss}*UT***2~\n"
+    n1_1 = f"N1*P5*{fake.company()}*FI*{random.randint(100_000_000, 999_999_999)}~\n"
+    n1_2 = f"N1*IN*{fake.company()}*FI*{random.randint(100_000_000, 999_999_999)}~\n"
+    # INS01 always yes?
+    # INS02 18, 19, 01?
+    # INS03 001, 021?
+    # INS05 always A?
+    # INS08 always AC?
+    ins = f"INS*Y*18*001**A***AC~\n"
+    ref_1 = f"REF*0F*{random.randint(100_000_000, 999_999_999)}V{random.randint(100_000_000, 999_999_999)}~\n"
+    ref_2 = f"REF*60*{random.randint(100_000_000, 999_999_999)}V{random.randint(100_000_000, 999_999_999)}~\n"
+    nm1 = f"NM1*IL*1*{fake.last_name()}*{fake.first_name()}*{fake.first_name()}***34*{ssn.replace("-", "")}~\n"
+    per = f"PER*IP**TE*{phone.replace("-", "")}~\n"
+    # can add apartment number for N302
+    n3 = f"N3*{fake.street_address()}*~\n"
+    n4 = f"N4*{fake.city()}*{fake.state_abbr()}*{fake.zipcode()}~\n"
+
+    message = bgn + n1_1 + n1_2 + ins + ref_1 + ref_2 + nm1 + per + n3 + n4 + """\
 AMT*D2*4~
 AMT*FK*0~
 AMT*R*7~
@@ -58,6 +75,11 @@ AMT*P3*3~
 AMT*B9*5~
 HD*001**MM*MCVA1003~
 DTP*348*D8*20040726~\n"""
+
+    # NM108 uses SSN
+    # Lookup uses ID instead of SSN
+    # AMT can have a maximum of 6 (so entire message length can vary)
+    # SE01 can vary based on length of message
     SE = f"SE*20*{interval:04}~\n"
 
     f.write(ST)
@@ -68,11 +90,13 @@ DTP*348*D8*20040726~\n"""
         print(f"Generated Message Number {interval}")
 
 GE = f"GE*{n}*61~\n"
-IEA = f"IEA*1*000000061~"
+IEA = f"IEA*1*{ISA13}~"
 f.write(GE)
 f.write(IEA)
 
+# close out of file
 f.close()
+# display amount of time it takes to create
 END_TIME = datetime.now() - now
 print("It took: ", end='')
 print(END_TIME)

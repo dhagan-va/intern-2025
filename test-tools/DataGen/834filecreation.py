@@ -4,18 +4,20 @@ import re
 from datetime import datetime
 from faker import Faker
 import uuid
+from collections import Counter
 
 # Seeds and Initialization
 fake = Faker()
 Faker.seed(49245)
 random.seed(52)
+counts = Counter()
 
-# Reused vars
 ISA05_07 = "ZZ"
 ISA06 = "83-1002022"
 ISA08 = "841439824"
 AMT_CODES = ['D2', 'FK', 'R', 'C1', 'P3', 'B9']
-INS02 = ['null', '01', '18', '19', '25', '26', 'G8']
+INS02_VALUES = ['18', '19', '25', '26', '01', 'G8', 'null']
+weights = [0.8] + [0.2 / (len(INS02_VALUES) - 1)] * (len(INS02_VALUES) - 1)
 
 # Date vars
 now = datetime.now()
@@ -31,11 +33,11 @@ if not os.path.exists(file_directory):
     os.mkdir(file_directory)
     print("New file directory created for: 834 EDI files")
 
-file_name = f"834.VFMP.{now.year}.{yymmdd}.{hhmm}.{ISA13}.edi"
-file_path = os.path.join(file_directory, file_name)
+edi_name = f"834.VFMP.{now.year}.{yymmdd}.{hhmm}.{ISA13}.edi"
+edi_path = os.path.join(file_directory, edi_name)
 
 # Write to file
-f = open(file_path, "w")
+f = open(edi_path, "w")
 
 ISA = (f"ISA*00*          *00*          *{ISA05_07}*{ISA06:<15}*{ISA05_07}*{ISA08:<15}*{yymmdd}*{hhmm}*$*00501"
        f"*{ISA13}*0*T*:~\n")
@@ -44,7 +46,12 @@ f.write(ISA)
 f.write(GS)
 
 # number of tests
-n = 10
+n = 100_000
+
+
+def getIns02():
+    return random.choices(INS02_VALUES, weights=weights, k=1)[0]
+
 
 for interval in range(1, n + 1):
     amt_segments = []
@@ -52,6 +59,8 @@ for interval in range(1, n + 1):
     ssn = fake.ssn().replace("-", "")
     # half the time has second address
     n302 = f"{fake.secondary_address().replace(".", "")}" if random.random() < 0.5 else ""
+    ins02 = getIns02()
+    counts[ins02] += 1
 
     # Lookup uses ID instead of SSN
 
@@ -62,7 +71,7 @@ for interval in range(1, n + 1):
                 f"BGN*00*{uuid.uuid4().hex.upper()}*{ccyymmdd}*{hhmmss}*UT***2~\n",
                 f"N1*P5*{re.sub('[^A-Za-z]+', ' ', fake.company())}*FI*{random.randint(100_000_000, 999_999_999)}~\n",
                 f"N1*IN*{re.sub('[^A-Za-z]+', ' ', fake.company())}*FI*{random.randint(100_000_000, 999_999_999)}~\n",
-                f"INS*Y*18*001**A***AC~\n",
+                f"INS*Y*{getIns02()}*001**A***AC~\n",
                 f"REF*0F*1111111111V{random.randint(10_000_000, 99_999_999)}~\n",
                 f"REF*6O*1111111111V{random.randint(10_000_000, 99_999_999)}~\n",
                 f"NM1*IL*1*{fake.last_name().upper()}*{fake.first_name().upper()}*{fake.first_name().upper()}***34*{ssn}~\n",
@@ -103,3 +112,6 @@ f.close()
 END_TIME = datetime.now() - now
 print("It took: ", end='')
 print(END_TIME)
+print("The distribution of INS02 is as follows: ")
+for k, v in counts.items():
+    print(f"{k}: {v}")

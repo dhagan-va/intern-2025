@@ -5,6 +5,9 @@ from datetime import datetime
 from faker import Faker
 import uuid
 
+# Seeds and Initialization
+fake = Faker()
+Faker.seed(49245)
 random.seed(52)
 
 # Reused vars
@@ -12,6 +15,7 @@ ISA05_07 = "ZZ"
 ISA06 = "83-1002022"
 ISA08 = "841439824"
 AMT_CODES = ['D2', 'FK', 'R', 'C1', 'P3', 'B9']
+INS02 = ['null', '01', '18', '19', '25', '26', 'G8']
 
 # Date vars
 now = datetime.now()
@@ -20,10 +24,6 @@ ccyymmdd = now.strftime("%Y%m%d")
 yymmdd = now.strftime("%y%m%d")
 hhmm = now.strftime("%H%M")
 hhmmss = now.strftime("%H%M%S")
-
-# Faker vars
-fake = Faker()
-Faker.seed(49245)
 
 # Create new file directory for tests if not there before
 file_directory = '834Test_Files'
@@ -50,7 +50,6 @@ for interval in range(1, n + 1):
     amt_segments = []
     segment_count = 0
     ssn = fake.ssn().replace("-", "")
-    phone = fake.basic_phone_number()
     # half the time has second address
     n302 = f"{fake.secondary_address().replace(".", "")}" if random.random() < 0.5 else ""
 
@@ -64,10 +63,11 @@ for interval in range(1, n + 1):
                 f"N1*P5*{re.sub('[^A-Za-z]+', ' ', fake.company())}*FI*{random.randint(100_000_000, 999_999_999)}~\n",
                 f"N1*IN*{re.sub('[^A-Za-z]+', ' ', fake.company())}*FI*{random.randint(100_000_000, 999_999_999)}~\n",
                 f"INS*Y*18*001**A***AC~\n",
-                f"REF*0F*{random.randint(100_000_000, 999_999_999)}V{random.randint(100_000_000, 999_999_999)}~\n",
-                f"REF*6O*{random.randint(100_000_000, 999_999_999)}V{random.randint(100_000_000, 999_999_999)}~\n",
+                f"REF*0F*1111111111V{random.randint(10_000_000, 99_999_999)}~\n",
+                f"REF*6O*1111111111V{random.randint(10_000_000, 99_999_999)}~\n",
                 f"NM1*IL*1*{fake.last_name().upper()}*{fake.first_name().upper()}*{fake.first_name().upper()}***34*{ssn}~\n",
-                f"PER*IP**TE*{re.sub('[^0-9]+', '', phone)}~\n",
+                f"PER*IP**TE*{re.sub('[^0-9]+', '', fake.basic_phone_number())}~\n",
+                # Building number produces leading 0, need to be removed?
                 f"N3*{fake.building_number()} {fake.street_name()}*{n302}~\n",
                 f"N4*{fake.city().upper()}*{fake.state_abbr().upper()}*{fake.zipcode()}~\n"
                 ]
@@ -94,6 +94,8 @@ GE = f"GE*{n}*61~\n"
 IEA = f"IEA*1*{ISA13}~"
 f.write(GE)
 f.write(IEA)
+
+# keep track of sponsor ID, first, middle, last name, address, SSN, beneficiary ID, phone
 
 # close out of file
 f.close()

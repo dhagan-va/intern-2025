@@ -1,5 +1,6 @@
 import os
 import random
+import re
 from datetime import datetime
 from faker import Faker
 import uuid
@@ -43,32 +44,31 @@ f.write(ISA)
 f.write(GS)
 
 # number of tests
-n = 100_000
+n = 10
 
 for interval in range(1, n + 1):
     amt_segments = []
     segment_count = 0
-    ssn = fake.ssn()
+    ssn = fake.ssn().replace("-", "")
     phone = fake.basic_phone_number()
+    # half the time has second address
+    n302 = f"{fake.secondary_address().replace(".", "")}" if random.random() < 0.5 else ""
 
     # Lookup uses ID instead of SSN
 
-    # INS01 always yes?
-    # INS02 18, 19, 01?
-    # INS03 001, 021?
-    # INS05 always A?
-    # INS08 always AC?
-    # can add apartment number for N302
+    # INS02 null, 01, 18, 19, 25, 26, G8
+    # INS03 001 (change) or 030 (audit)
+    # INS08 always null, AC, TE
     segments = [f"ST*834*{interval:04}~\n",
                 f"BGN*00*{uuid.uuid4().hex.upper()}*{ccyymmdd}*{hhmmss}*UT***2~\n",
-                f"N1*P5*{fake.company()}*FI*{random.randint(100_000_000, 999_999_999)}~\n",
-                f"N1*IN*{fake.company()}*FI*{random.randint(100_000_000, 999_999_999)}~\n",
+                f"N1*P5*{re.sub('[^A-Za-z]+', ' ', fake.company())}*FI*{random.randint(100_000_000, 999_999_999)}~\n",
+                f"N1*IN*{re.sub('[^A-Za-z]+', ' ', fake.company())}*FI*{random.randint(100_000_000, 999_999_999)}~\n",
                 f"INS*Y*18*001**A***AC~\n",
                 f"REF*0F*{random.randint(100_000_000, 999_999_999)}V{random.randint(100_000_000, 999_999_999)}~\n",
                 f"REF*6O*{random.randint(100_000_000, 999_999_999)}V{random.randint(100_000_000, 999_999_999)}~\n",
-                f"NM1*IL*1*{fake.last_name().upper()}*{fake.first_name().upper()}*{fake.first_name().upper()}***34*{ssn.replace("-", "")}~\n",
-                f"PER*IP**TE*{phone.replace("-", "")}~\n",
-                f"N3*{fake.street_address().upper()}*~\n",
+                f"NM1*IL*1*{fake.last_name().upper()}*{fake.first_name().upper()}*{fake.first_name().upper()}***34*{ssn}~\n",
+                f"PER*IP**TE*{re.sub('[^0-9]+', '', phone)}~\n",
+                f"N3*{fake.building_number()} {fake.street_name()}*{n302}~\n",
                 f"N4*{fake.city().upper()}*{fake.state_abbr().upper()}*{fake.zipcode()}~\n"
                 ]
     # add AMT values
@@ -78,7 +78,6 @@ for interval in range(1, n + 1):
             continue
         amt_segments.append(f"AMT*{code}*{value}~\n")
     segments += amt_segments
-    # is HD03 always MM
     # add rest of  message
     segment_count += len(segments)
     segments += [f"HD*001**MM*MCVA1003~\n",

@@ -1,20 +1,22 @@
 import os
-import random
 from datetime import datetime
-
-random.seed(52)
+from faker import Faker
 
 # Reused vars
 ISA05_07 = "ZZ"
 ISA06 = "83-1002022"
 ISA08 = "841439824"
 
+# Date vars
 now = datetime.now()
 ISA13 = now.strftime("%Y%m%d1")
 ccyymmdd = now.strftime("%Y%m%d")
 yymmdd = now.strftime("%y%m%d")
 hhmm = now.strftime("%H%M")
 hhmmssss = f"{hhmm}{now.second}"
+
+# Faker vars
+
 
 file_directory = '834Test_Files'
 if not os.path.exists(file_directory):

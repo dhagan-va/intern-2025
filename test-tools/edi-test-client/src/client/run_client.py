@@ -1,5 +1,9 @@
 import requests
-from src.config import load_settings
+import sys
+from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).parent.parent))
+from config import load_settings
 import time
 
 cfg = load_settings()

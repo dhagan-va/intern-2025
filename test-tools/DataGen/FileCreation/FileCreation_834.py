@@ -4,7 +4,10 @@ from faker import Faker
 from datetime import datetime
 import uuid
 from collections import Counter
+import logging
 import config
+
+logger = logging.getLogger(__name__)
 
 
 class Make834:
@@ -30,13 +33,16 @@ class Make834:
         self.hhmm = now.strftime("%H%M")
         self.hhmmss = now.strftime("%H%M%S")
 
+        logger.debug("Make834 initialized")
+
     def make_dir(self, file_directory):
         if not os.path.exists(file_directory):
             os.mkdir(file_directory)
-            print(f"New file directory created called: {file_directory}")
+            logger.debug(f"New file directory created called: {file_directory}")
 
     def make_file_path(self, file_directory):
         edi_name = f"834.VFMP.{self.time.year}.{self.yymmdd}.{self.hhmm}.{self.ISA13}.edi"
+        logger.debug(f"New file created named: {edi_name} at {file_directory}")
         return os.path.join(file_directory, edi_name)
 
     def makeISA(self):
@@ -101,7 +107,3 @@ class Make834:
 
         # Lookup sponsor ID instead of SSN
         # keep track of sponsor ID, first, middle, last name, address, SSN, beneficiary ID, phone [hashtable/dict]
-
-        # print("The distribution of INS02 is as follows: ")
-        # for k, v in self.counts.items():
-        #     print(f"{k}: {v}")

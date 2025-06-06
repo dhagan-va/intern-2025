@@ -1,6 +1,5 @@
 import os
 import random
-import re
 from datetime import datetime
 from faker import Faker
 import uuid
@@ -17,9 +16,18 @@ ISA06 = "83-1002022"
 ISA08 = "841439824"
 AMT_CODES = ['D2', 'FK', 'R', 'C1', 'P3', 'B9']
 INS02_VALUES = ['18', '19', '25', '26', '01', 'G8', 'null']
-# add a test distribution
 
-# INS02 value distribution
+# 1. determine which distribution of tests to do (high-low error prob)
+# 2. randomize error dist (if there is one error on a file, it cant have another error)
+# 3. Set number of tests
+# 4. Track Personal info based on Sponsor ID, each key will have a value of 
+
+# add a test distribution (< .5% for missing value, format error, invalid value; < 1% for negative value)
+# Correct/Wrong test distributions
+test_dist = [85/15, 90/10, 92/8, 95/5, 98/2]
+# Tests need to have a Binom dist for number of beneficiaries (need to make another py to make this happen)
+# 80% of 100,000 people have at least 1 beneficiary; ~31008 ppl are sponsors
+# INS02 value distribution, this means that 18 needs to be created before rest of them are created
 weights = [0.8] + [0.2 / (len(INS02_VALUES) - 1)] * (len(INS02_VALUES) - 1)
 
 # Date vars
@@ -34,7 +42,7 @@ hhmmss = now.strftime("%H%M%S")
 file_directory = '834Test_Files'
 if not os.path.exists(file_directory):
     os.mkdir(file_directory)
-    print("New file directory created for: 834 EDI files")
+    print(f"New file directory created called: {file_directory}")
 
 edi_name = f"834.VFMP.{now.year}.{yymmdd}.{hhmm}.{ISA13}.edi"
 edi_path = os.path.join(file_directory, edi_name)
@@ -48,7 +56,7 @@ f.write(ISA)
 f.write(GS)
 
 # number of tests
-n = 10
+n = 1
 
 
 def getIns02():
@@ -66,7 +74,6 @@ def getPolicyID2():
 for interval in range(1, n + 1):
     amt_segments = []
     segment_count = 0
-    ssn = fake.ssn().replace("-", "")
     # half the time has second address
     n302 = f"{fake.secondary_address().replace(".", "")}" if random.random() < 0.5 else ""
     ins02 = getIns02()
@@ -81,13 +88,14 @@ for interval in range(1, n + 1):
                 f"INS*Y*{getIns02()}*001**A***AC~\n",
                 f"REF*0F*1111111111V{getPolicyID2()}~\n",
                 f"REF*6O*1111111111V{getPolicyID2()}~\n",
-                f"NM1*IL*1*{fake.last_name().upper()}*{fake.first_name().upper()}*{fake.first_name().upper()}***34*{ssn}~\n",
-                f"PER*IP**TE*{re.sub('[^0-9]+', '', fake.basic_phone_number())}~\n",
+                f"NM1*IL*1*{fake.last_name().upper()}*{fake.first_name().upper()}*{fake.first_name().upper()}***34*{fake.ssn()}~\n",
+                f"PER*IP**TE*{fake.basic_phone_number()}~\n",
                 f"N3*{fake.building_number()} {fake.street_name()}*{n302}~\n",
                 f"N4*{fake.city().upper()}*{fake.state_abbr().upper()}*{fake.zipcode()}~\n"
                 ]
     # add AMT values
     for code in AMT_CODES:
+        # if AMT = D2, FK, R ($)
         value = random.randint(0, 9)
         if value == 0:
             continue
@@ -110,7 +118,7 @@ f.write(GE)
 f.write(IEA)
 
 # Lookup sponsor ID instead of SSN
-# keep track of sponsor ID, first, middle, last name, address, SSN, beneficiary ID, phone
+# keep track of sponsor ID, first, middle, last name, address, SSN, beneficiary ID, phone [hashtable/dict]
 
 f.close()
 # display amount of time it takes to create

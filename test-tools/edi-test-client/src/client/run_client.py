@@ -1,11 +1,13 @@
 import requests
 import sys
 from pathlib import Path
-
+import logging
 sys.path.insert(0, str(Path(__file__).parent.parent))
 from config import load_settings
 import time
 
+logger = logging.getLogger(__name__)
+logging.basicConfig(filename='test.log', level=logging.INFO)
 cfg = load_settings()
 
 s = requests.Session()
@@ -32,8 +34,12 @@ SAMPLE_270 = (
 "IEA*1*000000101~\n"
 )
 
+logger.info("Sending %d RPS", cfg.rps)
+
 while True:
     start = time.perf_counter()
     resp = s.post(url=cfg.endpoint, data=SAMPLE_270)
     elapsed = (time.perf_counter() - start)*1000
-    time.sleep(max(0, (1 / cfg.rps) - elapsed))
+    logging.info("sent 270 → %s in %.2f ms", resp.status_code, elapsed)
+    time.sleep(max(0, (1 / cfg.rps) - elapsed/1000))
+    logging.info("SLEPT %.5fms", (1/cfg.rps)- elapsed/1000)

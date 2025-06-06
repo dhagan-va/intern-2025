@@ -40,12 +40,12 @@ Production amounts for Daily 834 batches:
   - Beneficiary to Sponsor Distribution looks like Standard (80%+ have 2 or less) 
   - Demographic information like DOB should never change ( or very rarely - simulate correction of error) Some demographic information like last name or address can change, but should change at the rate of general public.
   - Accumulators: (Visits are integers, $ are Dollar amounts 0.00)
-    - D2 - Individual deductible ($)
-    - FK - Family deductible ($)
-    - R - Cat Cap ($)
-    - C1 - Mental Health Counseling Visits
-    - P3 - Substance abuse counsiling Visits
-    - B9 - Family Therapy Visit count 
+    - D2 - Individual deductible (Max: $100,000)
+    - FK - Family deductible (Max: $100,000)
+    - R - Cat Cap (Max: $100,000)
+    - C1 - Mental Health Counseling Visits (Max: 20)
+    - P3 - Substance abuse counsiling Visits (Max: 20)
+    - B9 - Family Therapy Visit count (Max: 20)
 ---
 
 ## Sample

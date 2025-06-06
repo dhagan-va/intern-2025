@@ -31,7 +31,4 @@ f.writelines(segments)
 f.close()
 # display amount of time it takes to create
 END_TIME = datetime.now() - now
-logger.info('It took: %d', END_TIME)
-
-# Correct/Wrong
-# test_dist = [85/15, 90/10, 92/8, 95/5, 98/2]
+logger.info(f'It took: {END_TIME}')

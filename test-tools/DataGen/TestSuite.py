@@ -1,7 +1,6 @@
 from FileCreation_834 import Make834
-import os
 from datetime import datetime
-from faker import Faker
+import config
 
 # 1. determine which distribution of tests to do (high-low error prob)
 # 2. randomize error dist (if there is one error on a file, it cant have another error)
@@ -10,8 +9,8 @@ from faker import Faker
 
 # Setup/Initialization
 now = datetime.now()
-directory = 'Test_Files_834'
-n = 10
+directory = config.DIRECTORY_NAME
+n = config.NUMBER_OF_TESTS
 
 gen = Make834()
 gen.make_dir(directory)

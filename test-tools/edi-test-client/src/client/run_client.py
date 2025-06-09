@@ -2,17 +2,12 @@ import requests
 import sys
 from pathlib import Path
 import logging
+import concurrent.futures
 sys.path.insert(0, str(Path(__file__).parent.parent))
 from config import load_settings
 import time
 
-logger = logging.getLogger(__name__)
-logging.basicConfig(filename='test.log', level=logging.INFO)
-cfg = load_settings()
 
-s = requests.Session()
-
-count = 0
 
 SAMPLE_270 = (
 "ISA*00*          *00*          *ZZ*1234567        *ZZ*11111          *170508*1141*^*00501*000000101*1*P*:~\n"
@@ -34,8 +29,28 @@ SAMPLE_270 = (
 "IEA*1*000000101~\n"
 )
 
-logger.info("Sending %d RPS", cfg.rps)
 
+def send_270_request(endpoint):
+    start = time.perf_counter()
+    try:
+        resp = requests.post(url=endpoint, data=SAMPLE_270)
+        elapsed = (time.perf_counter() - start)*1000
+        return resp.status_code, elapsed
+    except Exception:
+        return -1, (time.perf_counter() - start)*1000
+
+def main():
+    cfg = load_settings()
+    logger = logging.getLogger("edi_client")
+    logging.basicConfig(filename='test.log', level=logging.INFO)
+    with ThreadPoolExecutor() as pool:
+        
+    logger.info("Client started with %d RPS", cfg.rps)
+
+
+
+if __name__ == "__main__":
+    main()
 while True:
     start = time.perf_counter()
     resp = s.post(url=cfg.endpoint, data=SAMPLE_270)

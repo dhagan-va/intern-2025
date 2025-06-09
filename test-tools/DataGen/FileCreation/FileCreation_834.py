@@ -68,6 +68,10 @@ class Make834:
     def getPolicyID2(self):
         return random.randint(10_000_000, 99_999_999)
 
+    def makeSSN(self):
+        # check then make
+        return self.fake.ssn()
+
     def makeMessage(self, num):
         amt_segments = []
         segment_count = 0
@@ -83,7 +87,7 @@ class Make834:
                     f"INS*Y*{self.getIns02()}*001**A***AC~\n",
                     f"REF*0F*1111111111V{self.getPolicyID2()}~\n",
                     f"REF*6O*1111111111V{self.getPolicyID2()}~\n",
-                    f"NM1*IL*1*{self.fake.last_name().upper()}*{self.fake.first_name().upper()}*{self.fake.first_name().upper()}***34*{self.fake.ssn()}~\n",
+                    f"NM1*IL*1*{self.fake.last_name().upper()}*{self.fake.first_name().upper()}*{self.fake.first_name().upper()}***34*{self.makeSSN()}~\n",
                     f"PER*IP**TE*{self.fake.basic_phone_number()}~\n",
                     f"N3*{self.fake.building_number()}{" "}{self.fake.street_name()}*{n302}~\n",
                     f"N4*{self.fake.city().upper()}*{self.fake.state_abbr().upper()}*{self.fake.zipcode()}~\n"

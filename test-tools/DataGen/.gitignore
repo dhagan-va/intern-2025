@@ -1,3 +1,4 @@
 Test_Files_834/*
 **/*.log
 .env
+__pycache__/

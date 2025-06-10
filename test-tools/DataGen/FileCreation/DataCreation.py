@@ -1,110 +1,115 @@
-import os
 import random
 from faker import Faker
-from datetime import datetime
-import uuid
-from collections import Counter
-import logging
+from Datatypes import Address, Sponsor, Beneficiary
+from Database_Functions import get_collection
 import config
 
-logger = logging.getLogger(__name__)
 
-
-class Make834:
-    def __init__(self, faker_seed=config.FAKER_SEED, random_seed=config.RANDOM_SEED, n=1):
-        self.time = datetime.now()
+class Make834Data:
+    def __init__(self, faker_seed=config.FAKER_SEED, random_seed=config.RANDOM_SEED,
+                 relationship_map=config.RELATIONSHIP_MAP):
         self.fake = Faker()
         Faker.seed(faker_seed)
         random.seed(random_seed)
-        self.counts = Counter()
-        self.n = n
+        self.collection = get_collection()
+        self.relationship_map = relationship_map
 
-        self.interchangeIDQual = "ZZ"
-        self.interchangeSenderID = "83-1002022"
-        self.interchangeReceiverID = "841439824"
-        self.amtQualCode = ['D2', 'FK', 'R', 'C1', 'P3', 'B9']
-        self.INS02_VAL = ['18', '19', '25', '26', '01', 'G8', 'null']
-        self.weights = [0.8] + [0.2 / (len(self.INS02_VAL) - 1)] * (len(self.INS02_VAL) - 1)
+    def create_address(self):
+        return Address(
+            building_number=self.fake.building_number(),
+            street=self.fake.street_name(),
+            apartment=f"{self.fake.secondary_address().replace(".", "")}" if random.random() < 0.5 else "",
+            city=self.fake.city(),
+            state=self.fake.state_abbr(False, False),
+            zipcode=self.fake.zipcode()
+        )
 
-        now = self.time
-        self.interCtrlNumber = now.strftime("%Y%m%d1")
-        self.ccyymmdd = now.strftime("%Y%m%d")
-        self.yymmdd = now.strftime("%y%m%d")
-        self.hhmm = now.strftime("%H%M")
-        self.hhmmss = now.strftime("%H%M%S")
+    def create_amt_data(self):
+        return {
+            "deductibles": {
+                "D2": random.randint(0, 100_000),
+                "FK": random.randint(0, 100_000),
+                "R": random.randint(0, 100_000)
+            },
+            "visit_counts": {
+                "C1": random.randint(0, 15),
+                "P3": random.randint(0, 15),
+                "B9": random.randint(0, 15)
+            }
+        }
 
-        logger.debug("Make834 initialized")
+    def ssn_exists(self, ssn):
+        return self.collection.find_one(
+            {"$or": [{"ssn": ssn}, {"beneficiaries.ssn": ssn}]}
+        ) is not None
 
-    def make_dir(self, file_directory):
-        if not os.path.exists(file_directory):
-            os.mkdir(file_directory)
-            logger.debug(f"New file directory created called: {file_directory}")
+    def generate_ssn(self):
+        while True:
+            ssn = self.fake.ssn()
+            if not self.ssn_exists(ssn):
+                return ssn
 
-    def make_file_path(self, file_directory):
-        edi_name = f"834.VFMP.{self.time.year}.{self.yymmdd}.{self.hhmm}.{self.interCtrlNumber}.edi"
-        logger.debug(f"New file created named: {edi_name} at {file_directory}")
-        return os.path.join(file_directory, edi_name)
+    def sponsor_id_exists(self, sponsor_id):
+        return self.collection.find_one({"sponsor_id": sponsor_id}) is not None
 
-    def makeISA(self):
-        return (
-            f"ISA*00*          *00*          *{self.interchangeIDQual}*{self.interchangeSenderID:<15}*{self.interchangeIDQual}*{self.interchangeReceiverID:<15}*{self.yymmdd}*{self.hhmm}*$*00501"
-            f"*{self.interCtrlNumber}*0*T*:~\n")
+    def beneficiary_id_exists(self, beneficiary_id):
+        return self.collection.find_one({"beneficiaries.beneficiary_id": beneficiary_id}) is not None
 
-    def makeGS(self):
-        return f"GS*BE*{self.interchangeSenderID}*{self.interchangeReceiverID}*{self.ccyymmdd}*{self.hhmmss}*61*X*005010X220A1~\n"
+    def generate_sponsor_id(self):
+        while True:
+            candidate = f"1111111111V{random.randint(10_000_000, 99_999_999)}"
+            if not self.sponsor_id_exists(candidate):
+                return candidate
 
-    def makeGE(self, num):
-        return f"GE*{num}*61~\n"
+    def generate_beneficiary_id(self):
+        while True:
+            candidate = f"1111111111V{random.randint(10_000_000, 99_999_999)}"
+            if not self.beneficiary_id_exists(candidate):
+                return candidate
 
-    def makeIEA(self):
-        return f"IEA*1*{self.interCtrlNumber}~"
+    def create_sponsor_and_beneficiaries(self):
+        sponsor_id = self.generate_sponsor_id()
+        sponsor_last_name = self.fake.last_name()
+        sponsor_address = self.create_address()
+        amt_data = self.create_amt_data()
 
-    def getIns02(self):
-        return random.choices(self.INS02_VAL, weights=self.weights, k=1)[0]
+        sponsor = Sponsor(
+            ssn=self.generate_ssn(),
+            dob=self.fake.date_of_birth(),
+            first_name=self.fake.first_name(),
+            last_name=sponsor_last_name,
+            address=sponsor_address,
+            phone=self.fake.basic_phone_number(),
+            insurance_company=self.fake.company(),
+            insurance_FID=str(random.randint(100_000_000, 999_999_999)),
+            middle_name=self.fake.first_name(),
+            sponsor_id=sponsor_id,
+            deductibles=amt_data["deductibles"],
+            visit_counts=amt_data["visit_counts"]
+        )
 
-    def getFid(self):
-        return random.randint(100_000_000, 999_999_999)
+        # make it so that beneficiary age makes sense (child < age than sponsor)
+        # also add randomization to num of beneficiaries
+        num_beneficiaries = random.randint(0, 4)
+        for _ in range(num_beneficiaries):
+            relationship = random.choice(list(self.relationship_map.keys()))
 
-    def getPolicyID2(self):
-        return random.randint(10_000_000, 99_999_999)
+            beneficiary = Beneficiary(
+                ssn=self.generate_ssn(),
+                dob=self.fake.date_of_birth(),
+                first_name=self.fake.first_name(),
+                last_name=sponsor_last_name,
+                address=sponsor_address,
+                phone=self.fake.basic_phone_number(),
+                insurance_company=self.fake.company(),
+                insurance_FID=str(random.randint(100_000_000, 999_999_999)),
+                middle_name=self.fake.first_name(),
+                sponsor_id=sponsor_id,
+                beneficiary_id=self.generate_beneficiary_id(),
+                relationship=relationship,
+                deductibles=amt_data["deductibles"],
+                visit_counts=amt_data["visit_counts"]
+            )
+            sponsor.beneficiaries.append(beneficiary)
 
-    def makeSSN(self):
-        # check then make
-        return self.fake.ssn()
-
-    def makeMessage(self, num):
-        amt_segments = []
-        segment_count = 0
-        # half the time has second address
-        n302 = f"{self.fake.secondary_address().replace(".", "")}" if random.random() < 0.5 else ""
-        ins02 = self.getIns02()
-        self.counts[ins02] += 1
-
-        segments = [f"ST*834*{num:04}~\n",
-                    f"BGN*00*{uuid.uuid4().hex.upper()}*{self.ccyymmdd}*{self.hhmmss}*UT***2~\n",
-                    f"N1*P5*{self.fake.company()}*FI*{self.getFid()}~\n",
-                    f"N1*IN*{self.fake.company()}*FI*{self.getFid()}~\n",
-                    f"INS*Y*{self.getIns02()}*001**A***AC~\n",
-                    f"REF*0F*1111111111V{self.getPolicyID2()}~\n",
-                    f"REF*6O*1111111111V{self.getPolicyID2()}~\n",
-                    f"NM1*IL*1*{self.fake.last_name().upper()}*{self.fake.first_name().upper()}*{self.fake.first_name().upper()}***34*{self.makeSSN()}~\n",
-                    f"PER*IP**TE*{self.fake.basic_phone_number()}~\n",
-                    f"N3*{self.fake.building_number()}{" "}{self.fake.street_name()}*{n302}~\n",
-                    f"N4*{self.fake.city().upper()}*{self.fake.state_abbr().upper()}*{self.fake.zipcode()}~\n"
-                    ]
-        # add AMT values
-        for code in self.amtQualCode:
-            if code == "D2" or code == "FK" or code == "R":
-                value = random.randint(0, 100_000)
-            else:
-                value = random.randint(0, 9)
-            if value == 0:
-                continue
-            amt_segments.append(f"AMT*{code}*{value}~\n")
-        segments += amt_segments
-        segment_count += len(segments)
-        segments += [f"HD*001**MM*MCVA1003~\n",
-                     f"DTP*348*D8*{self.ccyymmdd}~\n",
-                     f"SE*{segment_count + 3}*{num:04}~\n"
-                     ]
-        return segments
+        return sponsor

@@ -39,31 +39,30 @@ def send_270_request(endpoint):
     except Exception:
         return -1, (time.perf_counter() - start)*1000
 
+def log_result(fut, logger):
+    status, elapsed = fut.result()
+    if status == 200:
+        logger.info("200 OK in %.2f ms", elapsed)
+    else:
+        logger.error("ERR %d in %.2f ms", status, elapsed)
+
 def main():
     cfg = load_settings()
     logger = logging.getLogger("edi_client")
     logging.basicConfig(filename='test.log', level=logging.INFO)
     logger.info("Client started with %d RPS", cfg.rps)
     reqs_sent = 0
-    with ThreadPoolExecutor() as pool:
-        futures = []
+    with ThreadPoolExecutor(max_workers=cfg.rps) as pool:
+        next_run = time.perf_counter()
         try:
             while True:
-                futures.append(pool.submit(send_270_request, cfg.endpoint))
+                fut = pool.submit(send_270_request, cfg.endpoint)
+                fut.add_done_callback(lambda f: log_result(f, logger))
                 reqs_sent += 1
-                time.sleep(max(1/cfg.rps - time.perf_counter(), 0))
+                next_run += 1.0 / cfg.rps
+                time.sleep(max(0, next_run - time.perf_counter()))
         except KeyboardInterrupt:
             logger.info("Stopped by user")
-    ok = 0
-    err = 0
-    for f in futures:
-        status, _ = f.result()
-        if status == 200:
-            ok += 1
-        else:
-            err += 1
-        logger.info("Completed %d requests with 200 OK: %d, ERROR: %d", reqs_sent, ok, err)
-
 
 if __name__ == "__main__":
     main()

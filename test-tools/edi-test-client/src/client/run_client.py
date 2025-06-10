@@ -2,7 +2,7 @@ import requests
 import sys
 from pathlib import Path
 import logging
-import concurrent.futures
+from concurrent.futures import ThreadPoolExecutor
 sys.path.insert(0, str(Path(__file__).parent.parent))
 from config import load_settings
 import time
@@ -43,18 +43,27 @@ def main():
     cfg = load_settings()
     logger = logging.getLogger("edi_client")
     logging.basicConfig(filename='test.log', level=logging.INFO)
-    with ThreadPoolExecutor() as pool:
-        
     logger.info("Client started with %d RPS", cfg.rps)
-
+    reqs_sent = 0
+    with ThreadPoolExecutor() as pool:
+        futures = []
+        try:
+            while True:
+                futures.append(pool.submit(send_270_request, cfg.endpoint))
+                reqs_sent += 1
+                time.sleep(max(1/cfg.rps - time.perf_counter(), 0))
+        except KeyboardInterrupt:
+            logger.info("Stopped by user")
+    ok = 0
+    err = 0
+    for f in futures:
+        status, _ = f.result()
+        if status == 200:
+            ok += 1
+        else:
+            err += 1
+        logger.info("Completed %d requests with 200 OK: %d, ERROR: %d", reqs_sent, ok, err)
 
 
 if __name__ == "__main__":
     main()
-while True:
-    start = time.perf_counter()
-    resp = s.post(url=cfg.endpoint, data=SAMPLE_270)
-    elapsed = (time.perf_counter() - start)*1000
-    logging.info("sent 270 → %s in %.2f ms", resp.status_code, elapsed)
-    time.sleep(max(0, (1 / cfg.rps) - elapsed/1000))
-    logging.info("SLEPT %.5fms", (1/cfg.rps)- elapsed/1000)

@@ -144,6 +144,22 @@ IEA&ast;1&ast;000000061~
 
 ## Architecture
 
+Pre-Requisite) Beneficiary is enrolled in the VA VFMP program
+0) Yearly eligibility file (not x12) is delivered to us and stored in our system (custom format*)
+1) Beneficiary makes appointment with provider for care covered by the program
+2) Provider checks eligibility for the Beneficiary to see if they are covered (270*)
+3) Provider bills the VA for healthcare (837*)
+4) Claim adjudicator gives status and initial review of claim (277CA*)
+6) Claim adjudicator decides to pay the claim (835*)
+7) Claim adjudicator tells us they used some of their program benefits (834*)
+ 
+Shared data in all the transactions:
+Beneficiary ID, Name, DOB
+ 
+Accumulator Data (AMT in 834) is also in 837, 277CA, 835
+ 
+Claim Data (claim amount, diagnosis, procedure) shared in 837 and 277CA
+
 ```mermaid
 flowchart TD
   A[834 - Enrollment<br/>Sent from Sponsor to Payer] --> B[Member Enrollment<br/>Database Updated]

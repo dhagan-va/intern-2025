@@ -32,7 +32,7 @@ if not os.path.exists(config.DIRECTORY_NAME):
     os.mkdir(config.DIRECTORY_NAME)
     logger.info(f"Created directory: {config.DIRECTORY_NAME}")
 
-file_name = f"834.VFMP.{now.year}.{now.strftime("%y%m%d")}.{now.strftime("%H%M")}.{now.strftime("%Y%m%d1")}.edi"
+file_name = f'834.VFMP.{now.year}.{now.strftime("%y%m%d")}.{now.strftime("%H%M")}.{now.strftime("%Y%m%d1")}.edi'
 file_path = os.path.join(config.DIRECTORY_NAME, file_name)
 f = open(file_path, 'w')
 f.writelines(edi_file)

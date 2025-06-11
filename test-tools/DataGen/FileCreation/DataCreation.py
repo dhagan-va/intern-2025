@@ -18,7 +18,7 @@ class Make834Data:
         return Address(
             building_number=self.fake.building_number(),
             street=self.fake.street_name(),
-            apartment=f"{self.fake.secondary_address().replace(".", "")}" if random.random() < 0.5 else "",
+            apartment=f'{self.fake.secondary_address().replace(".", "")}" if random.random() < 0.5 else "',
             city=self.fake.city(),
             state=self.fake.state_abbr(False, False),
             zipcode=self.fake.zipcode()

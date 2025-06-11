@@ -8,16 +8,17 @@ import logging
 load_dotenv()
 
 MONGO_URI = os.getenv("MONGO_CONNECTION_STRING")
-MONGO_SPONSOR_DB = os.getenv("MONGO_SPONSOR_DB")
-MONGO_BENEFICIARY_DB = os.getenv("MONGO_BENEFICIARY_DB")
-MONGO_COLLECTION = os.getenv("MONGO_COLLECTION", "Test")
+MONGO_DB = os.getenv("MONGO_DB")
+MONGO_COLLECTION = os.getenv("MONGO_COLLECTION")
 logger = logging.getLogger(__name__)
 
 client = MongoClient(MONGO_URI, server_api=ServerApi('1'))
-sponsor_db = client[MONGO_SPONSOR_DB]
-beneficiary_db = client[MONGO_BENEFICIARY_DB]
-sponsor_collection = sponsor_db[MONGO_COLLECTION]
-beneficiary_collection = beneficiary_db[MONGO_COLLECTION]
+sponsor_db = client[MONGO_DB]
+collection = sponsor_db[MONGO_COLLECTION]
+
+
+def get_collection():
+    return collection
 
 
 def get_common_indexes():
@@ -36,7 +37,7 @@ def get_common_indexes():
     ]
 
 
-def initialize_indexes(sponsor_collection, beneficiary_collection):
+def initialize_indexes(collection):
     common_indexes = get_common_indexes()
 
     sponsor_indexes = common_indexes + [
@@ -48,20 +49,3 @@ def initialize_indexes(sponsor_collection, beneficiary_collection):
             ("sponsor_id", ASCENDING)
         ])
     ]
-
-    beneficiary_indexes = common_indexes + [
-        IndexModel([("sponsor_id", ASCENDING)]),
-        IndexModel([("beneficiary_id", ASCENDING)], unique=True)
-    ]
-
-    sponsor_collection.create_indexes(sponsor_indexes)
-    logging.info("Initialized Sponsor Indexes")
-
-    beneficiary_collection.create_indexes(beneficiary_indexes)
-    logging.info("Initialized Beneficiary Indexes")
-
-
-def is_duplicate_ssn(ssn, sponsor_collection, beneficiary_collection):
-    sponsor_exists = sponsor_collection.find_one({"ssn":ssn}) is not None
-    beneficiary_exists = beneficiary_collection.find_one({"ssn": ssn}) is not None
-    return sponsor_exists or beneficiary_exists

@@ -8,7 +8,7 @@ from FileCreation.EDI_File_Generator import EDI834Generator
 # Setup/Initialization
 now = datetime.now()
 directory = config.DIRECTORY_NAME
-n = 2
+n = 100
 logger = get_logger(__name__)
 
 # Generate 834 Data
@@ -19,12 +19,13 @@ edi_generator = EDI834Generator()
 logger.info(f"Generating {n} families")
 sponsor_data = [data_creation.create_sponsor_and_beneficiaries() for _ in range(n)]
 logger.info(f"Data generation complete")
+logger.info(f"Data generation took: {datetime.now() - now}")
 
 # Generate EDI File
 logger.info("Generating EDI file from stored data")
 edi_file = edi_generator.generate_file(sponsor_data)
 logger.info("EDI file generation complete")
-logger.info(f"It took: {datetime.now() - now}")
+logger.info(f"File generation took: {datetime.now() - now}")
 
 # Create Directory/Write to file
 if not os.path.exists(config.DIRECTORY_NAME):

@@ -1,8 +1,8 @@
 import random
 from faker import Faker
 from Datatypes import Address, Sponsor, Beneficiary
-from Database_Functions import get_collection
 import config
+from Database_Functions import get_collection
 
 
 class Make834Data:
@@ -89,8 +89,8 @@ class Make834Data:
         )
 
         # make it so that beneficiary age makes sense (child < age than sponsor)
-        # also add randomization to num of beneficiaries
-        num_beneficiaries = random.randint(0, 4)
+        # also add weighted randomization to num of beneficiaries
+        num_beneficiaries = random.randint(1, 4)
         for _ in range(num_beneficiaries):
             relationship = random.choice(list(self.relationship_map.keys()))
 

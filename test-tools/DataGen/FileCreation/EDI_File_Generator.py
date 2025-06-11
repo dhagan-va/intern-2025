@@ -12,6 +12,8 @@ class EDI834Generator:
         self.transaction_control_number = 0
 
     def create_member(self, member):
+        self.transaction_control_number += 1
+
         if isinstance(member, Sponsor):
             relationship_code = '18'
             sponsor_id = member.sponsor_id
@@ -21,7 +23,11 @@ class EDI834Generator:
             sponsor_id = member.sponsor_id
             beneficiary_id = member.beneficiary_id
 
-        segments = [Seg.INS(relationship_code).to_edi(),
+        segments = [Seg.ST(self.transaction_control_number).to_edi(),
+                    Seg.BGN(uuid.uuid4().hex.upper()).to_edi(),
+                    Seg.N1("P5", member.insurance_company, member.insurance_FID).to_edi(),
+                    Seg.N1("IN", member.insurance_company, member.insurance_FID).to_edi(),
+                    Seg.INS(relationship_code).to_edi(),
                     Seg.REF("0F", sponsor_id).to_edi(),
                     Seg.REF("6O", beneficiary_id).to_edi(),
                     Seg.NM1(member.last_name, member.first_name, member.middle_name, member.ssn).to_edi(),
@@ -34,21 +40,19 @@ class EDI834Generator:
             segments.append(Seg.AMT(code, str(value)).to_edi())
         for code, value in member.visit_counts.items():
             segments.append(Seg.AMT(code, str(value)).to_edi())
+
+        segments += [Seg.HD().to_edi(),
+                     Seg.DTP().to_edi(),
+                     Seg.SE(len(segments) + 3, self.transaction_control_number).to_edi()
+                     ]
+
         return segments
 
     def create_transaction(self, sponsor):
-        self.transaction_control_number += 1
-        segments = [Seg.ST(self.transaction_control_number).to_edi(),
-                    Seg.BGN(uuid.uuid4().hex.upper()).to_edi(),
-                    Seg.N1("P5", sponsor.insurance_company, sponsor.insurance_FID).to_edi(),
-                    Seg.N1("IN", sponsor.insurance_company, sponsor.insurance_FID).to_edi(),
-                    ]
-
+        segments = []
         segments.extend(self.create_member(sponsor))
         for beneficiary in sponsor.beneficiaries:
             segments.extend(self.create_member(beneficiary))
-
-        segments.append(Seg.SE(len(segments) + 1, self.transaction_control_number).to_edi())
         return segments
 
     def generate_file(self, sponsors):
@@ -59,7 +63,7 @@ class EDI834Generator:
         for sponsor in sponsors:
             all_segments.extend(self.create_transaction(sponsor))
 
-        all_segments.append(Seg.GE(len(sponsors)).to_edi())
+        all_segments.append(Seg.GE(self.transaction_control_number).to_edi())
         all_segments.append(Seg.IEA().to_edi())
 
         return all_segments

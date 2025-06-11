@@ -13,12 +13,13 @@ class Make834Data:
         random.seed(random_seed)
         self.collection = get_collection()
         self.relationship_map = relationship_map
+        self.used_ssns = set()
 
     def create_address(self):
         return Address(
             building_number=self.fake.building_number(),
             street=self.fake.street_name(),
-            apartment=f'{self.fake.secondary_address().replace(".", "")}" if random.random() < 0.5 else "',
+            apartment=f"{self.fake.secondary_address().replace(".", "")}" if random.random() < 0.5 else "",
             city=self.fake.city(),
             state=self.fake.state_abbr(False, False),
             zipcode=self.fake.zipcode()
@@ -46,35 +47,20 @@ class Make834Data:
     def generate_ssn(self):
         while True:
             ssn = self.fake.ssn()
-            if not self.ssn_exists(ssn):
+            print(ssn)
+            if ssn not in self.used_ssns and not self.ssn_exists(ssn):
+                self.used_ssns.add(ssn)
                 return ssn
 
-    def sponsor_id_exists(self, sponsor_id):
-        return self.collection.find_one({"sponsor_id": sponsor_id}) is not None
-
-    def beneficiary_id_exists(self, beneficiary_id):
-        return self.collection.find_one({"beneficiaries.beneficiary_id": beneficiary_id}) is not None
-
-    def generate_sponsor_id(self):
-        while True:
-            candidate = f"1111111111V{random.randint(10_000_000, 99_999_999)}"
-            if not self.sponsor_id_exists(candidate):
-                return candidate
-
-    def generate_beneficiary_id(self):
-        while True:
-            candidate = f"1111111111V{random.randint(10_000_000, 99_999_999)}"
-            if not self.beneficiary_id_exists(candidate):
-                return candidate
-
     def create_sponsor_and_beneficiaries(self):
-        sponsor_id = self.generate_sponsor_id()
+        sponsor_ssn = self.generate_ssn()
+        sponsor_id = f"{sponsor_ssn.replace("-", "")}V11111111"
         sponsor_last_name = self.fake.last_name()
         sponsor_address = self.create_address()
         amt_data = self.create_amt_data()
 
         sponsor = Sponsor(
-            ssn=self.generate_ssn(),
+            ssn=sponsor_ssn,
             dob=self.fake.date_of_birth(),
             first_name=self.fake.first_name(),
             last_name=sponsor_last_name,
@@ -94,8 +80,11 @@ class Make834Data:
         for _ in range(num_beneficiaries):
             relationship = random.choice(list(self.relationship_map.keys()))
 
+            beneficiary_ssn = self.generate_ssn()
+            beneficiary_id = f"{beneficiary_ssn.replace("-", "")}V11111111"
+
             beneficiary = Beneficiary(
-                ssn=self.generate_ssn(),
+                ssn=beneficiary_ssn,
                 dob=self.fake.date_of_birth(),
                 first_name=self.fake.first_name(),
                 last_name=sponsor_last_name,
@@ -105,7 +94,7 @@ class Make834Data:
                 insurance_FID=str(random.randint(100_000_000, 999_999_999)),
                 middle_name=self.fake.first_name(),
                 sponsor_id=sponsor_id,
-                beneficiary_id=self.generate_beneficiary_id(),
+                beneficiary_id=beneficiary_id,
                 relationship=relationship,
                 deductibles=amt_data["deductibles"],
                 visit_counts=amt_data["visit_counts"]

@@ -47,7 +47,6 @@ class Make834Data:
     def generate_ssn(self):
         while True:
             ssn = self.fake.ssn()
-            print(ssn)
             if ssn not in self.used_ssns and not self.ssn_exists(ssn):
                 self.used_ssns.add(ssn)
                 return ssn

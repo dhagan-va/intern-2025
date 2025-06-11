@@ -1,5 +1,5 @@
 """
-Defines data classes for MongoDB database
+Defines data classes for database
 """
 import datetime
 from dataclasses import dataclass, field

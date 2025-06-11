@@ -3,6 +3,7 @@ import sys
 from pathlib import Path
 import logging
 from concurrent.futures import ThreadPoolExecutor
+
 sys.path.insert(0, str(Path(__file__).parent.parent))
 from config import load_settings
 import reqs
@@ -16,10 +17,11 @@ def log_result(fut, logger):
     else:
         logger.error("ERR %d in %.2f ms", status, elapsed)
 
+
 def main():
     cfg = load_settings()
     logger = logging.getLogger("edi_client")
-    logging.basicConfig(filename='test.log', level=logging.INFO)
+    logging.basicConfig(filename="test.log", level=logging.INFO)
     logger.info("Client started with %d RPS", cfg.rps)
     reqs_sent = 0
     with ThreadPoolExecutor(max_workers=cfg.rps) as pool:
@@ -33,6 +35,7 @@ def main():
                 time.sleep(max(0, next_run - time.perf_counter()))
         except KeyboardInterrupt:
             logger.info("Stopped by user")
+
 
 if __name__ == "__main__":
     main()

@@ -1,4 +1,5 @@
-Test_Files_834/*
+**/Test_Files_834/*
 **/*.log
 .env
 __pycache__/
+localdb.json

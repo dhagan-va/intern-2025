@@ -14,12 +14,20 @@ pip install poetry
    git clone https://github.com/dhagan-va/intern-2025.git
    ```
 2. Navigate to test-tools/edi-test-client
-3. Install dependencies with poetry
+3. Create a virtual environment
+   ```
+   python -m venv .venv
+   ```
+4. Install dependencies with poetry
    ```
    poetry install
    ```
-4. Start mock Flask server
+5. Start mock Flask server
    ```
    ./runserver.sh
    ```
-   
+6. Start client
+   ```
+   ./runclient.sh
+   ```
+7. Run logs available in ```src/client/test.log```

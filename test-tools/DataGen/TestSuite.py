@@ -9,7 +9,7 @@ from DataLayer.Datatypes import Sponsor
 # Setup/Initialization
 now = datetime.now()
 directory = config.OUTPUT_DIRECTORY_NAME
-n = 100_000
+n = 100
 logger = get_logger(__name__)
 
 # Generate 834 Data

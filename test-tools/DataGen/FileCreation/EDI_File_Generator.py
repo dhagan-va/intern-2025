@@ -1,6 +1,6 @@
 import FileCreation.EDISegments as Seg
 import uuid
-from Datatypes import Sponsor
+from DataLayer.Datatypes import Sponsor
 import config
 
 

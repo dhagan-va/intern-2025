@@ -1,8 +1,8 @@
 import random
 from faker import Faker
-from Datatypes import Address, Sponsor, Beneficiary
+from DataLayer.Datatypes import Address, Sponsor, Beneficiary
 import config
-from Database_Functions import get_collection
+from Repository.Database_Functions import get_collection
 
 
 class Make834Data:

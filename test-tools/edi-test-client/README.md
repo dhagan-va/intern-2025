@@ -10,13 +10,14 @@ pip install poetry
 
 ### Installation
 1. Clone the repository
-   ```
+   ```bash
    git clone https://github.com/dhagan-va/intern-2025.git
    ```
 2. Navigate to test-tools/edi-test-client
-3. Create a virtual environment
-   ```
+3. Create and start a virtual environment
+   ```bash
    python -m venv .venv
+   source .venv/bin/activate
    ```
 4. Install dependencies with poetry
    ```

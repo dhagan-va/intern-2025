@@ -3,8 +3,8 @@ import time
 import sys
 from pathlib import Path
 
-sys.path.insert(0, str(Path(__file__).parent.parent))
-import src.client.samples
+# sys.path.insert(0, str(Path(__file__).parent.parent))
+import samples
 
 
 def send_270_request(endpoint):

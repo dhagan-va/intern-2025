@@ -1,6 +1,10 @@
 import requests
 import time
-import samples
+import sys
+from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).parent.parent))
+import src.client.samples
 
 
 def send_270_request(endpoint):

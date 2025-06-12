@@ -11,12 +11,14 @@ CCYYMMDD = DATE.strftime("%Y%m%d")
 SENDER_ID = "83-1002022"
 RECEIVER_ID = "841439824"
 
+LOCAL_DATABASE = "localdb.json"
+
 NUMBER_OF_TESTS = fit_range_to_half_bel(avg=10627, std=13948, min_val=1, max_val=246778, shape=BellShapes.NORMAL)
-DIRECTORY_NAME = 'Test_Files_834'
+OUTPUT_DIRECTORY_NAME = 'Test_Files_834'
 USER_LIMIT = 500_000
 
 RELATIONSHIP_MAP = {
-    'Spouse': ' 01',
+    'Spouse': '01',
     'Child': '19',
     'Caregiver': '26',
     'Ex-Spouse': '25'

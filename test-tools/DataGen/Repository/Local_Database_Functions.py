@@ -25,7 +25,7 @@ class LocalDBFunctions(DataAccess):
 
     def save_all(self):
         with open(self.file, "w") as f:
-            json.dump(self.data, f)
+            json.dump(self.data, f, indent=2)
 
     def ssn_exists(self, ssn):
         for sponsor in self.data:

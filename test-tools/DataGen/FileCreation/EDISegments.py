@@ -1,6 +1,12 @@
+"""
+Each class is its own EDI segment
+"""
 from datetime import datetime
 import logging
+from typing import Optional
+
 import config
+
 # Need to add logging to this file
 logger = logging.getLogger(__name__)
 
@@ -18,7 +24,7 @@ class ISA:
 
     def to_edi(self):
         return (
-            f"ISA*00*          *00*          *{self.id_qualifier}*{self.sender:<15}*{self.id_qualifier}*{self.receiver}*{self.date}*{self.time}*$*00501"
+            f"ISA*00*          *00*          *{self.id_qualifier}*{self.sender:<15}*{self.id_qualifier}*{self.receiver:<15}*{self.date}*{self.time}*$*00501"
             f"*{self.interCtrlNumber}*0*T*:~\n")
 
 
@@ -63,6 +69,15 @@ class ST:
         return f"ST*834*{self.num:04}~\n"
 
 
+class SE:
+    def __init__(self, segment_count, control_num):
+        self.segment_count = segment_count
+        self.control_num = f"{control_num:04}"
+
+    def to_edi(self):
+        return f"SE*{self.segment_count}*{self.control_num}~\n"
+
+
 class BGN:
     def __init__(self, ref_id):
         now = datetime.now()
@@ -75,13 +90,13 @@ class BGN:
 
 
 class N1:
-    def __init__(self, entity_id_code, name, id_code_qualifier, id_code):
+    def __init__(self, entity_id_code, name, id_code):
         self.entity_id_code = entity_id_code
         self.name = name
         self.id_code = id_code
 
     def to_edi(self):
-        return f"N1*{self.entity_id_code}*{self.name}*FI*{self.id_code}~\n",
+        return f"N1*{self.entity_id_code}*{self.name}*FI*{self.id_code}~\n"
 
 
 class INS:
@@ -89,7 +104,7 @@ class INS:
         self.relationship = relationship
 
     def to_edi(self):
-        return f"INS*Y*{self.relationship}*001**A***AC~\n",
+        return f"INS*Y*{self.relationship}*001**A***AC~\n"
 
 
 class REF:
@@ -98,7 +113,7 @@ class REF:
         self.reference_id = reference_id
 
     def to_edi(self):
-        return f"REF*{self.qualifier}*1111111111V{self.reference_id}~\n",
+        return f"REF*{self.qualifier}*{self.reference_id}~\n"
 
 
 class NM1:
@@ -121,23 +136,32 @@ class PER:
 
 
 class N3:
-    def __init__(self, building_number, street1, street2):
+    def __init__(self, building_number, street, apartment: Optional[str] = None):
         self.building_number = building_number
-        self.street1 = street1
-        self.street2 = street2
+        self.street = street
+        self.apartment = apartment if apartment else ""
 
     def to_edi(self):
-        return f"N3*{self.building_number}{" "}{self.street1}*{self.street2}~\n"
+        return f"N3*{self.building_number}{" "}{self.street}*{self.apartment}~\n"
 
 
 class N4:
-    def __init__(self, city, state, zip):
+    def __init__(self, city, state, zipcode):
         self.city = city
         self.state = state
-        self.zip = zip
+        self.zipcode = zipcode
 
     def to_edi(self):
-        return f"N4*{self.city}*{self.state}*{self.zip}~\n"
+        return f"N4*{self.city}*{self.state}*{self.zipcode}~\n"
+
+
+class AMT:
+    def __init__(self, amount_qualifier_code, amount):
+        self.amount_qualifier_code = amount_qualifier_code
+        self.amount = amount
+
+    def to_edi(self):
+        return f"AMT*{self.amount_qualifier_code}*{self.amount}~\n"
 
 
 class HD:
@@ -150,7 +174,7 @@ class HD:
 
 
 class DTP:
-    def __init__(self, maintenance_type_code="001", plan_coverage_description="MCVA1003"):
+    def __init__(self):
         now = datetime.now()
         self.date = now.strftime("%Y%m%d")
 

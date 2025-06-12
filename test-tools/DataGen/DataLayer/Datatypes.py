@@ -1,7 +1,7 @@
 """
 Defines data classes for database
 """
-from datetime import datetime
+from datetime import date
 from dataclasses import dataclass, field
 from typing import List, Dict, Optional
 
@@ -25,11 +25,15 @@ class Address:
             "zipcode": self.zipcode,
         }
 
+    @staticmethod
+    def from_dict(data):
+        return Address(**data)
+
 
 @dataclass
 class Base:
-    ssn: str
-    dob: datetime
+    ssn: int
+    dob: date
     first_name: str
     last_name: str
     address: Address
@@ -50,7 +54,7 @@ class Beneficiary(Base):
     def to_dict(self):
         return {
             "ssn": self.ssn,
-            "dob": self.dob,
+            "dob": self.dob.isoformat(),
             "first_name": self.first_name,
             "last_name": self.last_name,
             "address": self.address.to_dict(),
@@ -64,6 +68,25 @@ class Beneficiary(Base):
             "deductibles": self.deductibles,
             "visit_counts": self.visit_counts
         }
+
+    @staticmethod
+    def from_dict(data):
+        return Beneficiary(
+            ssn=data["ssn"],
+            dob=date.fromisoformat(data["dob"]),
+            first_name=data["first_name"],
+            last_name=data["last_name"],
+            address=Address.from_dict(data["address"]),
+            phone=data["phone"],
+            insurance_company=data["insurance_company"],
+            insurance_FID=data["insurance_FID"],
+            middle_name=data["middle_name"],
+            sponsor_id=data["sponsor_id"],
+            beneficiary_id=data["beneficiary_id"],
+            relationship=data["relationship"],
+            deductibles=data["deductibles"],
+            visit_counts=data["visit_counts"]
+        )
 
 
 @dataclass
@@ -90,3 +113,23 @@ class Sponsor(Base):
             "visit_counts": self.visit_counts,
             "beneficiaries": [b.to_dict() for b in self.beneficiaries]
         }
+
+    @staticmethod
+    def from_dict(data):
+        return Sponsor(
+            ssn=data["ssn"],
+            dob=date.fromisoformat(data["dob"]),
+            first_name=data["first_name"],
+            last_name=data["last_name"],
+            address=Address.from_dict(data["address"]),
+            phone=data["phone"],
+            insurance_company=data["insurance_company"],
+            insurance_FID=data["insurance_FID"],
+            middle_name=data["middle_name"],
+            sponsor_id=data["sponsor_id"],
+            deductibles=data["deductibles"],
+            visit_counts=data["visit_counts"],
+            beneficiaries=[
+                Beneficiary.from_dict(b) for b in data.get("beneficiaries", [])
+            ]
+        )

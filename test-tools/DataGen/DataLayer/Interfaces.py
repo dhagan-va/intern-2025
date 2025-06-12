@@ -3,6 +3,12 @@ from abc import ABC, abstractmethod
 
 class DataAccess(ABC):
     @abstractmethod
+    def save_all(self): pass
+
+    @abstractmethod
+    def ssn_exists(self, ssn): pass
+
+    @abstractmethod
     def get_sponsor_by_id(self, sponsor_id): pass
 
     @abstractmethod
@@ -22,14 +28,13 @@ class DataAccess(ABC):
     def update_beneficiary_field(self, sponsor_id, beneficiary_id, field, value): pass
 
     @abstractmethod
-    def get_bene_deductible(self, sponsor_id, bene_id, code): pass
+    def get_bene_deductible(self, sponsor_id, beneficiary_id, code): pass
 
     @abstractmethod
-    def get_bene_visit(self, sponsor_id, bene_id, code): pass
+    def get_bene_visit(self, sponsor_id, beneficiary_id, code): pass
 
     @abstractmethod
-    def update_bene_deductible(self, sponsor_id, bene_id, code, value): pass
+    def update_bene_deductible(self, sponsor_id, beneficiary_id, code, value): pass
 
     @abstractmethod
-    def update_bene_visit(self, sponsor_id, bene_id, code, value): pass
-    
+    def update_bene_visit(self, sponsor_id, beneficiary_id, code, value): pass

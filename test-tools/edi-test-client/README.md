@@ -2,12 +2,6 @@
 
 ## Setup
 
-### Prerequesites
-Poetry is used for dependency management.
-``` 
-pip install poetry
-```
-
 ### Installation
 1. Clone the repository
    ```bash
@@ -21,6 +15,7 @@ pip install poetry
    ```
 4. Install dependencies with poetry
    ```
+   pip install poetry
    poetry install
    ```
 5. Start mock Flask server

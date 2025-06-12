@@ -24,7 +24,7 @@ def main():
     client = LoadClient(cfg)
     client.start()
 
-    rps_thread = threading.Thread(target=rps_listener, args=(client,),daemon=True)
+    rps_thread = threading.Thread(target=rps_listener, args=(client,), daemon=True)
     rps_thread.start()
     try:
         while True:

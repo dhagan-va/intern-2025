@@ -53,19 +53,21 @@ class Make834Data:
 
     def generate_ssn(self):
         while True:
-            ssn = self.fake.ssn().replace("-", "")
+            ssn = self.fake.ssn()
             if ssn not in self.used_ssns and not self.repo.ssn_exists(ssn):
                 self.used_ssns.add(ssn)
-                return int(ssn)
+                return ssn
 
-    def create_sponsor_and_beneficiaries(self, n):
-        sponsor_ssn = self.generate_ssn()
-        sponsor_id = f"{sponsor_ssn}V11111111"
-        sponsor_last_name = self.fake.last_name()
-        sponsor_address = self.create_address()
-        sponsor_amt_data = create_amt_data()
+    def create_sponsor_and_beneficiaries(self, total):
+        generated = 0
 
-        for _ in range(n):
+        for generated in range(total):
+            sponsor_ssn = self.generate_ssn()
+            sponsor_id = f"{sponsor_ssn.replace("-", "")}V11111111"
+            sponsor_last_name = self.fake.last_name()
+            sponsor_address = self.create_address()
+            sponsor_amt_data = create_amt_data()
+
             sponsor = Sponsor(
                 ssn=sponsor_ssn,
                 dob=self.fake.date_of_birth(),
@@ -81,6 +83,8 @@ class Make834Data:
                 visit_counts=sponsor_amt_data["visit_counts"]
             )
 
+            generated += 1
+
             # make it so that beneficiary age makes sense (child < age than sponsor)
             # also add weighted randomization to num of beneficiaries
             # should I make these outside?
@@ -88,7 +92,7 @@ class Make834Data:
             for _ in range(num_beneficiaries):
                 relationship = random.choice(list(self.relationship_map.keys()))
                 beneficiary_ssn = self.generate_ssn()
-                beneficiary_id = f"{beneficiary_ssn}V11111111"
+                beneficiary_id = f"{beneficiary_ssn.replace("-", "")}V11111111"
                 beneficiary_amt_data = create_amt_data()
 
                 beneficiary = Beneficiary(
@@ -108,6 +112,10 @@ class Make834Data:
                     visit_counts=beneficiary_amt_data["visit_counts"]
                 )
                 sponsor.beneficiaries.append(beneficiary)
+                generated += 1
+
+                if generated >= total:
+                    break
 
             self.repo.save_sponsor(sponsor)
 

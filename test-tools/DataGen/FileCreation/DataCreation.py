@@ -2,7 +2,7 @@ import random
 from faker import Faker
 from DataLayer.Datatypes import Address, Sponsor, Beneficiary
 import config
-from Repository.Database_Functions import get_collection
+from Repository.Mongo_Database_Functions import get_collection
 
 
 class Make834Data:

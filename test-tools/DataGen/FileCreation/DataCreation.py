@@ -61,7 +61,7 @@ class Make834Data:
     def create_sponsor_and_beneficiaries(self, total):
         generated = 0
 
-        for generated in range(total):
+        while generated < total:
             sponsor_ssn = self.generate_ssn()
             sponsor_id = f"{sponsor_ssn.replace("-", "")}V11111111"
             sponsor_last_name = self.fake.last_name()

@@ -1,9 +1,6 @@
 import requests
 import time
-import sys
-from pathlib import Path
 import samples
-
 
 def send_270_request(endpoint):
     start = time.perf_counter()

@@ -3,7 +3,9 @@ import uuid
 import FileCreation.EDISegments as Seg
 import config
 from DataLayer.Datatypes import Sponsor
+from config import get_logger
 
+logger = get_logger(__name__)
 
 class EDI834Generator:
     def __init__(self, sender=config.SENDER_ID, receiver=config.RECEIVER_ID, relationship_map=config.RELATIONSHIP_MAP):
@@ -56,7 +58,7 @@ class EDI834Generator:
             segments.extend(self.create_member(beneficiary))
         return segments
 
-    def generate_file(self, sponsors):
+    def combine_segments(self, sponsors):
         all_segments = [Seg.ISA().to_edi(),
                         Seg.GS().to_edi()
                         ]

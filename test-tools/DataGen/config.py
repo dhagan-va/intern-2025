@@ -12,7 +12,9 @@ CCYYMMDD = DATE.strftime("%Y%m%d")
 SENDER_ID = "83-1002022"
 RECEIVER_ID = "841439824"
 
-LOCAL_DATABASE = "localdb.jsonl"
+LOCAL_DATABASE = f"localdb_{CCYYMMDD}.jsonl"
+
+TEST_FILE_NAME = f'834.VFMP.{DATE.year}.{DATE.strftime("%y%m%d")}.{DATE.strftime("%H%M")}.{DATE.strftime("%Y%m%d1")}.edi'
 
 NUMBER_OF_TESTS = fit_range_to_half_bel(avg=10627, std=13948, min_val=1, max_val=246778, shape=BellShapes.NORMAL)
 OUTPUT_DIRECTORY_NAME = 'Test_Files_834'

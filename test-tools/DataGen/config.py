@@ -1,4 +1,5 @@
 import logging
+import os
 from datetime import datetime
 
 from BellShapes import BellShapes, fit_range_to_half_bel
@@ -12,7 +13,8 @@ CCYYMMDD = DATE.strftime("%Y%m%d")
 SENDER_ID = "83-1002022"
 RECEIVER_ID = "841439824"
 
-LOCAL_DATABASE = f"localdb_{CCYYMMDD}.jsonl"
+LOCAL_DATABASE = f"localdb.jsonl"
+LOCAL_DATABASE_DIRECTORY = "Local_DB"
 
 TEST_FILE_NAME = f'834.VFMP.{DATE.year}.{DATE.strftime("%y%m%d")}.{DATE.strftime("%H%M")}.{DATE.strftime("%Y%m%d1")}.edi'
 
@@ -26,6 +28,11 @@ RELATIONSHIP_MAP = {
     'Caregiver': '26',
     'Ex-Spouse': '25'
 }
+
+
+def get_local_db_path():
+    os.makedirs(LOCAL_DATABASE_DIRECTORY, exist_ok=True)
+    return os.path.join(LOCAL_DATABASE_DIRECTORY, LOCAL_DATABASE)
 
 
 def get_logger(name):

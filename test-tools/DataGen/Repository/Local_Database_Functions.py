@@ -4,20 +4,22 @@ import os
 
 import config
 from DataLayer.Interfaces import DataAccess
+from config import get_local_db_path
 
 logger = logging.getLogger(__name__)
 
 
 class LocalDBFunctions(DataAccess):
-    def __init__(self, file=config.LOCAL_DATABASE):
+    def __init__(self, file=None):
         self.data = []
-        self.file = file
+        self.file = file or get_local_db_path()
         self.existing_ssns = set()
         self.loadfile()
 
     def loadfile(self):
         if not os.path.exists(self.file):
             open(self.file, "w").close()
+            logger.debug(f"{self.file} created")
         with open(self.file, "r") as f:
             for line in f:
                 family = json.loads(line)

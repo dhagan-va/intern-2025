@@ -63,6 +63,7 @@ class Make834Data:
     # This creates sponsors and beneficiaries and stores it
     def create_sponsor_and_beneficiaries(self, total):
         generated = 0
+        new_sponsors = []
 
         while generated < total:
             sponsor_ssn = self.generate_ssn()
@@ -119,5 +120,6 @@ class Make834Data:
 
                 if generated >= total:
                     break
-
             self.repo.save_sponsor(sponsor)
+            new_sponsors.append(sponsor)
+        return new_sponsors

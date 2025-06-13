@@ -1,6 +1,7 @@
 import json
 import logging
 import os
+
 import config
 from DataLayer.Interfaces import DataAccess
 
@@ -9,32 +10,33 @@ logger = logging.getLogger(__name__)
 
 class LocalDBFunctions(DataAccess):
     def __init__(self, file=config.LOCAL_DATABASE):
-        self.data = None
+        self.data = []
         self.file = file
+        self.existing_ssns = set()
         self.loadfile()
 
     def loadfile(self):
         if not os.path.exists(self.file):
-            with open(self.file, "w") as f:
-                json.dump([], f)
+            open(self.file, "w").close()
         with open(self.file, "r") as f:
-            self.data = json.load(f)
+            for line in f:
+                family = json.loads(line)
+                self.data.append(family)
+                self.add_ssns_to_set(family)
 
     def save_sponsor(self, sponsor):
-        self.data.append(sponsor.to_dict())
+        with open(self.file, "a") as f:
+            json.dump(sponsor.to_dict(), f)
+            f.write("\n")
+        self.add_ssns_to_set(sponsor.to_dict())
 
-    def save_all(self):
-        with open(self.file, "w") as f:
-            json.dump(self.data, f, indent=2)
+    def add_ssns_to_set(self, sponsor_dict):
+        self.existing_ssns.add(sponsor_dict["ssn"])
+        for b in sponsor_dict.get("beneficiaries", []):
+            self.existing_ssns.add(b["ssn"])
 
     def ssn_exists(self, ssn):
-        for sponsor in self.data:
-            if sponsor["ssn"] == ssn:
-                return True
-            for b in sponsor.get("beneficiaries", []):
-                if b["ssn"] == ssn:
-                    return True
-        return False
+        return ssn in self.existing_ssns
 
     def get_sponsor_by_id(self, sponsor_id):
         return next((s for s in self.data if s["sponsor_id"] == sponsor_id), None)

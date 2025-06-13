@@ -1,8 +1,10 @@
 import logging
 import random
+
 from faker import Faker
-from DataLayer.Datatypes import Address, Sponsor, Beneficiary
+
 import config
+from DataLayer.Datatypes import Address, Sponsor, Beneficiary
 from Repository.Local_Database_Functions import LocalDBFunctions
 
 logger = logging.getLogger(__name__)
@@ -58,6 +60,7 @@ class Make834Data:
                 self.used_ssns.add(ssn)
                 return ssn
 
+    # This creates sponsors and beneficiaries and stores it
     def create_sponsor_and_beneficiaries(self, total):
         generated = 0
 
@@ -118,9 +121,3 @@ class Make834Data:
                     break
 
             self.repo.save_sponsor(sponsor)
-
-    def return_generated_data(self):
-        return self.repo.data
-
-    def save_generated_data(self):
-        self.repo.save_all()

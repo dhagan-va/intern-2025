@@ -1,7 +1,8 @@
-import FileCreation.EDISegments as Seg
 import uuid
-from DataLayer.Datatypes import Sponsor
+
+import FileCreation.EDISegments as Seg
 import config
+from DataLayer.Datatypes import Sponsor
 
 
 class EDI834Generator:

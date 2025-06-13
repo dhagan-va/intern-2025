@@ -1,10 +1,11 @@
 import os
-from FileCreation.DataCreation import Make834Data
 from datetime import datetime
+
 import config
-from config import get_logger
-from FileCreation.EDI_File_Generator import EDI834Generator
 from DataLayer.Datatypes import Sponsor
+from FileCreation.DataCreation import Make834Data
+from FileCreation.EDI_File_Generator import EDI834Generator
+from config import get_logger
 
 # Setup/Initialization
 now = datetime.now()
@@ -19,15 +20,9 @@ edi_generator = EDI834Generator()
 # Generate Fake Data
 logger.info(f"Generating {n} families")
 data_creation.create_sponsor_and_beneficiaries(n)
-sponsor_data = data_creation.return_generated_data()
+sponsor_data = data_creation.repo.data
 logger.info(f"Data generation complete")
 logger.info(f"Data generation took: {datetime.now() - now}")
-
-# Store Data to database
-logger.info(f"Storing data to database")
-data_creation.save_generated_data()
-logger.info(f"Data storage complete")
-logger.info(f"Data storage took: {datetime.now() - now}")
 
 # Generate EDI File
 logger.info("Generating EDI file from stored data")

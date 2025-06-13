@@ -3,9 +3,6 @@ from abc import ABC, abstractmethod
 
 class DataAccess(ABC):
     @abstractmethod
-    def save_all(self): pass
-
-    @abstractmethod
     def ssn_exists(self, ssn): pass
 
     @abstractmethod

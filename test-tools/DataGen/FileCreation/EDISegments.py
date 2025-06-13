@@ -1,8 +1,8 @@
 """
 Each class is its own EDI segment
 """
-from datetime import datetime
 import logging
+from datetime import datetime
 from typing import Optional
 
 import config

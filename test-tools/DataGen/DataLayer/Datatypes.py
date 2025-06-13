@@ -1,8 +1,8 @@
 """
 Defines data classes for database
 """
-from datetime import date
 from dataclasses import dataclass, field
+from datetime import date
 from typing import List, Dict, Optional
 
 
@@ -32,7 +32,7 @@ class Address:
 
 @dataclass
 class Base:
-    ssn: int
+    ssn: str
     dob: date
     first_name: str
     last_name: str

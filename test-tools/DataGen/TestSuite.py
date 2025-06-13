@@ -10,7 +10,7 @@ from config import get_logger
 # Setup/Initialization
 now = datetime.now()
 directory = config.OUTPUT_DIRECTORY_NAME
-n = 100
+n = 50000
 logger = get_logger(__name__)
 
 # Generate 834 Data
@@ -20,6 +20,7 @@ edi_generator = EDI834Generator()
 # Generate Fake Data
 logger.info(f"Generating {n} families")
 data_creation.create_sponsor_and_beneficiaries(n)
+data_creation.repo.loadfile()
 sponsor_data = data_creation.repo.data
 logger.info(f"Data generation complete")
 logger.info(f"Data generation took: {datetime.now() - now}")

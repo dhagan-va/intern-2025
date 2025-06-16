@@ -55,7 +55,7 @@ class EDI834Generator:
         return segments
 
     def create_transaction(self, sponsor):
-        error_ctrl = ErrorCheck(error_rate=config.TOTAL_ERROR_RATE, error_type=config.ERROR_TYPES)
+        error_ctrl = ErrorCheck(error_rate=config.TOTAL_ERROR_RATE)
 
         segments = []
         segments.extend(self.create_member(sponsor, error_ctrl))

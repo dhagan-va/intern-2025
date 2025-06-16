@@ -13,6 +13,8 @@ CCYYMMDD = DATE.strftime("%Y%m%d")
 SENDER_ID = "83-1002022"
 RECEIVER_ID = "841439824"
 
+TOTAL_ERROR_RATE = 0.005
+
 ROOT_PATH = os.path.dirname(os.path.abspath(__file__))
 LOCAL_DATABASE_DIRECTORY = os.path.join(ROOT_PATH, "Local_DB")
 LOCAL_DATABASE = f"localdb.jsonl"

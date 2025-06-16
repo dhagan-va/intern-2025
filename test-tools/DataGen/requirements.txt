@@ -1,1 +1,3 @@
 faker
+python-dotenv
+pymongo

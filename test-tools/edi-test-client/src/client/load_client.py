@@ -67,7 +67,7 @@ class LoadClient:
             "%d requests sent, %.2f ms avg latency, %d 200 OK",
             result["count"],
             result["avg_latency"],
-            result["codes"][200]
+            result["codes"][200],
         )
 
     def _scheduler(self):

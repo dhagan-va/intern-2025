@@ -17,5 +17,5 @@ class LiveStats:
             return {
                 "count": len(self.latencies),
                 "avg_latency": sum(self.latencies) / len(self.latencies),
-                "codes": dict(self.codes)
+                "codes": dict(self.codes),
             }

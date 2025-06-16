@@ -11,8 +11,10 @@ logger = logging.getLogger(__name__)
 
 class LocalDBFunctions(DataAccess):
     def __init__(self, file=None):
+        if file is None:
+            file = get_local_db_path()
         self.data = []
-        self.file = file or get_local_db_path()
+        self.file = file
         self.existing_ssns = set()
         self.loadfile()
 

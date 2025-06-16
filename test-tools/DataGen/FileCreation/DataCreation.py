@@ -62,10 +62,17 @@ class Make834Data:
 
     # This creates sponsors and beneficiaries and stores it
     def create_sponsor_and_beneficiaries(self, total):
+        existing_users = len(self.repo.existing_ssns)
+        remaining = config.USER_LIMIT - existing_users
+
+        if remaining <= 0:
+            logger.warning("User limit already reached. No data generated.")
+            return []
+
         generated = 0
         new_sponsors = []
 
-        while generated < total:
+        while generated < total and remaining > 0:
             sponsor_ssn = self.generate_ssn()
             sponsor_id = f"{sponsor_ssn.replace("-", "")}V11111111"
             sponsor_last_name = self.fake.last_name()
@@ -88,11 +95,12 @@ class Make834Data:
             )
 
             generated += 1
+            remaining -= 1
 
             # make it so that beneficiary age makes sense (child < age than sponsor)
             # also add weighted randomization to num of beneficiaries
             # should I make these outside?
-            num_beneficiaries = random.randint(1, 4)
+            num_beneficiaries = min(random.randint(1, 4), remaining)
             for _ in range(num_beneficiaries):
                 relationship = random.choice(list(self.relationship_map.keys()))
                 beneficiary_ssn = self.generate_ssn()
@@ -117,9 +125,11 @@ class Make834Data:
                 )
                 sponsor.beneficiaries.append(beneficiary)
                 generated += 1
+                remaining -= 1
 
-                if generated >= total:
+                if generated >= total or remaining <= 0:
                     break
+
             self.repo.save_sponsor(sponsor)
             new_sponsors.append(sponsor)
         return new_sponsors

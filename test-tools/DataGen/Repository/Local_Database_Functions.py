@@ -27,8 +27,14 @@ class LocalDBFunctions(DataAccess):
                 family = json.loads(line)
                 self.data.append(family)
                 self.add_ssns_to_set(family)
+        logging.info(f"There are {len(self.existing_ssns)} users in the database")
 
     def save_sponsor(self, sponsor):
+        total_users = len(self.existing_ssns)
+        curr_user_count = 1 + len(sponsor.beneficiaries)
+        if total_users + curr_user_count > config.USER_LIMIT:
+            logger.warning("Max User Limit reached. Skipping save.")
+            return
         with open(self.file, "a") as f:
             json.dump(sponsor.to_dict(), f)
             f.write("\n")

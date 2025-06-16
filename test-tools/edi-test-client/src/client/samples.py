@@ -1,17 +1,3 @@
-import requests
-import sys
-from pathlib import Path
-
-sys.path.insert(0, str(Path(__file__).parent.parent))
-from config import load_settings
-import time
-
-cfg = load_settings()
-
-s = requests.Session()
-
-count = 0
-
 SAMPLE_270 = (
 "ISA*00*          *00*          *ZZ*1234567        *ZZ*11111          *170508*1141*^*00501*000000101*1*P*:~\n"
 "GS*HC*XXXXXXX*XXXXX*20170617*1741*101*X*005010X279A1~\n"
@@ -31,9 +17,3 @@ SAMPLE_270 = (
 "GE*1*101~\n"
 "IEA*1*000000101~\n"
 )
-
-while True:
-    start = time.perf_counter()
-    resp = s.post(url=cfg.endpoint, data=SAMPLE_270)
-    elapsed = (time.perf_counter() - start)*1000
-    time.sleep(max(0, (1 / cfg.rps) - elapsed))

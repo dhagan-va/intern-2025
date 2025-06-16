@@ -7,10 +7,9 @@ logger = get_logger(__name__)
 
 
 class ErrorCheck:
-    def __init__(self, error_rate=config.TOTAL_ERROR_RATE, error_type=config.ERROR_TYPES):
+    def __init__(self, error_rate=config.TOTAL_ERROR_RATE):
         self.error_rate = error_rate
         self.used = False
-        self.error_type = error_type
 
     def should_insert(self):
         val = random.random()

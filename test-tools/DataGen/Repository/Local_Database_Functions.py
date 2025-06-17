@@ -48,7 +48,6 @@ class LocalDBFunctions(DataAccess):
             self.existing_ssns.add(b["ssn"])
             logger.debug(f"Added beneficiary SSN to set: {b["ssn"]}")
 
-
     def ssn_exists(self, ssn):
         return ssn in self.existing_ssns
 

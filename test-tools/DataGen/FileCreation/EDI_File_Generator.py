@@ -15,6 +15,7 @@ class EDI834Generator:
         self.receiver = receiver
         self.relationship_map = relationship_map
         self.transaction_control_number = 0
+        logger.debug(f"Initialized EDI834Generator")
 
     def create_member(self, member, error_ctrl):
         self.transaction_control_number += 1
@@ -23,10 +24,12 @@ class EDI834Generator:
             relationship_code = '18'
             sponsor_id = member.sponsor_id
             beneficiary_id = member.sponsor_id
+            logger.debug(f"Creating segments for Sponsor: {sponsor_id}")
         else:
             relationship_code = self.relationship_map.get(member.relationship)
             sponsor_id = member.sponsor_id
             beneficiary_id = member.beneficiary_id
+            logger.debug(f"Creating segments for Beneficiary: {beneficiary_id} under Sponsor: {sponsor_id}")
 
         segments = [Seg.ST(self.transaction_control_number).to_edi(),
                     Seg.BGN(uuid.uuid4().hex.upper()).to_edi(),
@@ -52,9 +55,12 @@ class EDI834Generator:
                      Seg.SE(len(segments) + 3, self.transaction_control_number).to_edi()
                      ]
 
+        logger.debug(f"Completed {len(segments)} segments for member {beneficiary_id}")
         return segments
 
     def create_transaction(self, sponsor):
+        logger.info(
+            f"Generating transaction for Sponsor: {sponsor.sponsor_id} with {len(sponsor.beneficiaries)} beneficiaries")
         error_ctrl = ErrorCheck(error_rate=config.TOTAL_ERROR_RATE)
 
         segments = []
@@ -64,14 +70,17 @@ class EDI834Generator:
         return segments
 
     def combine_segments(self, sponsors):
+        logger.info(f"Starting EDI 834 generation for {len(list(sponsors))} sponsors")
         all_segments = [Seg.ISA().to_edi(),
                         Seg.GS().to_edi()
                         ]
 
         for sponsor in sponsors:
+            logger.debug(f"Sponsor {sponsor.sponsor_id} has {len(sponsor.beneficiaries)} beneficiaries")
             all_segments.extend(self.create_transaction(sponsor))
 
         all_segments.append(Seg.GE(self.transaction_control_number).to_edi())
         all_segments.append(Seg.IEA().to_edi())
 
+        logger.info(f"Generated total of {self.transaction_control_number} transactions")
         return all_segments

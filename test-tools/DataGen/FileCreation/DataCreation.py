@@ -1,17 +1,17 @@
-import logging
 import random
 
 from faker import Faker
 
 import config
+from config import get_logger
 from DataLayer.Datatypes import Address, Sponsor, Beneficiary
 from Repository.Local_Database_Functions import LocalDBFunctions
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
 
 
 def create_amt_data():
-    return {
+    data = {
         "deductibles": {
             "D2": random.randint(config.MIN_DEDUCTIBLES, config.MAX_DEDUCTIBLES),
             "FK": random.randint(config.MIN_DEDUCTIBLES, config.MAX_DEDUCTIBLES),
@@ -23,6 +23,8 @@ def create_amt_data():
             "B9": random.randint(config.MIN_VISITS, config.MAX_VISITS)
         }
     }
+    logger.debug(f"Created AMT data: {data}")
+    return data
 
 
 class Make834Data:
@@ -36,15 +38,17 @@ class Make834Data:
 
         if data_access:
             self.repo = data_access
+            logger.debug("Using local storage")
         else:
             try:
                 self.repo = MongoDBFunctions()
+                logger.info("Using MongoDB for storage")
             except Exception as e:
-                logger.warning("MongoDB is not available. Using local JSON")
+                logger.warning("MongoDB is not available")
                 self.repo = LocalDBFunctions()
 
     def create_address(self):
-        return Address(
+        address = Address(
             building_number=self.fake.building_number(),
             street=self.fake.street_name(),
             apartment=f"{self.fake.secondary_address().replace(".", "")}" if random.random() < 0.5 else "",
@@ -52,13 +56,18 @@ class Make834Data:
             state=self.fake.state_abbr(False, False),
             zipcode=self.fake.zipcode()
         )
+        logger.debug(f"Created address: {address}")
+        return address
 
     def generate_ssn(self):
         while True:
             ssn = self.fake.ssn()
             if ssn not in self.used_ssns and not self.repo.ssn_exists(ssn):
                 self.used_ssns.add(ssn)
+                logger.debug(f"Generated unique SSN: {ssn}")
                 return ssn
+            else:
+                logger.debug(f"Duplicate SSN created (skipping): {ssn}")
 
     # This creates sponsors and beneficiaries and stores it
     def create_sponsor_and_beneficiaries(self, total):
@@ -94,13 +103,14 @@ class Make834Data:
                 visit_counts=sponsor_amt_data["visit_counts"]
             )
 
+            logger.debug(f"Created Sponsor: {sponsor_id}")
             generated += 1
             remaining -= 1
 
             # make it so that beneficiary age makes sense (child < age than sponsor)
             # also add weighted randomization to num of beneficiaries
             # should I make these outside? Currently creation of beneficiaries inside loop doesn't slow down generation
-            num_beneficiaries = min(random.randint(config.MIN_BENEFICIARIES, config.max), remaining)
+            num_beneficiaries = min(random.randint(config.MIN_BENEFICIARIES, config.MAX_BENEFICIARIES), remaining)
             for _ in range(num_beneficiaries):
                 relationship = random.choice(list(self.relationship_map.keys()))
                 beneficiary_ssn = self.generate_ssn()
@@ -124,6 +134,7 @@ class Make834Data:
                     visit_counts=beneficiary_amt_data["visit_counts"]
                 )
                 sponsor.beneficiaries.append(beneficiary)
+                logger.debug(f"Created beneficiary: {beneficiary_id} for sponsor {sponsor_id}")
                 generated += 1
                 remaining -= 1
 
@@ -131,5 +142,7 @@ class Make834Data:
                     break
 
             self.repo.save_sponsor(sponsor)
+            logger.info(f"Sponsor {sponsor_id} with {len(sponsor.beneficiaries)} beneficiaries saved")
             new_sponsors.append(sponsor)
+        logger.info(f"Finished generating {len(new_sponsors)} sponsors")
         return new_sponsors

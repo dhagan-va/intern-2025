@@ -1,14 +1,14 @@
 """
 Each class is its own EDI segment
 """
-import logging
 from datetime import datetime
 from typing import Optional
 
 import config
+from config import get_logger
 
 # Need to add logging to this file
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
 
 
 # File Header
@@ -23,6 +23,7 @@ class ISA:
         self.time = now.strftime("%H%M")
 
     def to_edi(self):
+        logger.debug("Generating ISA segment")
         return (
             f"ISA*00*          *00*          *{self.id_qualifier}*{self.sender:<15}*{self.id_qualifier}*{self.receiver:<15}*{self.date}*{self.time}*$*00501"
             f"*{self.interCtrlNumber}*0*T*:~\n")
@@ -35,6 +36,7 @@ class IEA:
         self.interCtrlNumber = now.strftime("%Y%m%d1")
 
     def to_edi(self):
+        logger.debug("Generating IEA segment")
         return f"IEA*1*{self.interCtrlNumber}~"
 
 
@@ -48,6 +50,7 @@ class GS:
         self.time = now.strftime("%H%M%S")
 
     def to_edi(self):
+        logger.debug("Generating GS segment")
         return f"GS*BE*{self.sender}*{self.receiver}*{self.date}*{self.time}*61*X*005010X220A1~\n"
 
 
@@ -57,6 +60,7 @@ class GE:
         self.num = num
 
     def to_edi(self):
+        logger.debug("Generating GE segment")
         return f"GE*{self.num}*61~\n"
 
 
@@ -66,6 +70,7 @@ class ST:
         self.num = num
 
     def to_edi(self):
+        logger.debug(f"Generating ST segment for transaction #{self.num}")
         return f"ST*834*{self.num:04}~\n"
 
 
@@ -76,6 +81,7 @@ class SE:
         self.control_num = f"{control_num:04}"
 
     def to_edi(self):
+        logger.debug(f"Generating SE segment with count {self.segment_count} and control {self.control_num}")
         return f"SE*{self.segment_count}*{self.control_num}~\n"
 
 
@@ -89,6 +95,7 @@ class BGN:
         self.error_ctrl = error_ctrl
 
     def to_edi(self):
+        logger.debug(f"Generating BGN segment with ref_id {self.ref_id}")
         return f"BGN*00*{self.ref_id}*{self.date}*{self.time}*UT***2~\n"
 
 
@@ -103,7 +110,9 @@ class N1:
     def to_edi(self):
         id_code = self.id_code
         if self.error_ctrl and self.error_ctrl.should_insert():
-            id_code = self.error_ctrl.insert(id_code, "missing")
+            erroneous = self.error_ctrl.insert(id_code, "missing")
+            logger.error(f"[ERROR INSERTED] N1 segment: ID code '{id_code}' changed to '{erroneous}'")
+            id_code = erroneous
         return f"N1*{self.entity_id_code}*{self.name}*FI*{id_code}~\n"
 
 
@@ -113,6 +122,7 @@ class INS:
         self.relationship = relationship
 
     def to_edi(self):
+        logger.debug(f"Generating INS segment with relationship {self.relationship}")
         return f"INS*Y*{self.relationship}*001**A***AC~\n"
 
 
@@ -126,7 +136,11 @@ class REF:
     def to_edi(self):
         ref_id = self.reference_id
         if self.error_ctrl and self.error_ctrl.should_insert():
-            ref_id = self.error_ctrl.insert(ref_id, "invalid")
+            erroneous = self.error_ctrl.insert(ref_id, "invalid")
+            logger.error(f"[ERROR INSERTED] REF segment: Replaced reference_id '{ref_id}' with changed '{erroneous}'")
+            ref_id = erroneous
+        else:
+            logger.debug(f"Generating REF segment with qualifier {self.qualifier}")
         return f"REF*{self.qualifier}*{ref_id}~\n"
 
 
@@ -142,7 +156,11 @@ class NM1:
     def to_edi(self):
         ssn = self.ssn
         if self.error_ctrl and self.error_ctrl.should_insert():
-            ssn = self.error_ctrl.insert(ssn, "format")
+            erroneous = self.error_ctrl.insert(ssn, "format")
+            logger.error(f"[ERROR INSERTED] NM1 segment: SSN '{ssn}' changed to '{erroneous}'")
+            ssn = erroneous
+        else:
+            logger.debug(f"Generating NM1 segment for {self.last_name}, {self.first_name}")
         return f"NM1*IL*1*{self.last_name}*{self.first_name}*{self.middle_name}***34*{ssn}~\n"
 
 
@@ -155,7 +173,11 @@ class PER:
     def to_edi(self):
         phone_number = self.phone_number
         if self.error_ctrl and self.error_ctrl.should_insert():
-            phone_number = self.error_ctrl.insert(phone_number, "format")
+            erroneous = self.error_ctrl.insert(phone_number, "format")
+            logger.error(f"[ERROR INSERTED] PER segment: Phone '{phone_number}' changed to '{erroneous}'")
+            phone_number = erroneous
+        else:
+            logger.debug("Generating PER segment")
         return f"PER*IP**TE*{phone_number}~\n"
 
 
@@ -170,7 +192,11 @@ class N3:
     def to_edi(self):
         street = self.street
         if self.error_ctrl and self.error_ctrl.should_insert():
-            street = self.error_ctrl.insert(street, "invalid")
+            erroneous = self.error_ctrl.insert(street, "invalid")
+            logger.error(f"[ERROR INSERTED] N3 segment: Street '{street}' changed to '{erroneous}'")
+            street = erroneous
+        else:
+            logger.debug("Generating N3 segment")
         return f"N3*{self.building_number}{" "}{street}*{self.apartment}~\n"
 
 
@@ -185,7 +211,11 @@ class N4:
     def to_edi(self):
         city = self.city
         if self.error_ctrl and self.error_ctrl.should_insert():
-            city = self.error_ctrl.insert(city, "invalid")
+            erroneous = self.error_ctrl.insert(city, "invalid")
+            logger.error(f"[ERROR INSERTED] N4 segment: City '{city}' changed to '{erroneous}'")
+            city = erroneous
+        else:
+            logger.debug("Generating N4 segment")
         return f"N4*{city}*{self.state}*{self.zipcode}~\n"
 
 
@@ -199,7 +229,11 @@ class AMT:
     def to_edi(self):
         amount = self.amount
         if self.error_ctrl and self.error_ctrl.should_insert():
-            amount = self.error_ctrl.insert(amount, "missing")
+            erroneous = self.error_ctrl.insert(amount, "missing")
+            logger.error(f"[ERROR INSERTED] AMT segment: Amount '{amount}' changed to '{erroneous}'")
+            amount = erroneous
+        else:
+            logger.debug(f"Generating AMT segment for code {self.amount_qualifier_code}")
         return f"AMT*{self.amount_qualifier_code}*{amount}~\n"
 
 
@@ -210,6 +244,7 @@ class HD:
         self.plan_coverage_description = plan_coverage_description
 
     def to_edi(self):
+        logger.debug("Generating HD segment")
         return f"HD*{self.maintenance_type_code}**MM*{self.plan_coverage_description}~\n"
 
 
@@ -220,4 +255,5 @@ class DTP:
         self.date = now.strftime("%Y%m%d")
 
     def to_edi(self):
+        logger.debug(f"Generating DTP segment for date {self.date}")
         return f"DTP*348*D8*{self.date}~\n"

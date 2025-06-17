@@ -42,6 +42,7 @@ file_name = config.TEST_FILE_NAME
 file_path = os.path.join(config.OUTPUT_DIRECTORY_NAME, config.TEST_FILE_NAME)
 f = open(file_path, 'w')
 f.writelines(edi_file)
+logger.info(f"Writing to file took: {datetime.now() - now}")
 f.close()
 
 # Display amount of time it takes to create

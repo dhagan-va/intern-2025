@@ -100,7 +100,7 @@ class Make834Data:
             # make it so that beneficiary age makes sense (child < age than sponsor)
             # also add weighted randomization to num of beneficiaries
             # should I make these outside? Currently creation of beneficiaries inside loop doesn't slow down generation
-            num_beneficiaries = min(random.randint(1, 4), remaining)
+            num_beneficiaries = min(random.randint(config.MIN_BENEFICIARIES, config.max), remaining)
             for _ in range(num_beneficiaries):
                 relationship = random.choice(list(self.relationship_map.keys()))
                 beneficiary_ssn = self.generate_ssn()

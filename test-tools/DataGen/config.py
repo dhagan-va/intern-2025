@@ -1,6 +1,7 @@
 import logging
 import os
 from datetime import datetime
+from token import NUMBER
 
 from BellShapes import BellShapes, fit_range_to_half_bel
 
@@ -22,6 +23,12 @@ LOCAL_DATABASE = f"localdb.jsonl"
 TEST_FILE_NAME = f'834.VFMP.{DATE.year}.{DATE.strftime("%y%m%d")}.{DATE.strftime("%H%M")}.{DATE.strftime("%Y%m%d1")}.edi'
 
 NUMBER_OF_TESTS = fit_range_to_half_bel(avg=10627, std=13948, min_val=1, max_val=246778, shape=BellShapes.NORMAL)
+
+def number_of_tests(n=None):
+    if n is None:
+        return NUMBER_OF_TESTS
+    return n
+
 OUTPUT_DIRECTORY_NAME = 'Test_Files_834'
 USER_LIMIT = 500_000
 

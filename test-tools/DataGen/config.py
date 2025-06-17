@@ -32,6 +32,12 @@ RELATIONSHIP_MAP = {
     'Ex-Spouse': '25'
 }
 
+MAX_BENEFICIARIES = 4
+MIN_BENEFICIARIES = 1
+MAX_DEDUCTIBLES = 100_000
+MIN_DEDUCTIBLES = 0
+MAX_VISITS = 15
+MIN_VISITS = 0
 
 def get_local_db_path():
     os.makedirs(LOCAL_DATABASE_DIRECTORY, exist_ok=True)

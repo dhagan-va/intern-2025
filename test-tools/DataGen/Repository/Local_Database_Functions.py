@@ -27,7 +27,7 @@ class LocalDBFunctions(DataAccess):
                 family = json.loads(line)
                 self.data.append(family)
                 self.add_ssns_to_set(family)
-        logging.info(f"There are {len(self.existing_ssns)} users in the database")
+        logging.debug(f"There are {len(self.existing_ssns)} users in the database")
 
     def save_sponsor(self, sponsor):
         total_users = len(self.existing_ssns)
@@ -39,11 +39,15 @@ class LocalDBFunctions(DataAccess):
             json.dump(sponsor.to_dict(), f)
             f.write("\n")
         self.add_ssns_to_set(sponsor.to_dict())
+        logger.debug(f"Saved sponsor: {sponsor.to_dict()}")
 
     def add_ssns_to_set(self, sponsor_dict):
         self.existing_ssns.add(sponsor_dict["ssn"])
+        logger.debug(f"Added sponsor SSN to set: {sponsor_dict["ssn"]}")
         for b in sponsor_dict.get("beneficiaries", []):
             self.existing_ssns.add(b["ssn"])
+            logger.debug(f"Added beneficiary SSN to set: {b["ssn"]}")
+
 
     def ssn_exists(self, ssn):
         return ssn in self.existing_ssns

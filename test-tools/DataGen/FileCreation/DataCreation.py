@@ -13,14 +13,14 @@ logger = logging.getLogger(__name__)
 def create_amt_data():
     return {
         "deductibles": {
-            "D2": random.randint(0, 100_000),
-            "FK": random.randint(0, 100_000),
-            "R": random.randint(0, 100_000)
+            "D2": random.randint(config.MIN_DEDUCTIBLES, config.MAX_DEDUCTIBLES),
+            "FK": random.randint(config.MIN_DEDUCTIBLES, config.MAX_DEDUCTIBLES),
+            "R": random.randint(config.MIN_DEDUCTIBLES, config.MAX_DEDUCTIBLES)
         },
         "visit_counts": {
-            "C1": random.randint(0, 15),
-            "P3": random.randint(0, 15),
-            "B9": random.randint(0, 15)
+            "C1": random.randint(config.MIN_VISITS, config.MAX_VISITS),
+            "P3": random.randint(config.MIN_VISITS, config.MAX_VISITS),
+            "B9": random.randint(config.MIN_VISITS, config.MAX_VISITS)
         }
     }
 
@@ -99,7 +99,7 @@ class Make834Data:
 
             # make it so that beneficiary age makes sense (child < age than sponsor)
             # also add weighted randomization to num of beneficiaries
-            # should I make these outside?
+            # should I make these outside? Currently creation of beneficiaries inside loop doesn't slow down generation
             num_beneficiaries = min(random.randint(1, 4), remaining)
             for _ in range(num_beneficiaries):
                 relationship = random.choice(list(self.relationship_map.keys()))

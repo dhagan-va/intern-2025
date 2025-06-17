@@ -20,6 +20,7 @@ class ErrorCheck:
         if self.used:
             return value
         self.used = True
+        logger.debug(f"The value of the error is {value}, it is an {kind} error")
         return insert_error(value, kind)
 
 

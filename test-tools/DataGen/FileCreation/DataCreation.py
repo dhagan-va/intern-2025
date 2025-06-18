@@ -50,10 +50,10 @@ class Make834Data:
     def create_address(self):
         address = Address(
             building_number=self.fake.building_number(),
-            street=self.fake.street_name(),
-            apartment=f"{self.fake.secondary_address().replace(".", "")}" if random.random() < 0.5 else "",
-            city=self.fake.city(),
-            state=self.fake.state_abbr(False, False),
+            street=self.fake.street_name().upper(),
+            apartment=f"{self.fake.secondary_address().replace(".", "").upper()}" if random.random() < 0.5 else "",
+            city=self.fake.city().upper(),
+            state=self.fake.state_abbr(False, False).upper(),
             zipcode=self.fake.zipcode()
         )
         logger.debug(f"Created address: {address}")
@@ -84,20 +84,20 @@ class Make834Data:
         while generated < total and remaining > 0:
             sponsor_ssn = self.generate_ssn()
             sponsor_id = f"{sponsor_ssn.replace("-", "")}V11111111"
-            sponsor_last_name = self.fake.last_name()
+            sponsor_last_name = self.fake.last_name().upper()
             sponsor_address = self.create_address()
             sponsor_amt_data = create_amt_data()
 
             sponsor = Sponsor(
                 ssn=sponsor_ssn,
                 dob=self.fake.date_of_birth(),
-                first_name=self.fake.first_name(),
+                first_name=self.fake.first_name().upper(),
                 last_name=sponsor_last_name,
                 address=sponsor_address,
                 phone=self.fake.basic_phone_number(),
-                insurance_company=self.fake.company(),
+                insurance_company=self.fake.company().upper(),
                 insurance_FID=str(random.randint(100_000_000, 999_999_999)),
-                middle_name=self.fake.first_name(),
+                middle_name=self.fake.first_name().upper(),
                 sponsor_id=sponsor_id,
                 deductibles=sponsor_amt_data["deductibles"],
                 visit_counts=sponsor_amt_data["visit_counts"]
@@ -120,13 +120,13 @@ class Make834Data:
                 beneficiary = Beneficiary(
                     ssn=beneficiary_ssn,
                     dob=self.fake.date_of_birth(),
-                    first_name=self.fake.first_name(),
+                    first_name=self.fake.first_name().upper(),
                     last_name=sponsor_last_name,
                     address=sponsor_address,
                     phone=self.fake.basic_phone_number(),
-                    insurance_company=self.fake.company(),
+                    insurance_company=self.fake.company().upper(),
                     insurance_FID=str(random.randint(100_000_000, 999_999_999)),
-                    middle_name=self.fake.first_name(),
+                    middle_name=self.fake.first_name().upper(),
                     sponsor_id=sponsor_id,
                     beneficiary_id=beneficiary_id,
                     relationship=relationship,

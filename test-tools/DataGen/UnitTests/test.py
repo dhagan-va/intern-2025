@@ -1,6 +1,7 @@
 import unittest
 import os
 import config
+import random
 from TestSuite import run_test_suite
 
 from Repository.Local_Database_Functions import LocalDBFunctions
@@ -28,6 +29,9 @@ class TestDuplicateSSNs(unittest.TestCase):
 # Make message, test if contents are valid, make sure it's not the same every time
 class singleEDIMessage(unittest.TestCase):
     def test_make_one(self):
-        run_test_suite(n=2)
+        run_test_suite(n=1000)
         path = os.path.join(config.EDI_OUTPUT_DIRECTORY, config.TEST_FILE_NAME)
         self.assertTrue(os.path.isfile(path), f"file not found at: {path}")
+
+    # def test_check_message_validity(self):
+

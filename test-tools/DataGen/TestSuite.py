@@ -1,21 +1,20 @@
 from datetime import datetime
 
 import config
-from DataLayer.Datatypes import Sponsor
 from FileCreation.DataCreation import Make834Data
 from FileCreation.EDI_File_Generator import EDI834Generator
 from config import get_logger, number_of_tests
+
+logger = get_logger(__name__)
 
 
 def run_test_suite(n=None):
     # Setup/Initialization
     now = datetime.now()
     n = number_of_tests(n)
-    logger = get_logger(__name__)
 
     # Generate 834 Data
     data_creation = Make834Data()
-    edi_generator = EDI834Generator()
 
     # Generate Fake Data
     logger.info(f"Generating {n} families")
@@ -27,6 +26,8 @@ def run_test_suite(n=None):
     logger.info(f"Data generation took: {datetime.now() - now}")
 
     # Generate EDI File
+    message_count = sum(1 + len(s.beneficiaries) for s in new_sponsors)
+    edi_generator = EDI834Generator(max_messages=message_count)
     logger.info("Generating EDI file from stored data")
     edi_file = edi_generator.combine_segments(new_sponsors)
     logger.info("EDI file generation complete")

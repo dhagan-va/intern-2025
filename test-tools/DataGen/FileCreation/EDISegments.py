@@ -87,12 +87,11 @@ class SE:
 
 # Beginning Segment
 class BGN:
-    def __init__(self, ref_id, error_ctrl=None):
+    def __init__(self, ref_id):
         now = datetime.now()
         self.ref_id = ref_id
         self.date = now.strftime("%Y%m%d")
         self.time = now.strftime("%H%M%S")
-        self.error_ctrl = error_ctrl
 
     def to_edi(self):
         logger.debug(f"Generating BGN segment with ref_id {self.ref_id}")
@@ -101,18 +100,22 @@ class BGN:
 
 # Sponsor Name
 class N1:
-    def __init__(self, entity_id_code, name, id_code, error_ctrl):
+    def __init__(self, entity_id_code, name, id_code, error_ctrl, error_id):
         self.entity_id_code = entity_id_code
         self.name = name
         self.id_code = id_code
         self.error_ctrl = error_ctrl
+        self.error_id = error_id
 
     def to_edi(self):
         id_code = self.id_code
         if self.error_ctrl and self.error_ctrl.should_insert():
             erroneous = self.error_ctrl.insert(id_code, "missing")
-            logger.error(f"[ERROR INSERTED] N1 segment: ID code '{id_code}' changed to '{erroneous}'")
+            logger.error(
+                f"[ERROR INSERTED] N1 segment: ID code '{id_code}' changed to '{erroneous}' for member: {self.error_id}")
             id_code = erroneous
+        else:
+            logger.debug(f"Generating N1 segment")
         return f"N1*{self.entity_id_code}*{self.name}*FI*{id_code}~\n"
 
 
@@ -128,16 +131,18 @@ class INS:
 
 # Reference Identification
 class REF:
-    def __init__(self, qualifier, reference_id, error_ctrl):
+    def __init__(self, qualifier, reference_id, error_ctrl, error_id):
         self.qualifier = qualifier
         self.reference_id = reference_id
         self.error_ctrl = error_ctrl
+        self.error_id = error_id
 
     def to_edi(self):
         ref_id = self.reference_id
         if self.error_ctrl and self.error_ctrl.should_insert():
             erroneous = self.error_ctrl.insert(ref_id, "invalid")
-            logger.error(f"[ERROR INSERTED] REF segment: Replaced reference_id '{ref_id}' with changed '{erroneous}'")
+            logger.error(
+                f"[ERROR INSERTED] REF segment: Replaced reference_id '{ref_id}' with changed '{erroneous}' for member: {self.error_id}")
             ref_id = erroneous
         else:
             logger.debug(f"Generating REF segment with qualifier {self.qualifier}")
@@ -146,18 +151,20 @@ class REF:
 
 # Organization Name
 class NM1:
-    def __init__(self, last_name, first_name, middle_name, ssn, error_ctrl):
+    def __init__(self, last_name, first_name, middle_name, ssn, error_ctrl, error_id):
         self.last_name = last_name
         self.first_name = first_name
         self.middle_name = middle_name
         self.ssn = ssn
         self.error_ctrl = error_ctrl
+        self.error_id = error_id
 
     def to_edi(self):
         ssn = self.ssn
         if self.error_ctrl and self.error_ctrl.should_insert():
             erroneous = self.error_ctrl.insert(ssn, "format")
-            logger.error(f"[ERROR INSERTED] NM1 segment: SSN '{ssn}' changed to '{erroneous}'")
+            logger.error(
+                f"[ERROR INSERTED] NM1 segment: SSN '{ssn}' changed to '{erroneous}' for member: {self.error_id}")
             ssn = erroneous
         else:
             logger.debug(f"Generating NM1 segment for {self.last_name}, {self.first_name}")
@@ -166,15 +173,17 @@ class NM1:
 
 # Administrative Communications Contact
 class PER:
-    def __init__(self, phone_number, error_ctrl):
+    def __init__(self, phone_number, error_ctrl, error_id):
         self.phone_number = phone_number
         self.error_ctrl = error_ctrl
+        self.error_id = error_id
 
     def to_edi(self):
         phone_number = self.phone_number
         if self.error_ctrl and self.error_ctrl.should_insert():
             erroneous = self.error_ctrl.insert(phone_number, "format")
-            logger.error(f"[ERROR INSERTED] PER segment: Phone '{phone_number}' changed to '{erroneous}'")
+            logger.error(
+                f"[ERROR INSERTED] PER segment: Phone '{phone_number}' changed to '{erroneous}' for member: {self.error_id}")
             phone_number = erroneous
         else:
             logger.debug("Generating PER segment")
@@ -183,17 +192,19 @@ class PER:
 
 # Address Information
 class N3:
-    def __init__(self, building_number, street, apartment: Optional[str] = None, error_ctrl=None):
+    def __init__(self, building_number, street, apartment: Optional[str] = None, error_ctrl=None, error_id=None):
         self.building_number = building_number
         self.street = street
         self.apartment = apartment if apartment else ""
         self.error_ctrl = error_ctrl
+        self.error_id = error_id
 
     def to_edi(self):
         street = self.street
         if self.error_ctrl and self.error_ctrl.should_insert():
             erroneous = self.error_ctrl.insert(street, "invalid")
-            logger.error(f"[ERROR INSERTED] N3 segment: Street '{street}' changed to '{erroneous}'")
+            logger.error(
+                f"[ERROR INSERTED] N3 segment: Street '{street}' changed to '{erroneous}' for member: {self.error_id}")
             street = erroneous
         else:
             logger.debug("Generating N3 segment")
@@ -202,17 +213,19 @@ class N3:
 
 # Location
 class N4:
-    def __init__(self, city, state, zipcode, error_ctrl):
+    def __init__(self, city, state, zipcode, error_ctrl, error_id):
         self.city = city
         self.state = state
         self.zipcode = zipcode
         self.error_ctrl = error_ctrl
+        self.error_id = error_id
 
     def to_edi(self):
         city = self.city
         if self.error_ctrl and self.error_ctrl.should_insert():
             erroneous = self.error_ctrl.insert(city, "invalid")
-            logger.error(f"[ERROR INSERTED] N4 segment: City '{city}' changed to '{erroneous}'")
+            logger.error(
+                f"[ERROR INSERTED] N4 segment: City '{city}' changed to '{erroneous}' for member: {self.error_id}")
             city = erroneous
         else:
             logger.debug("Generating N4 segment")
@@ -221,16 +234,18 @@ class N4:
 
 # Monetary Amount
 class AMT:
-    def __init__(self, amount_qualifier_code, amount, error_ctrl=None):
+    def __init__(self, amount_qualifier_code, amount, error_ctrl, error_id):
         self.amount_qualifier_code = amount_qualifier_code
         self.amount = amount
         self.error_ctrl = error_ctrl
+        self.error_id = error_id
 
     def to_edi(self):
         amount = self.amount
         if self.error_ctrl and self.error_ctrl.should_insert():
             erroneous = self.error_ctrl.insert(amount, "missing")
-            logger.error(f"[ERROR INSERTED] AMT segment: Amount '{amount}' changed to '{erroneous}'")
+            logger.error(
+                f"[ERROR INSERTED] AMT segment: Amount '{amount}' changed to '{erroneous}' for member: {self.error_id}")
             amount = erroneous
         else:
             logger.debug(f"Generating AMT segment for code {self.amount_qualifier_code}")

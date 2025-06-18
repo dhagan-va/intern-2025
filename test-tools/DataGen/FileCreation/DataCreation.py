@@ -142,7 +142,7 @@ class Make834Data:
                     break
 
             self.repo.save_sponsor(sponsor)
-            logger.info(f"Sponsor {sponsor_id} with {len(sponsor.beneficiaries)} beneficiaries saved")
+            logger.debug(f"Sponsor {sponsor_id} with {len(sponsor.beneficiaries)} beneficiaries saved")
             new_sponsors.append(sponsor)
         logger.info(f"Finished generating {len(new_sponsors)} sponsors")
         return new_sponsors

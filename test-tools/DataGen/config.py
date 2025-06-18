@@ -37,7 +37,7 @@ def get_local_db_path():
 def get_logger(name):
     log_path = os.path.join(LOG_DIRECTORY, f'TestSuite_{CCYYMMDD}.log')
     logging.basicConfig(
-        level=0,
+        level=logging.INFO,
         filename=log_path,
         filemode='a'
     )
@@ -55,7 +55,7 @@ SENDER_ID = "83-1002022"
 RECEIVER_ID = "841439824"
 
 # Message Error Rate
-TOTAL_ERROR_RATE = 0.0005
+TOTAL_ERROR_RATE = 0.005
 
 # Database user limit
 USER_LIMIT = 500_000

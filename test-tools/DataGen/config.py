@@ -49,13 +49,11 @@ logger = get_logger(__name__)
 # Constants and config
 FAKER_SEED = 49245
 RANDOM_SEED = 52
+logger.info(f"Using RANDOM_SEED={RANDOM_SEED}, FAKER_SEED={FAKER_SEED}")
 
 # 834 Constants
 SENDER_ID = "83-1002022"
 RECEIVER_ID = "841439824"
-
-# Message Error Rate
-TOTAL_ERROR_RATE = 0.005
 
 # Database user limit
 USER_LIMIT = 500_000
@@ -77,6 +75,13 @@ MIN_VISITS = 0
 # Test size generator
 NUMBER_OF_TESTS = fit_range_to_half_bel(avg=10627, std=13948, min_val=1, max_val=246778, shape=BellShapes.NORMAL)
 
+# Message Error Rate
+TOTAL_ERROR_RATE = 0.005  # 0.5%
+
 
 def number_of_tests(n=None):
     return NUMBER_OF_TESTS if n is None else n
+
+
+def get_error_rate(n=None):
+    return TOTAL_ERROR_RATE if n is None else n

@@ -6,12 +6,13 @@ from config import get_logger
 logger = get_logger(__name__)
 
 
-class ErrorCheck:
-    def __init__(self, max_messages):
-        self.error_rate = config.TOTAL_ERROR_RATE
+class ErrorInjector:
+    def __init__(self, max_messages, error_rate):
         self.random_seed = config.RANDOM_SEED
+        self.error_rate = config.get_error_rate(error_rate)
         self.max_errors = max_messages * self.error_rate
         self.error_count = 0
+        random.seed(self.random_seed)
 
     def should_insert(self):
         if self.error_count >= self.max_errors:
@@ -31,9 +32,9 @@ class ErrorCheck:
 def insert_error(value, kind):
     match kind:
         case "missing":
-            return ""
+            return " "
         case "format":
-            return f"~{value}~"
+            return f"~{value}??"
         case "invalid":
             return "!@#INVALID321"
         case "negative":

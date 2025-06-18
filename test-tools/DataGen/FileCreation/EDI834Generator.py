@@ -3,7 +3,7 @@ import uuid
 import FileCreation.EDISegments as Seg
 import config
 from DataLayer.Datatypes import Sponsor
-from FileCreation.ErrorController import ErrorCheck
+from FileCreation.ErrorInjector import ErrorInjector
 from config import get_logger
 
 logger = get_logger(__name__)
@@ -11,13 +11,14 @@ logger = get_logger(__name__)
 
 class EDI834Generator:
     def __init__(self, sender=config.SENDER_ID, receiver=config.RECEIVER_ID, relationship_map=config.RELATIONSHIP_MAP,
-                 max_messages=None):
+                 max_messages=None, error_rate=None):
         self.sender = sender
         self.receiver = receiver
         self.relationship_map = relationship_map
         self.transaction_control_number = 0
         self.max_messages = max_messages
-        self.error_ctrl = ErrorCheck(max_messages)
+        self.error_rate = error_rate
+        self.error_ctrl = ErrorInjector(max_messages, error_rate)
         logger.debug(f"Initialized EDI834Generator")
 
     def create_member(self, member, error_ctrl):
@@ -41,8 +42,8 @@ class EDI834Generator:
                     Seg.N1("P5", member.insurance_company, member.insurance_FID, error_ctrl, error_id).to_edi(),
                     Seg.N1("IN", member.insurance_company, member.insurance_FID, error_ctrl, error_id).to_edi(),
                     Seg.INS(relationship_code).to_edi(),
-                    Seg.REF("0F", sponsor_id, error_ctrl, error_id).to_edi(),
-                    Seg.REF("6O", beneficiary_id, error_ctrl, error_id).to_edi(),
+                    Seg.REF("0F", sponsor_id, error_ctrl).to_edi(),
+                    Seg.REF("6O", beneficiary_id, error_ctrl).to_edi(),
                     Seg.NM1(member.last_name, member.first_name, member.middle_name, member.ssn, error_ctrl,
                             error_id).to_edi(),
                     Seg.PER(member.phone, error_ctrl, error_id).to_edi(),

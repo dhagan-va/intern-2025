@@ -131,22 +131,13 @@ class INS:
 
 # Reference Identification
 class REF:
-    def __init__(self, qualifier, reference_id, error_ctrl, error_id):
+    def __init__(self, qualifier, reference_id, error_ctrl):
         self.qualifier = qualifier
         self.reference_id = reference_id
         self.error_ctrl = error_ctrl
-        self.error_id = error_id
 
     def to_edi(self):
-        ref_id = self.reference_id
-        if self.error_ctrl and self.error_ctrl.should_insert():
-            erroneous = self.error_ctrl.insert(ref_id, "invalid")
-            logger.error(
-                f"[ERROR INSERTED] REF segment: Replaced reference_id '{ref_id}' with changed '{erroneous}' for member: {self.error_id}")
-            ref_id = erroneous
-        else:
-            logger.debug(f"Generating REF segment with qualifier {self.qualifier}")
-        return f"REF*{self.qualifier}*{ref_id}~\n"
+        return f"REF*{self.qualifier}*{self.reference_id}~\n"
 
 
 # Organization Name
@@ -181,7 +172,7 @@ class PER:
     def to_edi(self):
         phone_number = self.phone_number
         if self.error_ctrl and self.error_ctrl.should_insert():
-            erroneous = self.error_ctrl.insert(phone_number, "format")
+            erroneous = self.error_ctrl.insert(phone_number, "missing")
             logger.error(
                 f"[ERROR INSERTED] PER segment: Phone '{phone_number}' changed to '{erroneous}' for member: {self.error_id}")
             phone_number = erroneous
@@ -243,7 +234,7 @@ class AMT:
     def to_edi(self):
         amount = self.amount
         if self.error_ctrl and self.error_ctrl.should_insert():
-            erroneous = self.error_ctrl.insert(amount, "missing")
+            erroneous = self.error_ctrl.insert(amount, "negative")
             logger.error(
                 f"[ERROR INSERTED] AMT segment: Amount '{amount}' changed to '{erroneous}' for member: {self.error_id}")
             amount = erroneous

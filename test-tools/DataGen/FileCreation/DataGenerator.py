@@ -27,7 +27,7 @@ def create_amt_data():
     return data
 
 
-class Make834Data:
+class SponsorDataGenerator:
     def __init__(self, faker_seed=config.FAKER_SEED, random_seed=config.RANDOM_SEED,
                  relationship_map=config.RELATIONSHIP_MAP, data_access=None):
         self.fake = Faker()

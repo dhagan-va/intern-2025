@@ -1,22 +1,30 @@
 import csv
 from dataclasses import dataclass
+from pathlib import Path
+import pandas as pd
 
 
-@dataclass
-class Result:
-    timestamp: float
-    latency: float
-    http: int
+# @dataclass
+# class Result:
+#     def __init__(self):
+#         self.result_df = pd.DataFrame(columns=["timestamp", "latency", "http"])
+
+#     def append(self, stamp, lat, status):
+#         self.result_df.loc[len(self.result_df)] = [stamp, lat, status]
 
 
 class AbstractSink:
-    def write(self, result: Result):
+    def write(self):
         raise NotImplementedError
 
 
 class CsvSink(AbstractSink):
     def __init__(self, path):
-        self._path = 
+        self._path = Path(path)
+        self.result_df = pd.DataFrame(columns=["timestamp", "latency", "http"])
 
-    def write(self, result: Result):
-        return
+    def append(self, stamp, lat, status):
+        self.result_df.loc[len(self.result_df)] = [stamp, lat, status]
+
+    def write(self):
+        self.result_df.to_csv(self._path)

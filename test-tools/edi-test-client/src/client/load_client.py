@@ -10,6 +10,7 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 from config import Setting
 import reqs
 from stats import LiveStats
+import results
 
 
 class LoadClient:
@@ -24,6 +25,7 @@ class LoadClient:
         self._sched_thread = None
         self._stop_event = threading.Event()
 
+        self._sink = results.CsvSink("test.csv")
         self._stats = LiveStats()
         self._log = logging.getLogger("edi_load_client")
         logging.basicConfig(filename="test.log", level=logging.INFO)
@@ -63,6 +65,7 @@ class LoadClient:
         curr_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         self._log.info("Client stopped at %s", curr_time)
         result = self._stats.snapshot()
+        self._sink.write()
         self._log.info(
             "%d requests sent, %.2f ms avg latency, %d 200 OK",
             result["count"],
@@ -81,13 +84,16 @@ class LoadClient:
         return
 
     def _handle_response(self, future):
+        curr_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         try:
             status, elapsed = future.result()
             if status == 200:
                 self._stats.update(elapsed, status)
+                self._sink.append(curr_time, elapsed, status)
                 self._log.info("200 OK in %.3f ms", elapsed)
             else:
                 self._stats.update(elapsed, status)
+                self._sink.append(curr_time, elapsed, status)
                 self._log.error("ERR %d in %.3f ms", status, elapsed)
         except Exception as e:
             self._log.error("Error handling response: %s", e)

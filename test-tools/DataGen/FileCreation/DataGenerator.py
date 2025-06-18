@@ -69,7 +69,6 @@ class SponsorDataGenerator:
             else:
                 logger.debug(f"Duplicate SSN created (skipping): {ssn}")
 
-    # This creates sponsors and beneficiaries and stores it
     def create_sponsor_and_beneficiaries(self, total):
         existing_users = len(self.repo.existing_ssns)
         remaining = config.USER_LIMIT - existing_users
@@ -104,8 +103,6 @@ class SponsorDataGenerator:
             )
 
             logger.debug(f"Created Sponsor: {sponsor_id}")
-            generated += 1
-            remaining -= 1
 
             # make it so that beneficiary age makes sense (child < age than sponsor)
             # also add weighted randomization to num of beneficiaries

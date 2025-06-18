@@ -23,19 +23,11 @@ class EDI834Generator:
 
     def create_member(self, member, error_ctrl):
         self.transaction_control_number += 1
-
-        if isinstance(member, Sponsor):
-            relationship_code = '18'
-            sponsor_id = member.sponsor_id
-            beneficiary_id = member.sponsor_id
-            error_id = member.sponsor_id
-            logger.debug(f"Creating segments for Sponsor: {sponsor_id}")
-        else:
-            relationship_code = self.relationship_map.get(member.relationship)
-            sponsor_id = member.sponsor_id
-            beneficiary_id = member.beneficiary_id
-            error_id = member.beneficiary_id
-            logger.debug(f"Creating segments for Beneficiary: {beneficiary_id} under Sponsor: {sponsor_id}")
+        sponsor_id = member.sponsor_id
+        relationship_code = self.relationship_map.get(member.relationship)
+        beneficiary_id = member.beneficiary_id
+        error_id = member.beneficiary_id
+        logger.debug(f"Creating segments for Beneficiary: {beneficiary_id} under Sponsor: {sponsor_id}")
 
         segments = [Seg.ST(self.transaction_control_number).to_edi(),
                     Seg.BGN(uuid.uuid4().hex.upper()).to_edi(),
@@ -68,10 +60,9 @@ class EDI834Generator:
 
     def create_transaction(self, sponsor):
         logger.debug(
-            f"Generating transaction for Sponsor: {sponsor.sponsor_id} with {len(sponsor.beneficiaries)} beneficiaries")
+            f"Generating  {len(sponsor.beneficiaries)} transactions for beneficiaries of Sponsor: {sponsor.sponsor_id}")
 
         segments = []
-        segments.extend(self.create_member(sponsor, self.error_ctrl))
         for beneficiary in sponsor.beneficiaries:
             segments.extend(self.create_member(beneficiary, self.error_ctrl))
         return segments

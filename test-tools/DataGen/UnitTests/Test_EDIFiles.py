@@ -10,8 +10,8 @@ from RunGenerator import RunGenerator
 class Test834Message(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        cls.messages = 10
-        cls.error_rate = 0
+        cls.messages = 3
+        cls.error_rate = 0.5
         RunGenerator(max_messages=cls.messages, error_rate=cls.error_rate)
         cls.path = config.get_edi_path()
         with open(cls.path) as f:

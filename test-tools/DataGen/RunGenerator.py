@@ -2,7 +2,7 @@ from datetime import datetime
 
 import config
 from FileCreation.DataGenerator import SponsorDataGenerator
-from FileCreation.EDI834Generator import EDI834Generator
+from FileCreation.EDIGenerator import EDI834Generator
 from config import logger, number_of_tests, get_error_rate
 
 

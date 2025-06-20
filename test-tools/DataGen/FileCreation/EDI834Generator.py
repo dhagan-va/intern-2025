@@ -2,11 +2,8 @@ import uuid
 
 import FileCreation.EDISegments as Seg
 import config
-from DataLayer.Datatypes import Sponsor
 from FileCreation.ErrorInjector import ErrorInjector
-from config import get_logger
-
-logger = get_logger(__name__)
+from config import logger
 
 
 class EDI834Generator:

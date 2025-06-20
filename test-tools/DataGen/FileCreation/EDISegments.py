@@ -5,10 +5,7 @@ from datetime import datetime
 from typing import Optional
 
 import config
-from config import get_logger
-
-# Need to add logging to this file
-logger = get_logger(__name__)
+from config import logger
 
 
 # File Header

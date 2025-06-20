@@ -4,9 +4,7 @@ import os
 
 import config
 from DataLayer.Interfaces import DataAccess
-from config import get_local_db_path
-
-logger = logging.getLogger(__name__)
+from config import get_local_db_path, logger
 
 
 class LocalDBFunctions(DataAccess):

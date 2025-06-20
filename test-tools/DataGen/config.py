@@ -10,13 +10,14 @@ CCYYMMDD = DATE.strftime("%Y%m%d")
 
 TEST_FILE_NAME = f'834.VFMP.{DATE.year}.{DATE.strftime("%y%m%d")}.{DATE.strftime("%H%M")}.{DATE.strftime("%Y%m%d1")}.edi'
 LOCAL_DATABASE = f"localdb.jsonl"
+LOG_FILE = f'TestSuite_{CCYYMMDD}.log'
 
 # Paths
 
 ROOT_PATH = os.path.dirname(os.path.abspath(__file__))
 LOCAL_DATABASE_DIRECTORY = os.path.join(ROOT_PATH, "Output", "Local_DB")
 EDI_OUTPUT_DIRECTORY = os.path.join(ROOT_PATH, "Output", "Test_Files_834")
-LOG_DIRECTORY = os.path.join(ROOT_PATH, "Output")
+LOG_DIRECTORY = os.path.join(ROOT_PATH, "Output", "Logs")
 os.makedirs(LOG_DIRECTORY, exist_ok=True)
 
 
@@ -35,7 +36,7 @@ def get_local_db_path():
 
 # Logging
 def get_logger(name):
-    log_path = os.path.join(LOG_DIRECTORY, f'TestSuite_{CCYYMMDD}.log')
+    log_path = os.path.join(LOG_DIRECTORY, LOG_FILE)
     logging.basicConfig(
         level=logging.INFO,
         filename=log_path,
@@ -48,7 +49,7 @@ logger = get_logger(__name__)
 
 # Constants and config
 FAKER_SEED = 49245
-RANDOM_SEED = 52
+RANDOM_SEED = 3
 logger.info(f"Using RANDOM_SEED={RANDOM_SEED}, FAKER_SEED={FAKER_SEED}")
 
 # 834 Constants

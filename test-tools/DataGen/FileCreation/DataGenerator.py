@@ -3,11 +3,9 @@ import random
 from faker import Faker
 
 import config
-from config import get_logger
+from config import logger
 from DataLayer.Datatypes import Address, Sponsor, Beneficiary
 from Repository.Local_Database_Functions import LocalDBFunctions
-
-logger = get_logger(__name__)
 
 
 def create_amt_data():

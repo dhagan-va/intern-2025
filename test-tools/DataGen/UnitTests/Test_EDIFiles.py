@@ -1,20 +1,33 @@
+import logging
+import os.path
+import shutil
 import unittest
 
+from config import logger
 import config
 from FileCreation.ErrorInjector import ErrorInjector
 from Repository.Local_Database_Functions import LocalDBFunctions
 from RunGenerator import RunGenerator
 
 
-# Make message, test if contents are valid, make sure it's not the same every time
 class Test834Message(unittest.TestCase):
     def setUp(self):
+        os.makedirs(config.LOG_DIRECTORY, exist_ok=True)
+        config.get_edi_path()
+        config.get_local_db_path()
+        self.logger = config.get_logger(__name__)
         self.messages = 3
         self.error_rate = 0
         RunGenerator(max_messages=self.messages, error_rate=self.error_rate)
         self.path = config.get_edi_path()
         with open(self.path) as f:
             self.lines = [line.strip() for line in f if line.strip()]
+
+    def tearDown(self):
+        logging.shutdown()
+        output_dir = os.path.join(config.ROOT_PATH, "Output")
+        if os.path.exists(output_dir):
+            shutil.rmtree(output_dir)
 
     def test_duplicate_ssns(self):
         db = LocalDBFunctions()

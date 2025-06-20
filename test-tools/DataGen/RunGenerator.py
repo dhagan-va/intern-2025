@@ -3,9 +3,7 @@ from datetime import datetime
 import config
 from FileCreation.DataGenerator import SponsorDataGenerator
 from FileCreation.EDI834Generator import EDI834Generator
-from config import get_logger, number_of_tests, get_error_rate
-
-logger = get_logger(__name__)
+from config import logger, number_of_tests, get_error_rate
 
 
 def RunGenerator(max_messages=None, error_rate=None):

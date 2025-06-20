@@ -1,7 +1,4 @@
-import os
-import shutil
 import unittest
-import logging
 
 import config
 from FileCreation.ErrorInjector import ErrorInjector

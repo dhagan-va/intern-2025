@@ -67,7 +67,7 @@ class SponsorDataGenerator:
             else:
                 logger.debug(f"Duplicate SSN created (skipping): {ssn}")
 
-    def create_sponsor_and_beneficiaries(self, total):
+    def generate_sponsor_and_beneficiaries(self, total):
         existing_users = len(self.repo.existing_ssns)
         remaining = config.USER_LIMIT - existing_users
 
@@ -79,65 +79,74 @@ class SponsorDataGenerator:
         new_sponsors = []
 
         while generated < total and remaining > 0:
-            sponsor_ssn = self.generate_ssn()
-            sponsor_id = f"{sponsor_ssn.replace("-", "")}V11111111"
-            sponsor_last_name = self.fake.last_name().upper()
-            sponsor_address = self.create_address()
-            sponsor_amt_data = create_amt_data()
-
-            sponsor = Sponsor(
-                ssn=sponsor_ssn,
-                dob=self.fake.date_of_birth(),
-                first_name=self.fake.first_name().upper(),
-                last_name=sponsor_last_name,
-                address=sponsor_address,
-                phone=self.fake.basic_phone_number(),
-                insurance_company=self.fake.company().upper(),
-                insurance_FID=str(random.randint(100_000_000, 999_999_999)),
-                middle_name=self.fake.first_name().upper(),
-                sponsor_id=sponsor_id,
-                deductibles=sponsor_amt_data["deductibles"],
-                visit_counts=sponsor_amt_data["visit_counts"]
-            )
-
-            logger.debug(f"Created Sponsor: {sponsor_id}")
-
-            # make it so that beneficiary age makes sense (child < age than sponsor)
-            # also add weighted randomization to num of beneficiaries
-            # should I make these outside? Currently creation of beneficiaries inside loop doesn't slow down generation
+            sponsor = self.create_sponsor()
             num_beneficiaries = min(random.randint(config.MIN_BENEFICIARIES, config.MAX_BENEFICIARIES), remaining)
             for _ in range(num_beneficiaries):
-                relationship = random.choice(list(self.relationship_map.keys()))
-                beneficiary_ssn = self.generate_ssn()
-                beneficiary_id = f"{beneficiary_ssn.replace("-", "")}V11111111"
-                beneficiary_amt_data = create_amt_data()
-
-                beneficiary = Beneficiary(
-                    ssn=beneficiary_ssn,
-                    dob=self.fake.date_of_birth(),
-                    first_name=self.fake.first_name().upper(),
-                    last_name=sponsor_last_name,
-                    address=sponsor_address,
-                    phone=self.fake.basic_phone_number(),
-                    insurance_company=self.fake.company().upper(),
-                    insurance_FID=str(random.randint(100_000_000, 999_999_999)),
-                    middle_name=self.fake.first_name().upper(),
-                    sponsor_id=sponsor_id,
-                    beneficiary_id=beneficiary_id,
-                    relationship=relationship,
-                    deductibles=beneficiary_amt_data["deductibles"],
-                    visit_counts=beneficiary_amt_data["visit_counts"]
-                )
+                beneficiary = self.create_beneficiary(sponsor)
                 sponsor.beneficiaries.append(beneficiary)
-                logger.debug(f"Created beneficiary: {beneficiary_id} for sponsor {sponsor_id}")
                 generated += 1
                 remaining -= 1
-
                 if generated >= total or remaining <= 0:
                     break
 
-            self.repo.save_sponsor(sponsor)
-            logger.debug(f"Sponsor {sponsor_id} with {len(sponsor.beneficiaries)} beneficiaries saved")
             new_sponsors.append(sponsor)
-        logger.info(f"Finished generating {len(new_sponsors)} sponsors")
+
         return new_sponsors
+
+    def store_sponsor_and_beneficiaries(self, total):
+        sponsors = self.generate_sponsor_and_beneficiaries(total)
+        for sponsor in sponsors:
+            self.repo.save_sponsor(sponsor)
+            logger.debug(f"Sponsor {sponsor.sponsor_id} with {len(sponsor.beneficiaries)} beneficiaries saved")
+        logger.info(f"Finished generating {len(sponsors)} sponsors")
+        return sponsors
+
+    def create_sponsor(self):
+        sponsor_ssn = self.generate_ssn()
+        sponsor_id = f"{sponsor_ssn.replace("-", "")}V11111111"
+        sponsor_last_name = self.fake.last_name().upper()
+        sponsor_address = self.create_address()
+        sponsor_amt_data = create_amt_data()
+
+        sponsor = Sponsor(
+            ssn=sponsor_ssn,
+            dob=self.fake.date_of_birth(),
+            first_name=self.fake.first_name().upper(),
+            last_name=sponsor_last_name,
+            address=sponsor_address,
+            phone=self.fake.basic_phone_number(),
+            insurance_company=self.fake.company().upper(),
+            insurance_FID=str(random.randint(100_000_000, 999_999_999)),
+            middle_name=self.fake.first_name().upper(),
+            sponsor_id=sponsor_id,
+            deductibles=sponsor_amt_data["deductibles"],
+            visit_counts=sponsor_amt_data["visit_counts"]
+        )
+
+        logger.debug(f"Created Sponsor: {sponsor_id}")
+        return sponsor
+
+    def create_beneficiary(self, sponsor):
+        relationship = random.choice(list(self.relationship_map.keys()))
+        beneficiary_ssn = self.generate_ssn()
+        beneficiary_id = f"{beneficiary_ssn.replace("-", "")}V11111111"
+        beneficiary_amt_data = create_amt_data()
+
+        beneficiary = Beneficiary(
+            ssn=beneficiary_ssn,
+            dob=self.fake.date_of_birth(),
+            first_name=self.fake.first_name().upper(),
+            last_name=sponsor.last_name,
+            address=sponsor.address,
+            phone=self.fake.basic_phone_number(),
+            insurance_company=self.fake.company().upper(),
+            insurance_FID=str(random.randint(100_000_000, 999_999_999)),
+            middle_name=self.fake.first_name().upper(),
+            sponsor_id=sponsor.sponsor_id,
+            beneficiary_id=beneficiary_id,
+            relationship=relationship,
+            deductibles=beneficiary_amt_data["deductibles"],
+            visit_counts=beneficiary_amt_data["visit_counts"]
+        )
+        logger.debug(f"Created beneficiary: {beneficiary_id} for sponsor {sponsor.sponsor_id}")
+        return beneficiary

@@ -15,7 +15,7 @@ def RunGenerator(max_messages=None, error_rate=None):
     # Generate Fake Data
     logger.info(f"Generating {max_messages} total members")
     data_creation = SponsorDataGenerator()
-    new_sponsors = data_creation.create_sponsor_and_beneficiaries(max_messages)
+    new_sponsors = data_creation.store_sponsor_and_beneficiaries(max_messages)
 
     logger.info(f"Data loading Initiated")
     data_creation.repo.loadfile()

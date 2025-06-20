@@ -86,14 +86,14 @@ class LoadClient:
     def _handle_response(self, future):
         curr_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         try:
-            status, elapsed = future.result()
+            status, elapsed, body = future.result()
             if status == 200:
                 self._stats.update(elapsed, status)
-                self._sink.append(curr_time, elapsed, status)
+                self._sink.append(curr_time, elapsed, status, self.rps, body)
                 self._log.info("200 OK in %.3f ms", elapsed)
             else:
                 self._stats.update(elapsed, status)
-                self._sink.append(curr_time, elapsed, status)
+                self._sink.append(curr_time, elapsed, status, self.rps, body)
                 self._log.error("ERR %d in %.3f ms", status, elapsed)
         except Exception as e:
             self._log.error("Error handling response: %s", e)

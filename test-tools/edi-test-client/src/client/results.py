@@ -21,10 +21,12 @@ class AbstractSink:
 class CsvSink(AbstractSink):
     def __init__(self, path):
         self._path = Path(path)
-        self.result_df = pd.DataFrame(columns=["timestamp", "latency", "http"])
+        self.result_df = pd.DataFrame(
+            columns=["timestamp", "latency", "http", "rps", "payload"]
+        )
 
-    def append(self, stamp, lat, status):
-        self.result_df.loc[len(self.result_df)] = [stamp, lat, status]
+    def append(self, stamp, lat, status, rps, payload):
+        self.result_df.loc[len(self.result_df)] = [stamp, lat, status, rps, payload]
 
     def write(self):
         self.result_df.to_csv(self._path)

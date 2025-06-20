@@ -7,6 +7,6 @@ def send_270_request(endpoint):
     try:
         resp = requests.post(url=endpoint, data=samples.SAMPLE_270)
         elapsed = (time.perf_counter() - start) * 1000
-        return resp.status_code, elapsed
+        return resp.status_code, elapsed, resp.content
     except Exception:
-        return -1, (time.perf_counter() - start) * 1000
+        return -1, (time.perf_counter() - start) * 1000, ""

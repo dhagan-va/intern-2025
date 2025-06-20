@@ -1,4 +1,5 @@
 import logging
+import math
 import os.path
 import shutil
 import unittest
@@ -11,22 +12,21 @@ from RunGenerator import RunGenerator
 
 class Test834Message(unittest.TestCase):
     def setUp(self):
-        os.makedirs(config.LOG_DIRECTORY, exist_ok=True)
-        config.get_edi_path()
-        config.get_local_db_path()
-        self.logger = config.get_logger(__name__)
-        self.messages = 100
-        self.error_rate = 0.005
-        RunGenerator(max_messages=self.messages, error_rate=self.error_rate)
-        self.path = config.get_edi_path()
-        with open(self.path) as f:
-            self.lines = [line.strip() for line in f if line.strip()]
-
-    def tearDown(self):
         logging.shutdown()
         output_dir = os.path.join(config.ROOT_PATH, "Output")
         if os.path.exists(output_dir):
             shutil.rmtree(output_dir)
+
+        os.makedirs(config.LOG_DIRECTORY, exist_ok=True)
+        config.get_edi_path()
+        config.get_local_db_path()
+        self.logger = config.get_logger(__name__)
+        self.messages = 200
+        self.error_rate = 0
+        RunGenerator(max_messages=self.messages, error_rate=self.error_rate)
+        self.path = config.get_edi_path()
+        with open(self.path) as f:
+            self.lines = [line.strip() for line in f if line.strip()]
 
     def test_duplicate_ssns(self):
         db = LocalDBFunctions()
@@ -67,8 +67,6 @@ class Test834Message(unittest.TestCase):
     def test_error_rates(self):
         injector = ErrorInjector(max_messages=self.messages, error_rate=self.error_rate)
         expected = self.messages * self.error_rate
-        lower = int(expected)
-        upper = int(expected + 0.999)
 
         actual_inserts = 0
         for _ in range(self.messages):
@@ -77,5 +75,5 @@ class Test834Message(unittest.TestCase):
                 actual_inserts += 1
 
         # check if error_count and inserts are same, do we need a margin of failures?
-        self.assertTrue(lower <= actual_inserts <= upper,
-                        f"Actual errors {actual_inserts}, expected between {lower} and {upper}")
+        self.assertTrue(math.isclose(actual_inserts, expected, abs_tol=1),
+                        f"Actual errors {actual_inserts}, expected {expected}")

@@ -3,7 +3,6 @@ import os.path
 import shutil
 import unittest
 
-from config import logger
 import config
 from FileCreation.ErrorInjector import ErrorInjector
 from Repository.Local_Database_Functions import LocalDBFunctions
@@ -16,8 +15,8 @@ class Test834Message(unittest.TestCase):
         config.get_edi_path()
         config.get_local_db_path()
         self.logger = config.get_logger(__name__)
-        self.messages = 3
-        self.error_rate = 0
+        self.messages = 100
+        self.error_rate = 0.005
         RunGenerator(max_messages=self.messages, error_rate=self.error_rate)
         self.path = config.get_edi_path()
         with open(self.path) as f:
@@ -67,14 +66,16 @@ class Test834Message(unittest.TestCase):
 
     def test_error_rates(self):
         injector = ErrorInjector(max_messages=self.messages, error_rate=self.error_rate)
+        expected = self.messages * self.error_rate
+        lower = int(expected)
+        upper = int(expected + 0.999)
 
         actual_inserts = 0
         for _ in range(self.messages):
             if injector.should_insert():
                 injector.insert("test", "missing")
                 actual_inserts += 1
-        print(f"Actual errors: {actual_inserts}, Expected: {injector.error_count}")
 
         # check if error_count and inserts are same, do we need a margin of failures?
-        self.assertEqual(injector.error_count, actual_inserts,
-                         f"Actual errors: {actual_inserts}, Expected: {injector.error_count}")
+        self.assertTrue(lower <= actual_inserts <= upper,
+                        f"Actual errors {actual_inserts}, expected between {lower} and {upper}")

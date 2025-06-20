@@ -5,10 +5,7 @@ from Test_EDIFiles import Test834Message
 def load_tests_in_order():
     suite = unittest.TestSuite()
 
-    suite.addTest(Test834Message('test_make_one'))
-    suite.addTest(Test834Message('test_duplicate_ssns'))
-    suite.addTest(Test834Message('test_834_message_validity'))
-    suite.addTest(Test834Message('test_error_rates'))
+    suite.addTest(unittest.TestLoader().loadTestsFromTestCase(Test834Message))
 
     return suite
 

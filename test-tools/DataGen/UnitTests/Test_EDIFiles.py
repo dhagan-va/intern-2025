@@ -1,4 +1,7 @@
+import os
+import shutil
 import unittest
+import logging
 
 import config
 from FileCreation.ErrorInjector import ErrorInjector
@@ -8,14 +11,13 @@ from RunGenerator import RunGenerator
 
 # Make message, test if contents are valid, make sure it's not the same every time
 class Test834Message(unittest.TestCase):
-    @classmethod
-    def setUpClass(cls):
-        cls.messages = 3
-        cls.error_rate = 0.5
-        RunGenerator(max_messages=cls.messages, error_rate=cls.error_rate)
-        cls.path = config.get_edi_path()
-        with open(cls.path) as f:
-            cls.lines = [line.strip() for line in f if line.strip()]
+    def setUp(self):
+        self.messages = 3
+        self.error_rate = 0
+        RunGenerator(max_messages=self.messages, error_rate=self.error_rate)
+        self.path = config.get_edi_path()
+        with open(self.path) as f:
+            self.lines = [line.strip() for line in f if line.strip()]
 
     def test_duplicate_ssns(self):
         db = LocalDBFunctions()
@@ -61,6 +63,7 @@ class Test834Message(unittest.TestCase):
             if injector.should_insert():
                 injector.insert("test", "missing")
                 actual_inserts += 1
+        print(f"Actual errors: {actual_inserts}, Expected: {injector.error_count}")
 
         # check if error_count and inserts are same, do we need a margin of failures?
         self.assertEqual(injector.error_count, actual_inserts,

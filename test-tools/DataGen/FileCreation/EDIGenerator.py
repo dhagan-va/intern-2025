@@ -26,7 +26,7 @@ class EDI834Generator:
         error_id = member.beneficiary_id
         logger.debug(f"Creating segments for Beneficiary: {beneficiary_id} under Sponsor: {sponsor_id}")
 
-        segments = [Seg.ST(self.transaction_control_number).to_edi(),
+        segments = [Seg.ST("834", self.transaction_control_number).to_edi(),
                     Seg.BGN(uuid.uuid4().hex.upper()).to_edi(),
                     Seg.N1("P5", member.insurance_company, member.insurance_FID, error_ctrl, error_id).to_edi(),
                     Seg.N1("IN", member.insurance_company, member.insurance_FID, error_ctrl, error_id).to_edi(),
@@ -79,4 +79,24 @@ class EDI834Generator:
 
         logger.info(f"Generated total of {self.transaction_control_number} transactions")
         logger.info(f"There were {self.error_ctrl.error_count} errors")
+        return all_segments
+
+
+class EDI270Generator:
+    def __init__(self):
+        self.transaction_num = 0
+
+
+    def create_transaction(self):
+        segments = []
+        return segments
+
+    def combine_segments(self):
+        all_segments = [Seg.ISA().to_edi(),
+                        Seg.GS().to_edi(),
+                        Seg.ST("270", self.transaction_num).to_edi(),
+                        Seg.BHT().to_edi(),
+                        Seg.GE(1).to_edi(),
+                        Seg.IEA().to_edi()]
+
         return all_segments

@@ -63,12 +63,13 @@ class GE:
 
 # Transaction Set Header
 class ST:
-    def __init__(self, num):
+    def __init__(self, file_type, num):
+        self.file_type = file_type
         self.num = num
 
     def to_edi(self):
-        logger.debug(f"Generating ST segment for transaction #{self.num}")
-        return f"ST*834*{self.num:04}~\n"
+        logger.debug(f"Generating ST segment for an {self.file_type} file, transaction #{self.num}")
+        return f"ST*{self.file_type}*{self.num:04}~\n"
 
 
 # Transaction Set Trailer
@@ -260,3 +261,17 @@ class DTP:
     def to_edi(self):
         logger.debug(f"Generating DTP segment for date {self.date}")
         return f"DTP*348*D8*{self.date}~\n"
+
+
+class BHT:
+    def __init__(self):
+        now = datetime.now()
+        self.date = now.strftime("%Y%m%d")
+        self.time = now.strftime("%H%M")
+
+    def to_edi(self):
+        logger.debug(f"Generating BHT segment for")
+        return f"BHT*0022*13*{self.date}*{self.time}~"
+
+
+

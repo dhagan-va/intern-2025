@@ -8,7 +8,8 @@ from BellShapes import BellShapes, fit_range_to_half_bel
 DATE = datetime.now()
 CCYYMMDD = DATE.strftime("%Y%m%d")
 
-TEST_FILE_NAME = f'834.VFMP.{DATE.year}.{DATE.strftime("%y%m%d")}.{DATE.strftime("%H%M")}.{DATE.strftime("%Y%m%d1")}.edi'
+EDI834_FILE_NAME = f'834.VFMP.{DATE.year}.{DATE.strftime("%y%m%d")}.{DATE.strftime("%H%M")}.{DATE.strftime("%Y%m%d1")}.edi'
+EDI270_FILE_NAME = f'270.VFMP.{DATE.year}.{DATE.strftime("%y%m%d")}.{DATE.strftime("%H%M")}.{DATE.strftime("%Y%m%d1")}.edi'
 LOCAL_DATABASE = f"localdb.jsonl"
 LOG_FILE = f'TestSuite_{CCYYMMDD}.log'
 
@@ -22,10 +23,10 @@ os.makedirs(LOG_DIRECTORY, exist_ok=True)
 
 
 # Creates directory if nonexistent
-def get_edi_path():
+def get_edi834_path():
     os.makedirs(EDI_OUTPUT_DIRECTORY, exist_ok=True)
     logger.info(f"Directory exists: {EDI_OUTPUT_DIRECTORY}")
-    return os.path.join(EDI_OUTPUT_DIRECTORY, TEST_FILE_NAME)
+    return os.path.join(EDI_OUTPUT_DIRECTORY, EDI834_FILE_NAME)
 
 
 def get_local_db_path():

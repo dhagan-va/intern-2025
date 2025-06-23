@@ -22,8 +22,8 @@ class ISA:
     def to_edi(self):
         logger.debug("Generating ISA segment")
         return (
-            f"ISA*00*          *00*          *{self.id_qualifier}*{self.sender:<15}*{self.id_qualifier}*{self.receiver:<15}*{self.date}*{self.time}*$*00501"
-            f"*{self.interCtrlNumber}*0*T*:~\n")
+            f"ISA*00*          *00*          *{self.id_qualifier}*{self.sender:<15}*{self.id_qualifier}*"
+            f"{self.receiver:<15}*{self.date}*{self.time}*$*00501*{self.interCtrlNumber}*0*T*:~\n")
 
 
 # File Trailer
@@ -39,8 +39,9 @@ class IEA:
 
 # Group Header
 class GS:
-    def __init__(self, sender=config.SENDER_ID, receiver=config.RECEIVER_ID):
+    def __init__(self, functional_id, sender=config.SENDER_ID, receiver=config.RECEIVER_ID):
         now = datetime.now()
+        self.functional_id = functional_id
         self.sender = sender
         self.receiver = receiver
         self.date = now.strftime("%Y%m%d")
@@ -48,7 +49,7 @@ class GS:
 
     def to_edi(self):
         logger.debug("Generating GS segment")
-        return f"GS*BE*{self.sender}*{self.receiver}*{self.date}*{self.time}*61*X*005010X220A1~\n"
+        return f"GS*{self.functional_id}*{self.sender}*{self.receiver}*{self.date}*{self.time}*61*X*005010X220A1~\n"
 
 
 # Group Trailer
@@ -140,24 +141,31 @@ class REF:
 
 # Organization Name
 class NM1:
-    def __init__(self, last_name, first_name, middle_name, ssn, error_ctrl, error_id):
+    def __init__(self, entity_id_code, entity_type, last_name=None, first_name=None, middle_name=None,
+                 id_qualifier=None, id_code=None, error_ctrl=None, error_id=None):
+        self.entity_id_code = entity_id_code
+        self.entity_type = entity_type
         self.last_name = last_name
         self.first_name = first_name
         self.middle_name = middle_name
-        self.ssn = ssn
+        self.id_qualifier = id_qualifier
+        self.id_code = id_code
         self.error_ctrl = error_ctrl
         self.error_id = error_id
 
     def to_edi(self):
-        ssn = self.ssn
+        id_code = self.id_code
         if self.error_ctrl and self.error_ctrl.should_insert():
-            erroneous = self.error_ctrl.insert(ssn, "format")
+            erroneous = self.error_ctrl.insert(id_code, "format")
             logger.error(
-                f"[ERROR INSERTED] NM1 segment: SSN '{ssn}' changed to '{erroneous}' for member: {self.error_id}")
-            ssn = erroneous
+                f"[ERROR INSERTED] NM1 segment: SSN '{id_code}' changed to '{erroneous}' for member: {self.error_id}")
+            id_code = erroneous
         else:
             logger.debug(f"Generating NM1 segment for {self.last_name}, {self.first_name}")
-        return f"NM1*IL*1*{self.last_name}*{self.first_name}*{self.middle_name}***34*{ssn}~\n"
+        return (
+            f"NM1*{self.entity_id_code}*{self.entity_type}*{self.last_name}*{self.first_name}*{self.middle_name}*"
+            f"**{self.id_qualifier}*{id_code}~\n"
+        )
 
 
 # Administrative Communications Contact
@@ -270,8 +278,29 @@ class BHT:
         self.time = now.strftime("%H%M")
 
     def to_edi(self):
-        logger.debug(f"Generating BHT segment for")
-        return f"BHT*0022*13*{self.date}*{self.time}~"
+        logger.debug(f"Generating BHT segment")
+        # unsure of the value of BHT03
+        return f"BHT*0022*13*123456789*{self.date}*{self.time}~\n"
 
 
+class HL:
+    def __init__(self, hl_id=None, hl_parent=None, hl_code=None, children=None):
+        self.hl_id = hl_id
+        self.hl_parent = hl_parent
+        self.hl_code = hl_code if hl_code is hl_code else None
+        self.children = children
 
+    def to_edi(self):
+        logger.debug(f"Generating HL {self.hl_id} segment")
+        return f"HL*{self.hl_id}*{self.hl_parent}*{self.hl_code}*{self.children}~\n"
+
+
+class EQ:
+    def __init__(self, service_code, proc_code, scope):
+        self.service_code = service_code
+        self.proc_code = proc_code
+        self.scope = scope
+
+    def to_edi(self):
+        logger.debug(f"Generating EQ segment")
+        return f"EQ*{self.service_code}*{self.proc_code}*{self.scope}~\n"

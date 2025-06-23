@@ -14,19 +14,19 @@ LOCAL_DATABASE = f"localdb.jsonl"
 LOG_FILE = f'TestSuite_{CCYYMMDD}.log'
 
 # Paths
-
 ROOT_PATH = os.path.dirname(os.path.abspath(__file__))
 LOCAL_DATABASE_DIRECTORY = os.path.join(ROOT_PATH, "Output", "Local_DB")
-EDI_OUTPUT_DIRECTORY = os.path.join(ROOT_PATH, "Output", "Test_Files_834")
+EDI834_PATH = os.path.join(ROOT_PATH, "Output", "EDI834_Output")
+EDI270_PATH = os.path.join(ROOT_PATH, "Output", "EDI270_Output")
 LOG_DIRECTORY = os.path.join(ROOT_PATH, "Output", "Logs")
 os.makedirs(LOG_DIRECTORY, exist_ok=True)
 
 
 # Creates directory if nonexistent
-def get_edi834_path():
-    os.makedirs(EDI_OUTPUT_DIRECTORY, exist_ok=True)
-    logger.info(f"Directory exists: {EDI_OUTPUT_DIRECTORY}")
-    return os.path.join(EDI_OUTPUT_DIRECTORY, EDI834_FILE_NAME)
+def get_edi_path(edi_path, edi_file):
+    os.makedirs(edi_path, exist_ok=True)
+    logger.info(f"Directory exists: {edi_path}")
+    return os.path.join(edi_path, edi_file)
 
 
 def get_local_db_path():

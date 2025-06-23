@@ -26,15 +26,15 @@ class EDI834Generator:
         error_id = member.beneficiary_id
         logger.debug(f"Creating segments for Beneficiary: {beneficiary_id} under Sponsor: {sponsor_id}")
 
-        segments = [Seg.ST("834", self.transaction_control_number).to_edi(),
+        segments = [Seg.ST(834, self.transaction_control_number).to_edi(),
                     Seg.BGN(uuid.uuid4().hex.upper()).to_edi(),
                     Seg.N1("P5", member.insurance_company, member.insurance_FID, error_ctrl, error_id).to_edi(),
                     Seg.N1("IN", member.insurance_company, member.insurance_FID, error_ctrl, error_id).to_edi(),
                     Seg.INS(relationship_code).to_edi(),
                     Seg.REF("0F", sponsor_id, error_ctrl).to_edi(),
                     Seg.REF("6O", beneficiary_id, error_ctrl).to_edi(),
-                    Seg.NM1(member.last_name, member.first_name, member.middle_name, member.ssn, error_ctrl,
-                            error_id).to_edi(),
+                    Seg.NM1("IL", "1", member.last_name, member.first_name, member.middle_name, "34", member.ssn,
+                            error_ctrl, error_id).to_edi(),
                     Seg.PER(member.phone, error_ctrl, error_id).to_edi(),
                     Seg.N3(member.address.building_number, member.address.street, member.address.apartment,
                            error_ctrl, error_id).to_edi(),
@@ -67,7 +67,7 @@ class EDI834Generator:
     def combine_segments(self, sponsors):
         logger.debug(f"Starting EDI 834 generation for {len(list(sponsors))} sponsors")
         all_segments = [Seg.ISA().to_edi(),
-                        Seg.GS().to_edi()
+                        Seg.GS("BE").to_edi()
                         ]
 
         for sponsor in sponsors:
@@ -84,19 +84,32 @@ class EDI834Generator:
 
 class EDI270Generator:
     def __init__(self):
-        self.transaction_num = 0
+        date = config.DATE
 
+    def create_transaction():
+        segments = [Seg.BHT().to_edi(),
+                    Seg.HL(1, "", 20, 1).to_edi(),
+                    Seg.NM1("PR", 2, "None", "None", "None", "PI", "idk").to_edi(),
+                    Seg.HL(2, 1, 21, 1).to_edi(),
+                    Seg.NM1("1P", 2, "None", 'None', "None", "SV", "idk").to_edi(),
+                    Seg.HL(3, 2, 22, 0).to_edi(),
+                    Seg.NM1("IL", "1", "Last", "First", "MI", "MI", "idk").to_edi(),
+                    Seg.EQ("30", "", "FAM").to_edi()
+                    ]
 
-    def create_transaction(self):
-        segments = []
         return segments
 
     def combine_segments(self):
         all_segments = [Seg.ISA().to_edi(),
-                        Seg.GS().to_edi(),
-                        Seg.ST("270", self.transaction_num).to_edi(),
-                        Seg.BHT().to_edi(),
-                        Seg.GE(1).to_edi(),
-                        Seg.IEA().to_edi()]
+                        Seg.GS("HS").to_edi(),
+                        Seg.ST(270, 1).to_edi()
+                        ]
 
+        all_segments.extend(self.create_transaction())
+
+        ending_segments = [Seg.SE(10, 1).to_edi(),
+                           Seg.GE(1).to_edi(),
+                           Seg.IEA().to_edi()]
+
+        all_segments.extend(ending_segments)
         return all_segments

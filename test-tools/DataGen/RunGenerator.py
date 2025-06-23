@@ -2,7 +2,7 @@ from datetime import datetime
 
 import config
 from FileCreation.DataGenerator import SponsorDataGenerator
-from FileCreation.EDIGenerator import EDI834Generator
+from FileCreation.EDIGenerator import EDI834Generator, EDI270Generator
 from config import logger, number_of_tests, get_error_rate
 
 
@@ -31,7 +31,7 @@ def RunGenerator(max_messages=None, error_rate=None):
     logger.info(f"File generation took: {datetime.now() - now}")
 
     # Create Directory/Write to file
-    f = open(config.get_edi_path(), 'w')
+    f = open(config.get_edi_path(config.EDI834_PATH, config.EDI834_FILE_NAME), 'w')
     f.writelines(edi_file)
     f.close()
 

@@ -1,8 +1,10 @@
 import json
 import logging
 import os
+import random
 
 import config
+from DataLayer.Datatypes import Sponsor
 from DataLayer.Interfaces import DataAccess
 from config import get_local_db_path, logger
 
@@ -22,10 +24,15 @@ class LocalDBFunctions(DataAccess):
             logger.debug(f"{self.file} created")
         with open(self.file, "r") as f:
             for line in f:
-                family = json.loads(line)
-                self.data.append(family)
-                self.add_ssns_to_set(family)
+                sponsor_dict = json.loads(line)
+                sponsor = Sponsor.from_dict(sponsor_dict)
+                self.data.append(sponsor)
+                self.add_ssns_to_set(sponsor)
         logging.debug(f"There are {len(self.existing_ssns)} users in the database")
+
+    def get_random_beneficiary(self):
+        all_bene = [b for sponsor in self.data for b in sponsor.beneficiaries]
+        return random.choice(all_bene) if all_bene else logging.error("There are no beneficiaries to choose")
 
     def save_sponsor(self, sponsor):
         total_users = len(self.existing_ssns)
@@ -33,18 +40,21 @@ class LocalDBFunctions(DataAccess):
         if total_users + curr_user_count > config.USER_LIMIT:
             logger.warning("Max User Limit reached. Skipping save.")
             return
-        with open(self.file, "a") as f:
-            json.dump(sponsor.to_dict(), f)
-            f.write("\n")
-        self.add_ssns_to_set(sponsor.to_dict())
-        logger.debug(f"Saved sponsor: {sponsor.to_dict()}")
 
-    def add_ssns_to_set(self, sponsor_dict):
-        self.existing_ssns.add(sponsor_dict["ssn"])
-        logger.debug(f"Added sponsor SSN to set: {sponsor_dict["ssn"]}")
-        for b in sponsor_dict.get("beneficiaries", []):
-            self.existing_ssns.add(b["ssn"])
-            logger.debug(f"Added beneficiary SSN to set: {b["ssn"]}")
+        sponsor_dict = sponsor.to_dict()
+
+        with open(self.file, "a") as f:
+            json.dump(sponsor_dict, f)
+            f.write("\n")
+        self.add_ssns_to_set(sponsor)
+        logger.debug(f"Saved sponsor: {sponsor_dict}")
+
+    def add_ssns_to_set(self, sponsor):
+        self.existing_ssns.add(sponsor.ssn)
+        logger.debug(f"Added sponsor SSN to set: {sponsor.ssn}")
+        for b in sponsor.beneficiaries:
+            self.existing_ssns.add(b.ssn)
+            logger.debug(f"Added beneficiary SSN to set: {b.ssn}")
 
     def ssn_exists(self, ssn):
         return ssn in self.existing_ssns

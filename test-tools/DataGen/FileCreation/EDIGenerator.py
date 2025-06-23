@@ -3,6 +3,7 @@ import uuid
 import FileCreation.EDISegments as Seg
 import config
 from FileCreation.ErrorInjector import ErrorInjector
+from Repository.Local_Database_Functions import LocalDBFunctions
 from config import logger
 
 
@@ -84,17 +85,20 @@ class EDI834Generator:
 
 class EDI270Generator:
     def __init__(self):
-        date = config.DATE
+        self.localdb_funcs = LocalDBFunctions()
+        self.localdb_funcs.loadfile()
+        self.beneficiary = self.localdb_funcs.get_random_beneficiary()
 
-    def create_transaction():
+    def create_transaction(self):
         segments = [Seg.BHT().to_edi(),
                     Seg.HL(1, "", 20, 1).to_edi(),
                     Seg.NM1("PR", 2, "None", "None", "None", "PI", "idk").to_edi(),
                     Seg.HL(2, 1, 21, 1).to_edi(),
                     Seg.NM1("1P", 2, "None", 'None', "None", "SV", "idk").to_edi(),
                     Seg.HL(3, 2, 22, 0).to_edi(),
-                    Seg.NM1("IL", "1", "Last", "First", "MI", "MI", "idk").to_edi(),
-                    Seg.EQ("30", "", "FAM").to_edi()
+                    Seg.NM1("IL", "1", self.beneficiary.last_name, self.beneficiary.first_name,
+                            self.beneficiary.middle_name, "MI", "idk").to_edi(),
+                    Seg.EQ("30", "", "").to_edi()
                     ]
 
         return segments

@@ -6,7 +6,7 @@ from FileCreation.EDIGenerator import EDI834Generator, EDI270Generator
 from config import logger, number_of_tests, get_error_rate
 
 
-def RunGenerator(max_messages=None, error_rate=None):
+def Run834Generator(max_messages=None, error_rate=None):
     # Setup/Initialization
     now = datetime.now()
     max_messages = number_of_tests(max_messages)
@@ -38,3 +38,17 @@ def RunGenerator(max_messages=None, error_rate=None):
     # Display amount of time it takes to create
     end_time = datetime.now() - now
     logger.info(f"It took: {end_time}")
+
+
+def Run270Generator():
+    edi270 = EDI270Generator()
+    edi_out = edi270.combine_segments()
+
+    f = open(config.get_edi_path(config.EDI270_PATH, config.EDI270_FILE_NAME), 'w')
+    f.writelines(edi_out)
+    f.close()
+
+
+if __name__ == "__main__":
+    Run834Generator(5, 0)
+    Run270Generator()

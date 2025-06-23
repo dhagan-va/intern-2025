@@ -98,7 +98,7 @@ class EDI270Generator:
                     Seg.NM1("1P", 2, "None", 'None', "None", "SV", "idk").to_edi(),
                     Seg.HL(3, 2, 22, 0).to_edi(),
                     Seg.NM1("IL", "1", self.beneficiary.last_name, self.beneficiary.first_name,
-                            self.beneficiary.middle_name, "MI", "idk").to_edi(),
+                            self.beneficiary.middle_name, "MI", self.beneficiary.beneficiary_id).to_edi(),
                     Seg.EQ("30", "", "").to_edi()
                     ]
 

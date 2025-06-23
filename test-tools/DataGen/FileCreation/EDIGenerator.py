@@ -92,7 +92,8 @@ class EDI270Generator:
     def create_transaction(self):
         segments = [Seg.BHT().to_edi(),
                     Seg.HL(1, "", 20, 1).to_edi(),
-                    Seg.NM1("PR", 2, "None", "None", "None", "PI", "idk").to_edi(),
+                    Seg.NM1("PR", 2, self.beneficiary.insurance_company, "", "", "PI",
+                            self.beneficiary.insurance_FID).to_edi(),
                     Seg.HL(2, 1, 21, 1).to_edi(),
                     Seg.NM1("1P", 2, "None", 'None', "None", "SV", "idk").to_edi(),
                     Seg.HL(3, 2, 22, 0).to_edi(),

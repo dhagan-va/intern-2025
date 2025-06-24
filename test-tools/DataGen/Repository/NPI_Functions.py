@@ -25,8 +25,6 @@ def download_weekly_npi_data(download_path):
     start, end = get_week()
     filename = f"NPPES_Data_Dissemination_{start.strftime('%m%d%y')}_{end.strftime('%m%d%y')}_Weekly.zip"
     csv_pattern = f"npidata_pfile_{start.strftime('%Y%m%d')}-{end.strftime('%Y%m%d')}.csv"
-    print(filename)
-    print(csv_pattern)
 
     zip_path = Path(download_path) / filename
     csv_path = Path(download_path) / csv_pattern
@@ -65,5 +63,43 @@ def download_weekly_npi_data(download_path):
         return None
 
 
-if __name__ == "__main__":
-    csv_file = download_weekly_npi_data(config.DOWNLOAD_DIRECTORY)
+def get_random_provider(csv_path):
+    try:
+        df = pd.read_csv(
+            csv_path,
+            usecols=[
+                "NPI",
+                "Provider Organization Name (Legal Business Name)",
+                "Provider Last Name (Legal Name)",
+                "Provider First Name"
+            ],
+            dtype=str,
+            low_memory=False
+        )
+    except Exception as e:
+        logger.error(f"Error reading CSV: {e}")
+        return None
+
+    df_filtered = df[
+        df["Provider Organization Name (Legal Business Name)"].notna() |
+        df["Provider Last Name (Legal Name)"]
+        ]
+
+    if df_filtered.empty:
+        logger.error("Ermtosis, that's not supposed to happen")
+        return None
+
+    provider = df_filtered.sample(n=1).iloc[0]
+
+    if pd.notna(provider["Provider Organization Name (Legal Business Name)"]):
+        name = provider["Provider Organization Name (Legal Business Name)"]
+        entity_type = "2"
+    else:
+        name = f"{provider['Provider Last Name (Legal Name)']}, {provider['Provider First Name']}"
+        entity_type = "1"
+
+    return {
+        "npi": provider["NPI"],
+        "name": name,
+        "entity_type": entity_type
+    }

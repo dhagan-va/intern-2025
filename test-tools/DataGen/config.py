@@ -15,11 +15,13 @@ LOG_FILE = f'TestSuite_{CCYYMMDD}.log'
 
 # Paths
 ROOT_PATH = os.path.dirname(os.path.abspath(__file__))
+DOWNLOAD_DIRECTORY = os.path.join(ROOT_PATH, "Downloads")
 LOCAL_DATABASE_DIRECTORY = os.path.join(ROOT_PATH, "Output", "Local_DB")
 EDI834_PATH = os.path.join(ROOT_PATH, "Output", "EDI834_Output")
 EDI270_PATH = os.path.join(ROOT_PATH, "Output", "EDI270_Output")
 LOG_DIRECTORY = os.path.join(ROOT_PATH, "Output", "Logs")
 os.makedirs(LOG_DIRECTORY, exist_ok=True)
+os.makedirs(DOWNLOAD_DIRECTORY, exist_ok=True)
 
 
 # Creates directory if nonexistent
@@ -79,6 +81,9 @@ NUMBER_OF_TESTS = fit_range_to_half_bel(avg=10627, std=13948, min_val=1, max_val
 
 # Message Error Rate
 TOTAL_ERROR_RATE = 0.005  # 0.5%
+
+# Toggle New Line (for edi segments)
+TOGGLE_NEW_LINE = True
 
 
 def number_of_tests(n=None):

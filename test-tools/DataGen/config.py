@@ -18,9 +18,9 @@ DOWNLOAD_DIRECTORY = os.path.join(ROOT_PATH, "Downloads")
 LOCAL_DATABASE_DIRECTORY = os.path.join(ROOT_PATH, "Output", "Local_DB")
 EDI834_PATH = os.path.join(ROOT_PATH, "Output", "EDI834_Output")
 EDI270_PATH = os.path.join(ROOT_PATH, "Output", "EDI270_Output")
-NPI_CSV_PATH = download_weekly_npi_data(DOWNLOAD_DIRECTORY)
 
 os.makedirs(DOWNLOAD_DIRECTORY, exist_ok=True)
+NPI_CSV_PATH = download_weekly_npi_data(DOWNLOAD_DIRECTORY)
 
 logger = get_logger(__name__)
 

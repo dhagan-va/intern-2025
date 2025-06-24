@@ -94,7 +94,7 @@ class EDI270Generator:
     @staticmethod
     def split_provider_name(name, entity_type):
         if entity_type == "2":
-            return name, "", ""
+            return name, ""
         else:
             parts = name.replace(",", "").split()
             if len(parts) == 1:

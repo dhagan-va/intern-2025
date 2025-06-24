@@ -1,15 +1,13 @@
-import logging
-
 import requests
 import zipfile
 import io
 import datetime
 import pandas as pd
 
-import config
-from config import logger
+from log_config import get_logger
 from pathlib import Path
-import random
+
+logger = get_logger(__name__)
 
 
 def get_week(date=None):
@@ -59,11 +57,14 @@ def download_weekly_npi_data(download_path):
         return None
 
     except Exception as e:
-        logging.error(f"Error during download/extraction: {e}")
+        logger.error(f"Error during download/extraction: {e}")
         return None
 
 
-def get_random_provider(csv_path):
+def get_random_provider(csv_path, state):
+    if state is None:
+        logger.error("State must be provided to select provider")
+        return None
     try:
         df = pd.read_csv(
             csv_path,
@@ -71,7 +72,8 @@ def get_random_provider(csv_path):
                 "NPI",
                 "Provider Organization Name (Legal Business Name)",
                 "Provider Last Name (Legal Name)",
-                "Provider First Name"
+                "Provider First Name",
+                "Provider Business Mailing Address State Name"
             ],
             dtype=str,
             low_memory=False
@@ -81,8 +83,9 @@ def get_random_provider(csv_path):
         return None
 
     df_filtered = df[
-        df["Provider Organization Name (Legal Business Name)"].notna() |
-        df["Provider Last Name (Legal Name)"]
+        (df["Provider Organization Name (Legal Business Name)"].notna() |
+         df["Provider Last Name (Legal Name)"]) &
+        (df["Provider Business Mailing Address State Name"] == state.upper())
         ]
 
     if df_filtered.empty:
@@ -101,5 +104,6 @@ def get_random_provider(csv_path):
     return {
         "npi": provider["NPI"],
         "name": name,
-        "entity_type": entity_type
+        "entity_type": entity_type,
+        "state": provider["Provider Business Mailing Address State Name"]
     }

@@ -2,4 +2,5 @@
 **/*.log
 .env
 __pycache__/
-localdb.json
+/test-tools/DataGen/Output
+/test-tools/DataGen/Downloads

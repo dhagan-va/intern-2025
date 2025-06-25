@@ -103,9 +103,9 @@ class Test270Message(unittest.TestCase):
         self.error_rate_834 = 0
         Run834Generator(max_messages=self.messages_834, error_rate=self.error_rate_834)
 
-        self.messages_270 = 10
-        self.error_rate_270 = 0
-        Run270Generator(max_messages=self.messages_270)
+        self.messages_270 = 5
+        self.error_rate_270 = 0.5
+        Run270Generator(max_messages=self.messages_270, error_rate=self.error_rate_270)
         self.path = config.get_edi_path(config.EDI270_PATH, config.EDI270_FILE_NAME)
         self.logger = config.get_logger(__name__)
 
@@ -131,4 +131,14 @@ class Test270Message(unittest.TestCase):
         self.assertTrue(True)
 
     def test_270_error_rates(self):
-        self.assertTrue(True)
+        injector = ErrorInjector(max_messages=self.messages_270, error_rate=self.error_rate_270)
+        expected = self.messages_270 * self.error_rate_270
+
+        actual_inserts = 0
+        for _ in range(self.messages_270):
+            if injector.should_insert():
+                injector.insert("test", "missing")
+                actual_inserts += 1
+
+        self.assertTrue(math.isclose(actual_inserts, expected, abs_tol=1),
+                        f"Actual errors {actual_inserts}, expected {expected}")

@@ -16,7 +16,6 @@ class EDI834Generator:
         self.relationship_map = relationship_map
         self.transaction_control_number = 0
         self.max_messages = max_messages
-        self.error_rate = error_rate
         self.error_ctrl = ErrorInjector(max_messages, error_rate)
         logger.debug(f"Initialized EDI834Generator")
 
@@ -25,29 +24,28 @@ class EDI834Generator:
         sponsor_id = member.sponsor_id
         relationship_code = self.relationship_map.get(member.relationship)
         beneficiary_id = member.beneficiary_id
-        error_id = member.beneficiary_id
         logger.debug(f"Creating segments for Beneficiary: {beneficiary_id} under Sponsor: {sponsor_id}")
 
         segments = [Seg.ST(834, self.transaction_control_number).to_edi(),
                     Seg.BGN(uuid.uuid4().hex.upper()).to_edi(),
-                    Seg.N1("P5", member.insurance_company, member.insurance_FID, error_ctrl, error_id).to_edi(),
-                    Seg.N1("IN", member.insurance_company, member.insurance_FID, error_ctrl, error_id).to_edi(),
+                    Seg.N1("P5", member.insurance_company, member.insurance_FID, error_ctrl, beneficiary_id).to_edi(),
+                    Seg.N1("IN", member.insurance_company, member.insurance_FID, error_ctrl, beneficiary_id).to_edi(),
                     Seg.INS(relationship_code).to_edi(),
                     Seg.REF("0F", sponsor_id, error_ctrl).to_edi(),
                     Seg.REF("6O", beneficiary_id, error_ctrl).to_edi(),
                     Seg.NM1("IL", "1", member.last_name, member.first_name, member.middle_name, "34", member.ssn,
-                            error_ctrl, error_id).to_edi(),
-                    Seg.PER(member.phone, error_ctrl, error_id).to_edi(),
+                            error_ctrl, beneficiary_id).to_edi(),
+                    Seg.PER(member.phone, error_ctrl, beneficiary_id).to_edi(),
                     Seg.N3(member.address.building_number, member.address.street, member.address.apartment,
-                           error_ctrl, error_id).to_edi(),
+                           error_ctrl, beneficiary_id).to_edi(),
                     Seg.N4(member.address.city, member.address.state, member.address.zipcode, error_ctrl,
-                           error_id).to_edi()
+                           beneficiary_id).to_edi()
                     ]
 
         for code, value in member.deductibles.items():
-            segments.append(Seg.AMT(code, str(value), error_ctrl, error_id).to_edi())
+            segments.append(Seg.AMT(code, str(value), error_ctrl, beneficiary_id).to_edi())
         for code, value in member.visit_counts.items():
-            segments.append(Seg.AMT(code, str(value), error_ctrl, error_id).to_edi())
+            segments.append(Seg.AMT(code, str(value), error_ctrl, beneficiary_id).to_edi())
 
         segments += [Seg.HD().to_edi(),
                      Seg.DTP().to_edi(),
@@ -85,28 +83,29 @@ class EDI834Generator:
 
 
 class EDI270Generator:
-    def __init__(self, max_messages=None, provider_csv_path=None):
+    def __init__(self, max_messages=None, provider_csv_path=None, error_rate=None):
         self.localdb_funcs = LocalDBFunctions()
         self.npi_funcs = NPIFunctions(provider_csv_path)
         self.max_messages = max_messages
         self.provider_csv_path = provider_csv_path
+        self.error_ctrl = ErrorInjector(max_messages, error_rate)
 
     @staticmethod
     def split_provider_name(name, entity_type):
         if entity_type == "2":
             return name, ""
-        else:
-            parts = name.replace(",", "").split()
-            if len(parts) == 1:
-                return parts[0], ""
-            elif len(parts) == 2:
-                return parts[0], parts[1]
-            else:
-                return "Something", ""
 
-    def create_transaction(self, num):
+        parts = name.replace(",", "").split()
+
+        if len(parts) == 1:
+            return parts[0], ""
+        else:
+            return parts[0], parts[1]
+
+    def create_transaction(self, num, error_ctrl):
         beneficiary = self.localdb_funcs.get_random_beneficiary()
         state = beneficiary.address.state
+        error_id = beneficiary.beneficiary_id
 
         provider = self.npi_funcs.get_random_provider(state)
         last, first = self.split_provider_name(provider["name"], provider["entity_type"])
@@ -123,15 +122,15 @@ class EDI270Generator:
                     Seg.GS("HS").to_edi(),
                     Seg.ST(270, num).to_edi(),
                     Seg.BHT().to_edi(),
-                    Seg.HL(1, "", 20, 1).to_edi(),
+                    Seg.HL(1, "", 20, 1, error_ctrl, error_id).to_edi(),
                     Seg.NM1("PR", 2, beneficiary.insurance_company, "", "", "PI",
                             beneficiary.insurance_FID).to_edi(),
-                    Seg.HL(2, 1, 21, 1).to_edi(),
+                    Seg.HL(2, 1, 21, 1, error_ctrl, error_id).to_edi(),
                     Seg.NM1("1P", provider["entity_type"], last, first, "", "XX", provider["npi"]).to_edi(),
-                    Seg.HL(3, 2, 22, 0).to_edi(),
+                    Seg.HL(3, 2, 22, 0, error_ctrl, error_id).to_edi(),
                     Seg.NM1("IL", "1", beneficiary.last_name, beneficiary.first_name,
                             beneficiary.middle_name, "MI", beneficiary.beneficiary_id).to_edi(),
-                    Seg.EQ("30", "", "").to_edi(),
+                    Seg.EQ("30").to_edi(),
                     Seg.SE(10, num).to_edi(),
                     Seg.GE(1).to_edi(),
                     Seg.IEA().to_edi()
@@ -141,5 +140,5 @@ class EDI270Generator:
     def combine_segments(self):
         all_segments = []
         for i in range(1, self.max_messages + 1):
-            all_segments.extend(self.create_transaction(i))
+            all_segments.extend(self.create_transaction(i, self.error_ctrl))
         return all_segments

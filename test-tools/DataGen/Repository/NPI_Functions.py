@@ -95,6 +95,9 @@ class NPIFunctions:
         return self.df
 
     def get_random_provider(self, state):
+        org_col = "Provider Organization Name (Legal Business Name)"
+        last_col = "Provider Last Name (Legal Name)"
+        state_col = "Provider Business Mailing Address State Name"
         if not state:
             msg = "State must be provided to select provider"
             logger.error(msg)
@@ -103,9 +106,9 @@ class NPIFunctions:
         df = self.load_csv()
 
         df_filtered = df[
-            (df["Provider Organization Name (Legal Business Name)"].notna() |
-             df["Provider Last Name (Legal Name)"]) &
-            (df["Provider Business Mailing Address State Name"] == state.upper())
+            (df[org_col].notna() | df[last_col]) &
+            (df[state_col] == state.upper()) &
+            (df[org_col].isna() | (df[org_col].str.len() <= 60))
             ]
 
         if df_filtered.empty:
@@ -115,16 +118,17 @@ class NPIFunctions:
 
         provider = df_filtered.sample(n=1).iloc[0]
 
-        if pd.notna(provider["Provider Organization Name (Legal Business Name)"]):
-            name = provider["Provider Organization Name (Legal Business Name)"]
+        if pd.notna(provider[org_col]):
+            name = provider[org_col]
             entity_type = "2"
         else:
-            name = f"{provider['Provider Last Name (Legal Name)']}, {provider['Provider First Name']}"
+            name = f"{provider[last_col]}, {provider['Provider First Name']}"
             entity_type = "1"
 
         return {
             "npi": provider["NPI"],
             "name": name,
             "entity_type": entity_type,
-            "state": provider["Provider Business Mailing Address State Name"]
+            "state": provider[state_col]
         }
+

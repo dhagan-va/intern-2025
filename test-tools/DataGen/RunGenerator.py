@@ -40,8 +40,11 @@ def Run834Generator(max_messages=None, error_rate=None):
     logger.info(f"It took: {end_time}")
 
 
-def Run270Generator():
-    edi270 = EDI270Generator()
+def Run270Generator(max_messages=None):
+    max_messages = number_of_tests(max_messages)
+    provider_csv_path = config.NPI_CSV_PATH
+
+    edi270 = EDI270Generator(max_messages, provider_csv_path)
     edi_out = edi270.combine_segments()
 
     f = open(config.get_edi_path(config.EDI270_PATH, config.EDI270_FILE_NAME), 'w')
@@ -51,4 +54,4 @@ def Run270Generator():
 
 if __name__ == "__main__":
     Run834Generator(5, 0)
-    Run270Generator()
+    Run270Generator(5)

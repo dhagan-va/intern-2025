@@ -1,5 +1,6 @@
 import uuid
 
+from Repository.NPI_Functions import get_random_provider
 import FileCreation.EDISegments as Seg
 import config
 from FileCreation.ErrorInjector import ErrorInjector
@@ -84,37 +85,61 @@ class EDI834Generator:
 
 
 class EDI270Generator:
-    def __init__(self):
+    def __init__(self, max_messages=None, provider_csv_path=None):
         self.localdb_funcs = LocalDBFunctions()
         self.localdb_funcs.loadfile()
-        self.beneficiary = self.localdb_funcs.get_random_beneficiary()
+        self.max_messages = max_messages
+        self.provider_csv_path = provider_csv_path
 
-    def create_transaction(self):
-        segments = [Seg.BHT().to_edi(),
+    @staticmethod
+    def split_provider_name(name, entity_type):
+        if entity_type == "2":
+            return name, ""
+        else:
+            parts = name.replace(",", "").split()
+            if len(parts) == 1:
+                return parts[0], ""
+            elif len(parts) == 2:
+                return parts[0], parts[1]
+            else:
+                return "Something", ""
+
+    def create_transaction(self, num):
+        beneficiary = self.localdb_funcs.get_random_beneficiary()
+        state = beneficiary.address.state
+
+        provider = get_random_provider(self.provider_csv_path, state)
+        last, first = self.split_provider_name(provider["name"], provider["entity_type"])
+
+        if not provider:
+            logger.warning(f"No provider found for state: {state}. Using fallback")
+            provider = {
+                "name": "Ryan's company",
+                "npi": "0000000000",
+                "entity_type": 2
+            }
+
+        segments = [Seg.ISA().to_edi(),
+                    Seg.GS("HS").to_edi(),
+                    Seg.ST(270, num).to_edi(),
+                    Seg.BHT().to_edi(),
                     Seg.HL(1, "", 20, 1).to_edi(),
-                    Seg.NM1("PR", 2, self.beneficiary.insurance_company, "", "", "PI",
-                            self.beneficiary.insurance_FID).to_edi(),
+                    Seg.NM1("PR", 2, beneficiary.insurance_company, "", "", "PI",
+                            beneficiary.insurance_FID).to_edi(),
                     Seg.HL(2, 1, 21, 1).to_edi(),
-                    Seg.NM1("1P", 2, "None", 'None', "None", "SV", "idk").to_edi(),
+                    Seg.NM1("1P", provider["entity_type"], last, first, "", "XX", provider["npi"]).to_edi(),
                     Seg.HL(3, 2, 22, 0).to_edi(),
-                    Seg.NM1("IL", "1", self.beneficiary.last_name, self.beneficiary.first_name,
-                            self.beneficiary.middle_name, "MI", self.beneficiary.beneficiary_id).to_edi(),
-                    Seg.EQ("30", "", "").to_edi()
+                    Seg.NM1("IL", "1", beneficiary.last_name, beneficiary.first_name,
+                            beneficiary.middle_name, "MI", beneficiary.beneficiary_id).to_edi(),
+                    Seg.EQ("30", "", "").to_edi(),
+                    Seg.SE(10, num).to_edi(),
+                    Seg.GE(1).to_edi(),
+                    Seg.IEA().to_edi()
                     ]
-
         return segments
 
     def combine_segments(self):
-        all_segments = [Seg.ISA().to_edi(),
-                        Seg.GS("HS").to_edi(),
-                        Seg.ST(270, 1).to_edi()
-                        ]
-
-        all_segments.extend(self.create_transaction())
-
-        ending_segments = [Seg.SE(10, 1).to_edi(),
-                           Seg.GE(1).to_edi(),
-                           Seg.IEA().to_edi()]
-
-        all_segments.extend(ending_segments)
+        all_segments = []
+        for i in range(1, self.max_messages + 1):
+            all_segments.extend(self.create_transaction(i))
         return all_segments

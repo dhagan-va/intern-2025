@@ -1,25 +1,28 @@
-import logging
+from log_config import get_logger
 import os
 from datetime import datetime
+from Repository.NPI_Functions import download_weekly_npi_data
 
 from BellShapes import BellShapes, fit_range_to_half_bel
 
 # Time and File Info
 DATE = datetime.now()
-CCYYMMDD = DATE.strftime("%Y%m%d")
 
 EDI834_FILE_NAME = f'834.VFMP.{DATE.year}.{DATE.strftime("%y%m%d")}.{DATE.strftime("%H%M")}.{DATE.strftime("%Y%m%d1")}.edi'
 EDI270_FILE_NAME = f'270.VFMP.{DATE.year}.{DATE.strftime("%y%m%d")}.{DATE.strftime("%H%M")}.{DATE.strftime("%Y%m%d1")}.edi'
 LOCAL_DATABASE = f"localdb.jsonl"
-LOG_FILE = f'TestSuite_{CCYYMMDD}.log'
 
 # Paths
 ROOT_PATH = os.path.dirname(os.path.abspath(__file__))
+DOWNLOAD_DIRECTORY = os.path.join(ROOT_PATH, "Downloads")
 LOCAL_DATABASE_DIRECTORY = os.path.join(ROOT_PATH, "Output", "Local_DB")
 EDI834_PATH = os.path.join(ROOT_PATH, "Output", "EDI834_Output")
 EDI270_PATH = os.path.join(ROOT_PATH, "Output", "EDI270_Output")
-LOG_DIRECTORY = os.path.join(ROOT_PATH, "Output", "Logs")
-os.makedirs(LOG_DIRECTORY, exist_ok=True)
+
+os.makedirs(DOWNLOAD_DIRECTORY, exist_ok=True)
+NPI_CSV_PATH = download_weekly_npi_data(DOWNLOAD_DIRECTORY)
+
+logger = get_logger(__name__)
 
 
 # Creates directory if nonexistent
@@ -34,19 +37,6 @@ def get_local_db_path():
     logger.info(f"Directory exists: {LOCAL_DATABASE_DIRECTORY}")
     return os.path.join(LOCAL_DATABASE_DIRECTORY, LOCAL_DATABASE)
 
-
-# Logging
-def get_logger(name):
-    log_path = os.path.join(LOG_DIRECTORY, LOG_FILE)
-    logging.basicConfig(
-        level=logging.INFO,
-        filename=log_path,
-        filemode='a'
-    )
-    return logging.getLogger(name)
-
-
-logger = get_logger(__name__)
 
 # Constants and config
 FAKER_SEED = 49245
@@ -79,6 +69,9 @@ NUMBER_OF_TESTS = fit_range_to_half_bel(avg=10627, std=13948, min_val=1, max_val
 
 # Message Error Rate
 TOTAL_ERROR_RATE = 0.005  # 0.5%
+
+# Toggle New Line (for edi segments)
+TOGGLE_NEW_LINE = True
 
 
 def number_of_tests(n=None):

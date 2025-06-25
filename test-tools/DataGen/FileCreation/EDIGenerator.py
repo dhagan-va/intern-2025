@@ -21,6 +21,7 @@ class EDI834Generator:
 
     def create_member(self, member, error_ctrl):
         self.transaction_control_number += 1
+        self.error_ctrl.reset_error_inserted()
         sponsor_id = member.sponsor_id
         relationship_code = self.relationship_map.get(member.relationship)
         beneficiary_id = member.beneficiary_id
@@ -103,6 +104,7 @@ class EDI270Generator:
             return parts[0], parts[1]
 
     def create_transaction(self, num, error_ctrl):
+        self.error_ctrl.reset_error_inserted()
         beneficiary = self.localdb_funcs.get_random_beneficiary()
         state = beneficiary.address.state
         error_id = beneficiary.beneficiary_id

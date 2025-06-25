@@ -136,6 +136,7 @@ class Test270Message(unittest.TestCase):
 
         actual_inserts = 0
         for _ in range(self.messages_270):
+            injector.reset_error_inserted()
             if injector.should_insert():
                 injector.insert("test", "missing")
                 actual_inserts += 1

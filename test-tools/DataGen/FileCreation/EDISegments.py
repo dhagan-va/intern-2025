@@ -34,7 +34,7 @@ class IEA:
 
     def to_edi(self):
         logger.debug("Generating IEA segment")
-        return f"IEA*1*{self.interCtrlNumber}~"
+        return f"IEA*1*{self.interCtrlNumber}~\n"
 
 
 # Group Header
@@ -284,23 +284,30 @@ class BHT:
 
 
 class HL:
-    def __init__(self, hl_id=None, hl_parent=None, hl_code=None, children=None):
+    def __init__(self, hl_id=None, hl_parent=None, hl_code=None, children=None, error_ctrl=None, error_id=None):
         self.hl_id = hl_id
         self.hl_parent = hl_parent
-        self.hl_code = hl_code if hl_code is hl_code else None
+        self.hl_code = hl_code
         self.children = children
+        self.error_ctrl = error_ctrl
+        self.error_id = error_id
 
     def to_edi(self):
-        logger.debug(f"Generating HL {self.hl_id} segment")
-        return f"HL*{self.hl_id}*{self.hl_parent}*{self.hl_code}*{self.children}~\n"
+        hl_code = self.hl_code
+        if self.error_ctrl and self.error_ctrl.should_insert():
+            hl_code = self.error_ctrl.insert(hl_code, "missing")
+            logger.warning(
+                f"[ERROR INSERTED] HL segment: HL Code changed to '{hl_code}' for member: {self.error_id}"
+            )
+        else:
+            logger.debug(f"Generating HL {hl_code} segment")
+        return f"HL*{self.hl_id}*{self.hl_parent}*{hl_code}*{self.children}~\n"
 
 
 class EQ:
-    def __init__(self, service_code, proc_code, scope):
+    def __init__(self, service_code):
         self.service_code = service_code
-        self.proc_code = proc_code
-        self.scope = scope
 
     def to_edi(self):
         logger.debug(f"Generating EQ segment")
-        return f"EQ*{self.service_code}*{self.proc_code}*{self.scope}~\n"
+        return f"EQ*{self.service_code}~\n"

@@ -1,6 +1,4 @@
-**/Test_Files_834/*
-**/*.log
 .env
 __pycache__/
-/test-tools/DataGen/Output
-/test-tools/DataGen/Downloads
+Output/
+Downloads/

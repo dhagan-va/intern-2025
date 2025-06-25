@@ -1,6 +1,6 @@
 import uuid
 
-from Repository.NPI_Functions import get_random_provider
+from Repository.NPI_Functions import NPIFunctions
 import FileCreation.EDISegments as Seg
 import config
 from FileCreation.ErrorInjector import ErrorInjector
@@ -87,7 +87,7 @@ class EDI834Generator:
 class EDI270Generator:
     def __init__(self, max_messages=None, provider_csv_path=None):
         self.localdb_funcs = LocalDBFunctions()
-        self.localdb_funcs.loadfile()
+        self.npi_funcs = NPIFunctions(provider_csv_path)
         self.max_messages = max_messages
         self.provider_csv_path = provider_csv_path
 
@@ -108,7 +108,7 @@ class EDI270Generator:
         beneficiary = self.localdb_funcs.get_random_beneficiary()
         state = beneficiary.address.state
 
-        provider = get_random_provider(self.provider_csv_path, state)
+        provider = self.npi_funcs.get_random_provider(state)
         last, first = self.split_provider_name(provider["name"], provider["entity_type"])
 
         if not provider:

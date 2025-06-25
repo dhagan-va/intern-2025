@@ -110,7 +110,7 @@ class N1:
         id_code = self.id_code
         if self.error_ctrl and self.error_ctrl.should_insert():
             erroneous = self.error_ctrl.insert(id_code, "missing")
-            logger.error(
+            logger.warning(
                 f"[ERROR INSERTED] N1 segment: ID code '{id_code}' changed to '{erroneous}' for member: {self.error_id}")
             id_code = erroneous
         else:
@@ -157,7 +157,7 @@ class NM1:
         id_code = self.id_code
         if self.error_ctrl and self.error_ctrl.should_insert():
             erroneous = self.error_ctrl.insert(id_code, "format")
-            logger.error(
+            logger.warning(
                 f"[ERROR INSERTED] NM1 segment: SSN '{id_code}' changed to '{erroneous}' for member: {self.error_id}")
             id_code = erroneous
         else:
@@ -179,7 +179,7 @@ class PER:
         phone_number = self.phone_number
         if self.error_ctrl and self.error_ctrl.should_insert():
             erroneous = self.error_ctrl.insert(phone_number, "missing")
-            logger.error(
+            logger.warning(
                 f"[ERROR INSERTED] PER segment: Phone '{phone_number}' changed to '{erroneous}' for member: {self.error_id}")
             phone_number = erroneous
         else:
@@ -200,12 +200,12 @@ class N3:
         street = self.street
         if self.error_ctrl and self.error_ctrl.should_insert():
             erroneous = self.error_ctrl.insert(street, "invalid")
-            logger.error(
+            logger.warning(
                 f"[ERROR INSERTED] N3 segment: Street '{street}' changed to '{erroneous}' for member: {self.error_id}")
             street = erroneous
         else:
             logger.debug("Generating N3 segment")
-        return f'N3*{self.building_number}{" "}{street}*{self.apartment}~\n'
+        return f"N3*{self.building_number}{" "}{street}*{self.apartment}~\n"
 
 
 # Location
@@ -221,7 +221,7 @@ class N4:
         city = self.city
         if self.error_ctrl and self.error_ctrl.should_insert():
             erroneous = self.error_ctrl.insert(city, "invalid")
-            logger.error(
+            logger.warning(
                 f"[ERROR INSERTED] N4 segment: City '{city}' changed to '{erroneous}' for member: {self.error_id}")
             city = erroneous
         else:
@@ -241,7 +241,7 @@ class AMT:
         amount = self.amount
         if self.error_ctrl and self.error_ctrl.should_insert():
             erroneous = self.error_ctrl.insert(amount, "negative")
-            logger.error(
+            logger.warning(
                 f"[ERROR INSERTED] AMT segment: Amount '{amount}' changed to '{erroneous}' for member: {self.error_id}")
             amount = erroneous
         else:

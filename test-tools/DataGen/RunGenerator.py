@@ -37,21 +37,31 @@ def Run834Generator(max_messages=None, error_rate=None):
 
     # Display amount of time it takes to create
     end_time = datetime.now() - now
-    logger.info(f"It took: {end_time}")
+    logger.info(f"It took {end_time} to generate {max_messages} transactions for the 834 file")
 
 
 def Run270Generator(max_messages=None):
+    # Setup/Initialization
+    now = datetime.now()
     max_messages = number_of_tests(max_messages)
     provider_csv_path = config.NPI_CSV_PATH
 
+    logger.info(f"Generating transactions from NPI data and local database")
     edi270 = EDI270Generator(max_messages, provider_csv_path)
+    logger.info(f"Generating transactions into EDI file")
     edi_out = edi270.combine_segments()
 
     f = open(config.get_edi_path(config.EDI270_PATH, config.EDI270_FILE_NAME), 'w')
     f.writelines(edi_out)
     f.close()
+    end_time = datetime.now() - now
+    logger.info(f"It took {end_time} to generate {max_messages} transactions for the 270 file")
 
 
 if __name__ == "__main__":
+    curr = datetime.now()
     Run834Generator(5, 0)
-    Run270Generator(5)
+    Run270Generator(100)
+    end = datetime.now() - curr
+    logger.info(f"It took {end} to generate the output")
+

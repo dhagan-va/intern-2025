@@ -14,6 +14,7 @@ class LocalDBFunctions(DataAccess):
         if file is None:
             file = get_local_db_path()
         self.data = []
+        self.all_bene = []
         self.file = file
         self.existing_ssns = set()
         self.loadfile()
@@ -27,12 +28,15 @@ class LocalDBFunctions(DataAccess):
                 sponsor_dict = json.loads(line)
                 sponsor = Sponsor.from_dict(sponsor_dict)
                 self.data.append(sponsor)
+                self.all_bene.extend(sponsor.beneficiaries)
                 self.add_ssns_to_set(sponsor)
         logging.debug(f"There are {len(self.existing_ssns)} users in the database")
 
     def get_random_beneficiary(self):
-        all_bene = [b for sponsor in self.data for b in sponsor.beneficiaries]
-        return random.choice(all_bene) if all_bene else logging.error("There are no beneficiaries to choose")
+        if not self.all_bene:
+            logging.error("There are no beneficiaries to choose")
+            raise ValueError("There are no beneficiaries to choose")
+        return random.choice(self.all_bene)
 
     def save_sponsor(self, sponsor):
         total_users = len(self.existing_ssns)

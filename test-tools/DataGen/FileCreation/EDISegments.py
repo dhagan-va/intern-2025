@@ -205,7 +205,7 @@ class N3:
             street = erroneous
         else:
             logger.debug("Generating N3 segment")
-        return f"N3*{self.building_number}{" "}{street}*{self.apartment}~\n"
+        return f'N3*{self.building_number}{" "}{street}*{self.apartment}~\n'
 
 
 # Location

@@ -11,11 +11,13 @@ DATE = datetime.now()
 EDI834_FILE_NAME = f'834.VFMP.{DATE.year}.{DATE.strftime("%y%m%d")}.{DATE.strftime("%H%M")}.{DATE.strftime("%Y%m%d1")}.edi'
 EDI270_FILE_NAME = f'270.VFMP.{DATE.year}.{DATE.strftime("%y%m%d")}.{DATE.strftime("%H%M")}.{DATE.strftime("%Y%m%d1")}.edi'
 LOCAL_DATABASE = f"localdb.jsonl"
+STATISTICS_MD = f"Statistics_Visualizer.md"
 
 # Paths
 ROOT_PATH = os.path.dirname(os.path.abspath(__file__))
 DOWNLOAD_DIRECTORY = os.path.join(ROOT_PATH, "Downloads")
 LOCAL_DATABASE_DIRECTORY = os.path.join(ROOT_PATH, "Output", "Local_DB")
+MARKDOWN_DIRECTORY = os.path.join(ROOT_PATH, "Output")
 EDI834_PATH = os.path.join(ROOT_PATH, "Output", "EDI834_Output")
 EDI270_PATH = os.path.join(ROOT_PATH, "Output", "EDI270_Output")
 
@@ -85,3 +87,44 @@ def number_of_tests(n=None):
 
 def get_error_rate(n=None):
     return TOTAL_ERROR_RATE if n is None else n
+
+
+log_data = {
+    "num_834": 0,
+    "num_270": 0,
+    "time_834": 0,
+    "time_270": 0,
+    "avg_270_per_bene": 0,
+    "throughput_834": 0,
+    "throughput_270": 0,
+    "error_rate_834": 0,
+    "error_rate_270": 0,
+    "error_ct_834": 0,
+    "error_ct_270": 0,
+    "family_size": 0,
+    "avg_amt_D2": 0,
+    "avg_amt_FK": 0,
+    "avg_amt_R": 0,
+    "avg_amt_C1": 0,
+    "avg_amt_P3": 0,
+    "avg_amt_B9": 0
+}
+
+
+def create_md():
+    if not os.path.exists(MARKDOWN_DIRECTORY):
+        os.makedirs(MARKDOWN_DIRECTORY)
+    path = os.path.join(MARKDOWN_DIRECTORY, STATISTICS_MD)
+
+    with open(path, "w") as f:
+        f.write("# Data Visualizer \n\n")
+
+        f.write("## Transaction Counts\n")
+        f.write("```mermaid\n")
+        f.write("xychart-beta\n")
+        f.write('    title "Number of Messages"\n')
+        f.write('    x-axis ["834", "270"]\n')
+        f.write('    y-axis "Count" 0 --> {}\n'.format(max(log_data['num_834'], log_data['num_270']) + 100))
+        f.write(f'    bar [{log_data["num_834"]}, {log_data["num_270"]}]\n')
+        f.write("```\n\n")
+

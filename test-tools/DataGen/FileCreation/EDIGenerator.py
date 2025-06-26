@@ -29,8 +29,8 @@ class EDI834Generator:
 
         segments = [Seg.ST(834, self.transaction_control_number).to_edi(),
                     Seg.BGN(uuid.uuid4().hex.upper()).to_edi(),
-                    Seg.N1("P5", member.insurance_company, member.insurance_FID, error_ctrl, beneficiary_id).to_edi(),
-                    Seg.N1("IN", member.insurance_company, member.insurance_FID, error_ctrl, beneficiary_id).to_edi(),
+                    Seg.N1("P5", config.N1_SPONSOR_QUALIFIER, config.N1_SPONSOR_ID, error_ctrl, beneficiary_id).to_edi(),
+                    Seg.N1("IN", config.N1_PAYER_QUALIFIER, config.N1_PAYER_ID, error_ctrl, beneficiary_id).to_edi(),
                     Seg.INS(relationship_code).to_edi(),
                     Seg.REF("0F", sponsor_id, error_ctrl).to_edi(),
                     Seg.REF("6O", beneficiary_id, error_ctrl).to_edi(),

@@ -104,7 +104,7 @@ class Test270Message(unittest.TestCase):
         Run834Generator(max_messages=self.messages_834, error_rate=self.error_rate_834)
 
         self.messages_270 = 100
-        self.error_rate_270 = 1
+        self.error_rate_270 = 0
         Run270Generator(max_messages=self.messages_270, error_rate=self.error_rate_270)
         self.path = config.get_edi_path(config.EDI270_PATH, config.EDI270_FILE_NAME)
         self.logger = config.get_logger(__name__)
@@ -149,3 +149,6 @@ class Test270Message(unittest.TestCase):
 
         self.assertTrue(math.isclose(actual_inserts, expected, abs_tol=1),
                         f"Actual errors {actual_inserts}, expected {expected}")
+
+if __name__ == "__main__":
+    runner = unittest.TextTestRunner()

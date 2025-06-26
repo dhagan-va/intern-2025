@@ -88,30 +88,6 @@ def create_md():
             y_max=5
         ))
 
-        # f.write("## Family Size Distribution\n")
-        # family_size_counts = localdb.get_family_size_distribution()  # e.g., {1: 50, 2: 130, 3: 90, 4: 30}
-        # family_sizes = list(family_size_counts.keys())
-        # counts = list(family_size_counts.values())
-        # f.write("```mermaid\n")
-        # f.write("xychart-beta\n")
-        # f.write('    title "Family Size Histogram"\n')
-        # f.write(f'    x-axis {family_sizes}\n')
-        # f.write(f'    y-axis "Count" 0 --> {max(counts) + 1}\n')
-        # f.write(f'    bar {counts}\n')
-        # f.write("```\n\n")
-        #
-        # f.write("## Beneficiary Types\n")
-        # bene_type_counts = localdb.get_beneficiary_type_distribution()  # e.g., {"Spouse": 40, "Child": 150}
-        # bene_types = list(bene_type_counts.keys())
-        # bene_vals = list(bene_type_counts.values())
-        # f.write("```mermaid\n")
-        # f.write("xychart-beta\n")
-        # f.write('    title "Beneficiary Types"\n')
-        # f.write(f'    x-axis {bene_types}\n')
-        # f.write(f'    y-axis "Count" 0 --> {max(bene_vals) + 1}\n')
-        # f.write(f'    bar {bene_vals}\n')
-        # f.write("```\n\n")
-
         f.write("## AMT (deductible) Averages\n")
         f.writelines(create_mermaid_bar_graph(
             title="AMT (deductible) Averages",

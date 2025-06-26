@@ -11,13 +11,11 @@ class Setting:
     Class representing configuration settings for test client.
     """
 
-    endpoint: str
     rps: float
     threads: int
     transaction: int
 
-    def __init__(self, endpoint: str, rps: float, threads: int, transaction: int):
-        self.endpoint = endpoint
+    def __init__(self, rps: float, threads: int, transaction: int):
         self.rps = rps
         self.threads = threads
         self.transaction = transaction
@@ -26,4 +24,6 @@ class Setting:
 def load_settings():
     with open(DEFAULT_CONF, "rb") as f:
         data = tomllib.load(f)
-        return Setting(data["endpoint"], data["rps"], data["threads"], data["transaction"])
+        return Setting(
+            data["rps"], data["threads"], data["transaction"]
+        )

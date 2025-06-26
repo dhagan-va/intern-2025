@@ -4,15 +4,6 @@ from pathlib import Path
 import pandas as pd
 
 
-# @dataclass
-# class Result:
-#     def __init__(self):
-#         self.result_df = pd.DataFrame(columns=["timestamp", "latency", "http"])
-
-#     def append(self, stamp, lat, status):
-#         self.result_df.loc[len(self.result_df)] = [stamp, lat, status]
-
-
 class AbstractSink:
     def write(self):
         raise NotImplementedError

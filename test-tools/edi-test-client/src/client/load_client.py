@@ -15,7 +15,12 @@ import results
 
 class LoadClient:
     def __init__(self, cfg: Setting):
-        self.endpoint = cfg.endpoint
+        self.endpoints = {
+            270: "http://127.0.0.1:5000/270/",
+            276: "http://127.0.0.1:5000/276/",
+            278: "http://127.0.0.1:5000/278/",
+        }
+        self.transaction = cfg.transaction
         self._rps = cfg.rps
         self._rps_lock = threading.Lock()
         self.threads = cfg.threads

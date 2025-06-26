@@ -4,7 +4,7 @@ from datetime import datetime
 
 DATE = datetime.now()
 CCYYMMDD = DATE.strftime("%Y%m%d")
-LOG_DIRECTORY = os.path.join(os.path.dirname(os.path.abspath(__file__)), "Output", "Logs")
+LOG_DIRECTORY = os.path.join(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")), "Output", "Logs")
 LOG_FILE = f'TestSuite_{CCYYMMDD}.log'
 
 os.makedirs(LOG_DIRECTORY, exist_ok=True)

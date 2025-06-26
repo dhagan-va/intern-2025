@@ -4,13 +4,22 @@ Each class is its own EDI segment
 from datetime import datetime
 from typing import Optional
 
-import config
-from config import logger
+from Config import Config
+from Config.Config import logger
+
+
+class EDISegment:
+    def __init__(self, nl_toggle=True):
+        self.nl_toggle = nl_toggle
+
+    def get_nl(self):
+        return "~\n" if self.nl_toggle else "~"
 
 
 # File Header
-class ISA:
-    def __init__(self, sender=config.SENDER_ID, receiver=config.RECEIVER_ID):
+class ISA(EDISegment):
+    def __init__(self, sender=Config.SENDER_ID, receiver=Config.RECEIVER_ID, nl_toggle=True):
+        super().__init__(nl_toggle)
         now = datetime.now()
         self.sender = sender
         self.receiver = receiver
@@ -18,12 +27,14 @@ class ISA:
         self.interCtrlNumber = now.strftime("%Y%m%d1")
         self.date = now.strftime("%y%m%d")
         self.time = now.strftime("%H%M")
+        self.nl_toggle = nl_toggle
 
     def to_edi(self):
+        nl = "~\n" if self.nl_toggle else "~"
         logger.debug("Generating ISA segment")
         return (
             f"ISA*00*          *00*          *{self.id_qualifier}*{self.sender:<15}*{self.id_qualifier}*"
-            f"{self.receiver:<15}*{self.date}*{self.time}*$*00501*{self.interCtrlNumber}*0*T*:~\n")
+            f"{self.receiver:<15}*{self.date}*{self.time}*$*00501*{self.interCtrlNumber}*0*T*:{nl}")
 
 
 # File Trailer
@@ -39,17 +50,19 @@ class IEA:
 
 # Group Header
 class GS:
-    def __init__(self, functional_id, sender=config.SENDER_ID, receiver=config.RECEIVER_ID):
+    def __init__(self, functional_id, sender=Config.SENDER_ID, receiver=Config.RECEIVER_ID, nl_toggle=True):
         now = datetime.now()
         self.functional_id = functional_id
         self.sender = sender
         self.receiver = receiver
         self.date = now.strftime("%Y%m%d")
         self.time = now.strftime("%H%M%S")
+        self.nl_toggle = nl_toggle
 
     def to_edi(self):
+        nl = "~\n" if self.nl_toggle else "~"
         logger.debug("Generating GS segment")
-        return f"GS*{self.functional_id}*{self.sender}*{self.receiver}*{self.date}*{self.time}*61*X*005010X220A1~\n"
+        return f"GS*{self.functional_id}*{self.sender}*{self.receiver}*{self.date}*{self.time}*61*X*005010X220A1{nl}"
 
 
 # Group Trailer

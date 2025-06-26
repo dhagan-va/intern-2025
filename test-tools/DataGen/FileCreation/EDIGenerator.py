@@ -1,15 +1,16 @@
 import uuid
 
 import FileCreation.EDISegments as Seg
-import config
+from Config import Config
 from FileCreation.ErrorInjector import ErrorInjector
 from Repository.Local_Database_Functions import LocalDBFunctions
 from Repository.NPI_Functions import NPIFunctions
-from config import logger
+from Config.Config import logger
+from Config.Data_Visualizer import log_data
 
 
 class EDI834Generator:
-    def __init__(self, sender=config.SENDER_ID, receiver=config.RECEIVER_ID, relationship_map=config.RELATIONSHIP_MAP,
+    def __init__(self, sender=Config.SENDER_ID, receiver=Config.RECEIVER_ID, relationship_map=Config.RELATIONSHIP_MAP,
                  max_messages=None, error_rate=None):
         self.sender = sender
         self.receiver = receiver
@@ -29,8 +30,8 @@ class EDI834Generator:
 
         segments = [Seg.ST(834, self.transaction_control_number).to_edi(),
                     Seg.BGN(uuid.uuid4().hex.upper()).to_edi(),
-                    Seg.N1("P5", member.insurance_company, member.insurance_FID, error_ctrl, beneficiary_id).to_edi(),
-                    Seg.N1("IN", member.insurance_company, member.insurance_FID, error_ctrl, beneficiary_id).to_edi(),
+                    Seg.N1("P5", Config.N1_SPONSOR_QUALIFIER, Config.N1_SPONSOR_ID, error_ctrl, beneficiary_id).to_edi(),
+                    Seg.N1("IN", Config.N1_PAYER_QUALIFIER, Config.N1_PAYER_ID, error_ctrl, beneficiary_id).to_edi(),
                     Seg.INS(relationship_code).to_edi(),
                     Seg.REF("0F", sponsor_id, error_ctrl).to_edi(),
                     Seg.REF("6O", beneficiary_id, error_ctrl).to_edi(),
@@ -45,8 +46,12 @@ class EDI834Generator:
 
         for code, value in member.deductibles.items():
             segments.append(Seg.AMT(code, str(value), error_ctrl, beneficiary_id).to_edi())
+            log_data[f"sum_amt_{code}"] = log_data.get(f"sum_amt_{code}", 0) + value
+            log_data[f"count_amt_{code}"] = log_data.get(f"count_amt_{code}", 0) + 1
         for code, value in member.visit_counts.items():
             segments.append(Seg.AMT(code, str(value), error_ctrl, beneficiary_id).to_edi())
+            log_data[f"sum_amt_{code}"] = log_data.get(f"sum_amt_{code}", 0) + value
+            log_data[f"count_amt_{code}"] = log_data.get(f"count_amt_{code}", 0) + 1
 
         segments += [Seg.HD().to_edi(),
                      Seg.DTP().to_edi(),

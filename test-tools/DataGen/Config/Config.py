@@ -1,9 +1,9 @@
-from log_config import get_logger
+from Config.Log_Config import get_logger
 import os
 from datetime import datetime
 from Repository.NPI_Functions import download_weekly_npi_data
 
-from BellShapes import BellShapes, fit_range_to_half_bel
+from Config.BellShapes import BellShapes, fit_range_to_half_bel
 
 # Time and File Info
 DATE = datetime.now()
@@ -11,11 +11,13 @@ DATE = datetime.now()
 EDI834_FILE_NAME = f'834.VFMP.{DATE.year}.{DATE.strftime("%y%m%d")}.{DATE.strftime("%H%M")}.{DATE.strftime("%Y%m%d1")}.edi'
 EDI270_FILE_NAME = f'270.VFMP.{DATE.year}.{DATE.strftime("%y%m%d")}.{DATE.strftime("%H%M")}.{DATE.strftime("%Y%m%d1")}.edi'
 LOCAL_DATABASE = f"localdb.jsonl"
+STATISTICS_MD = f"Statistics_Visualizer.md"
 
 # Paths
-ROOT_PATH = os.path.dirname(os.path.abspath(__file__))
+ROOT_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 DOWNLOAD_DIRECTORY = os.path.join(ROOT_PATH, "Downloads")
 LOCAL_DATABASE_DIRECTORY = os.path.join(ROOT_PATH, "Output", "Local_DB")
+MARKDOWN_DIRECTORY = os.path.join(ROOT_PATH, "Output")
 EDI834_PATH = os.path.join(ROOT_PATH, "Output", "EDI834_Output")
 EDI270_PATH = os.path.join(ROOT_PATH, "Output", "EDI270_Output")
 
@@ -63,6 +65,11 @@ MAX_DEDUCTIBLES = 100_000
 MIN_DEDUCTIBLES = 0
 MAX_VISITS = 15
 MIN_VISITS = 0
+
+N1_SPONSOR_QUALIFIER = "OCC PAYER EDI"
+N1_SPONSOR_ID = "841469824"
+N1_PAYER_QUALIFIER = "CLAIMS XM"
+N1_PAYER_ID = "831002042"
 
 # Test size generator
 NUMBER_OF_TESTS = fit_range_to_half_bel(avg=10627, std=13948, min_val=1, max_val=246778, shape=BellShapes.NORMAL)

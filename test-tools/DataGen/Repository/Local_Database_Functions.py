@@ -3,10 +3,10 @@ import logging
 import os
 import random
 
-import config
+from Config import Config
 from DataLayer.Datatypes import Sponsor
 from DataLayer.Interfaces import DataAccess
-from config import get_local_db_path, logger
+from Config.Config import get_local_db_path, logger
 
 
 class LocalDBFunctions(DataAccess):
@@ -41,7 +41,7 @@ class LocalDBFunctions(DataAccess):
     def save_sponsor(self, sponsor):
         total_users = len(self.existing_ssns)
         curr_user_count = 1 + len(sponsor.beneficiaries)
-        if total_users + curr_user_count > config.USER_LIMIT:
+        if total_users + curr_user_count > Config.USER_LIMIT:
             logger.warning("Max User Limit reached. Skipping save.")
             return
 

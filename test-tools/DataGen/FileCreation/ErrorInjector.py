@@ -1,13 +1,13 @@
 import random
 
-import config
-from config import logger
+from Config import Config
+from Config.Config import logger
 
 
 class ErrorInjector:
     def __init__(self, max_messages, error_rate):
-        self.random_seed = config.RANDOM_SEED
-        self.error_rate = config.get_error_rate(error_rate)
+        self.random_seed = Config.RANDOM_SEED
+        self.error_rate = Config.get_error_rate(error_rate)
         self.max_errors = max_messages * self.error_rate
         self.error_count = 0
         self.error_inserted = False

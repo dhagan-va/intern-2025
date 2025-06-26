@@ -103,8 +103,8 @@ class Test270Message(unittest.TestCase):
         self.error_rate_834 = 0
         Run834Generator(max_messages=self.messages_834, error_rate=self.error_rate_834)
 
-        self.messages_270 = 5
-        self.error_rate_270 = 0.5
+        self.messages_270 = 100
+        self.error_rate_270 = 1
         Run270Generator(max_messages=self.messages_270, error_rate=self.error_rate_270)
         self.path = config.get_edi_path(config.EDI270_PATH, config.EDI270_FILE_NAME)
         self.logger = config.get_logger(__name__)
@@ -128,7 +128,13 @@ class Test270Message(unittest.TestCase):
             self.assertIn(npi, valid_npis, f"NPI {npi} not found in CSV")
         
     def test_270_message_validity(self):
-        self.assertTrue(True)
+        for line in self.lines:
+            line = line.rstrip("~").strip()
+            parts = line.split("*")
+            if line.startswith("HL"):
+                self.assertTrue(parts[3].strip(), f"HL code is empty: {line}")
+            elif line.startswith("NM1"):
+                self.assertFalse(any(c in parts[9] for c in ("~", ":")), f"Invalid char in SSN: {parts[9]}")
 
     def test_270_error_rates(self):
         injector = ErrorInjector(max_messages=self.messages_270, error_rate=self.error_rate_270)

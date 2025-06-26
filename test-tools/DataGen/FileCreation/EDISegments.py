@@ -155,10 +155,19 @@ class NM1:
 
     def to_edi(self):
         id_code = self.id_code
+
+        qualifier_desc = {
+            "34": "SSN",
+            "XX": "NPI",
+            "MI": "Member ID",
+            "PI": "Payer ID"
+        }.get(self.id_qualifier, "ID code")
+
         if self.error_ctrl and self.error_ctrl.should_insert():
             erroneous = self.error_ctrl.insert(id_code, "format")
             logger.warning(
-                f"[ERROR INSERTED] NM1 segment: SSN '{id_code}' changed to '{erroneous}' for member: {self.error_id}")
+                f"[ERROR INSERTED] NM1 segment: {qualifier_desc} '{id_code}' changed to '{erroneous}' for member: "
+                f"{self.error_id}")
             id_code = erroneous
         else:
             logger.debug(f"Generating NM1 segment for {self.last_name}, {self.first_name}")

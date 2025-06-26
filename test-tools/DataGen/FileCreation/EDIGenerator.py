@@ -1,10 +1,10 @@
 import uuid
 
-from Repository.NPI_Functions import NPIFunctions
 import FileCreation.EDISegments as Seg
 import config
 from FileCreation.ErrorInjector import ErrorInjector
 from Repository.Local_Database_Functions import LocalDBFunctions
+from Repository.NPI_Functions import NPIFunctions
 from config import logger
 
 
@@ -126,12 +126,13 @@ class EDI270Generator:
                     Seg.BHT().to_edi(),
                     Seg.HL(1, "", 20, 1, error_ctrl, error_id).to_edi(),
                     Seg.NM1("PR", 2, beneficiary.insurance_company, "", "", "PI",
-                            beneficiary.insurance_FID).to_edi(),
+                            beneficiary.insurance_FID, error_ctrl, error_id).to_edi(),
                     Seg.HL(2, 1, 21, 1, error_ctrl, error_id).to_edi(),
-                    Seg.NM1("1P", provider["entity_type"], last, first, "", "XX", provider["npi"]).to_edi(),
+                    Seg.NM1("1P", provider["entity_type"], last, first, "", "XX", provider["npi"], error_ctrl,
+                            error_id).to_edi(),
                     Seg.HL(3, 2, 22, 0, error_ctrl, error_id).to_edi(),
                     Seg.NM1("IL", "1", beneficiary.last_name, beneficiary.first_name,
-                            beneficiary.middle_name, "MI", beneficiary.beneficiary_id).to_edi(),
+                            beneficiary.middle_name, "MI", beneficiary.beneficiary_id, error_ctrl, error_id).to_edi(),
                     Seg.EQ("30").to_edi(),
                     Seg.SE(10, num).to_edi(),
                     Seg.GE(1).to_edi(),

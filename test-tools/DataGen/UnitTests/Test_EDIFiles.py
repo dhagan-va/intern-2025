@@ -4,8 +4,7 @@ import os.path
 import shutil
 import unittest
 
-import log_config
-import config
+from Config import Config, Log_Config
 from FileCreation.ErrorInjector import ErrorInjector
 from Repository.Local_Database_Functions import LocalDBFunctions
 from Repository.NPI_Functions import NPIFunctions, download_weekly_npi_data
@@ -16,18 +15,18 @@ class Test834Message(unittest.TestCase):
     def setUp(self):
         logging.shutdown()
 
-        output_dir = os.path.join(config.ROOT_PATH, "Output")
+        output_dir = os.path.join(Config.ROOT_PATH, "Output")
         if os.path.exists(output_dir):
             shutil.rmtree(output_dir)
 
-        os.makedirs(log_config.LOG_DIRECTORY, exist_ok=True)
-        config.get_edi_path(config.EDI834_PATH, config.EDI834_FILE_NAME)
-        config.get_local_db_path()
-        self.logger = config.get_logger(__name__)
+        os.makedirs(Log_Config.LOG_DIRECTORY, exist_ok=True)
+        Config.get_edi_path(Config.EDI834_PATH, Config.EDI834_FILE_NAME)
+        Config.get_local_db_path()
+        self.logger = Config.get_logger(__name__)
         self.messages = 7
         self.error_rate = 0
         Run834Generator(max_messages=self.messages, error_rate=self.error_rate)
-        self.path = config.get_edi_path(config.EDI834_PATH, config.EDI834_FILE_NAME)
+        self.path = Config.get_edi_path(Config.EDI834_PATH, Config.EDI834_FILE_NAME)
         with open(self.path) as f:
             self.lines = [line.strip() for line in f if line.strip()]
 
@@ -86,17 +85,17 @@ class Test270Message(unittest.TestCase):
     def setUp(self):
         logging.shutdown()
 
-        output_dir = os.path.join(config.ROOT_PATH, "Output")
-        download_dir = os.path.join(config.ROOT_PATH, "Downloads")
+        output_dir = os.path.join(Config.ROOT_PATH, "Output")
+        download_dir = os.path.join(Config.ROOT_PATH, "Downloads")
         if os.path.exists(output_dir):
             shutil.rmtree(output_dir)
         if os.path.exists(download_dir):
             shutil.rmtree(download_dir)
 
-        os.makedirs(log_config.LOG_DIRECTORY, exist_ok=True)
-        os.makedirs(config.DOWNLOAD_DIRECTORY, exist_ok=True)
+        os.makedirs(Log_Config.LOG_DIRECTORY, exist_ok=True)
+        os.makedirs(Config.DOWNLOAD_DIRECTORY, exist_ok=True)
 
-        npi_csv_path = download_weekly_npi_data(config.DOWNLOAD_DIRECTORY)
+        npi_csv_path = download_weekly_npi_data(Config.DOWNLOAD_DIRECTORY)
         self.npi_funcs = NPIFunctions(npi_csv_path)
 
         self.messages_834 = 5
@@ -104,9 +103,9 @@ class Test270Message(unittest.TestCase):
         Run834Generator(max_messages=self.messages_834, error_rate=self.error_rate_834)
 
         self.messages_270 = 100
-        self.error_rate_270 = 0
+        self.error_rate_270 = 1
         Run270Generator(max_messages=self.messages_270, error_rate=self.error_rate_270)
-        self.path = config.get_edi_path(config.EDI270_PATH, config.EDI270_FILE_NAME)
+        self.path = Config.get_edi_path(Config.EDI270_PATH, Config.EDI270_FILE_NAME)
         self.logger = config.get_logger(__name__)
 
         with open(self.path) as f:
@@ -149,6 +148,3 @@ class Test270Message(unittest.TestCase):
 
         self.assertTrue(math.isclose(actual_inserts, expected, abs_tol=1),
                         f"Actual errors {actual_inserts}, expected {expected}")
-
-if __name__ == "__main__":
-    runner = unittest.TextTestRunner()

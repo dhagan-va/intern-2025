@@ -1,9 +1,10 @@
 from datetime import datetime
 
-import config
+from Config import Config
 from FileCreation.DataGenerator import SponsorDataGenerator
 from FileCreation.EDIGenerator import EDI834Generator, EDI270Generator
-from config import logger, number_of_tests, get_error_rate
+from Config.Config import logger, number_of_tests, get_error_rate
+from Config import Data_Visualizer
 
 
 def Run834Generator(max_messages=None, error_rate=None):
@@ -31,7 +32,7 @@ def Run834Generator(max_messages=None, error_rate=None):
     logger.info(f"File generation took: {datetime.now() - now}")
 
     # Create Directory/Write to file
-    f = open(config.get_edi_path(config.EDI834_PATH, config.EDI834_FILE_NAME), 'w')
+    f = open(Config.get_edi_path(Config.EDI834_PATH, Config.EDI834_FILE_NAME), 'w')
     f.writelines(edi_file)
     f.close()
 
@@ -44,7 +45,7 @@ def Run270Generator(max_messages=None, error_rate=None):
     # Setup/Initialization
     now = datetime.now()
     max_messages = number_of_tests(max_messages)
-    provider_csv_path = config.NPI_CSV_PATH
+    provider_csv_path = Config.NPI_CSV_PATH
 
     # Generate EDI file
     logger.info(f"Generating transactions from NPI data and local database")
@@ -52,7 +53,7 @@ def Run270Generator(max_messages=None, error_rate=None):
     logger.info(f"Generating transactions into EDI file")
     edi_out = edi270.combine_segments()
 
-    f = open(config.get_edi_path(config.EDI270_PATH, config.EDI270_FILE_NAME), 'w')
+    f = open(Config.get_edi_path(Config.EDI270_PATH, Config.EDI270_FILE_NAME), 'w')
     f.writelines(edi_out)
     f.close()
     end_time = datetime.now() - now
@@ -65,4 +66,4 @@ if __name__ == "__main__":
     Run270Generator(5, 0)
     end = datetime.now() - curr
     logger.info(f"It took {end} to generate the output")
-    config.create_md()
+    Data_Visualizer.create_md()

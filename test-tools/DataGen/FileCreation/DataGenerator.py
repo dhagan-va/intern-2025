@@ -2,8 +2,8 @@ import random
 
 from faker import Faker
 
-import config
-from config import logger
+from Config import Config
+from Config.Config import logger
 from DataLayer.Datatypes import Address, Sponsor, Beneficiary
 from Repository.Local_Database_Functions import LocalDBFunctions
 
@@ -11,14 +11,14 @@ from Repository.Local_Database_Functions import LocalDBFunctions
 def create_amt_data():
     data = {
         "deductibles": {
-            "D2": random.randint(config.MIN_DEDUCTIBLES, config.MAX_DEDUCTIBLES),
-            "FK": random.randint(config.MIN_DEDUCTIBLES, config.MAX_DEDUCTIBLES),
-            "R": random.randint(config.MIN_DEDUCTIBLES, config.MAX_DEDUCTIBLES)
+            "D2": random.randint(Config.MIN_DEDUCTIBLES, Config.MAX_DEDUCTIBLES),
+            "FK": random.randint(Config.MIN_DEDUCTIBLES, Config.MAX_DEDUCTIBLES),
+            "R": random.randint(Config.MIN_DEDUCTIBLES, Config.MAX_DEDUCTIBLES)
         },
         "visit_counts": {
-            "C1": random.randint(config.MIN_VISITS, config.MAX_VISITS),
-            "P3": random.randint(config.MIN_VISITS, config.MAX_VISITS),
-            "B9": random.randint(config.MIN_VISITS, config.MAX_VISITS)
+            "C1": random.randint(Config.MIN_VISITS, Config.MAX_VISITS),
+            "P3": random.randint(Config.MIN_VISITS, Config.MAX_VISITS),
+            "B9": random.randint(Config.MIN_VISITS, Config.MAX_VISITS)
         }
     }
     logger.debug(f"Created AMT data: {data}")
@@ -26,8 +26,8 @@ def create_amt_data():
 
 
 class SponsorDataGenerator:
-    def __init__(self, faker_seed=config.FAKER_SEED, random_seed=config.RANDOM_SEED,
-                 relationship_map=config.RELATIONSHIP_MAP, data_access=None):
+    def __init__(self, faker_seed=Config.FAKER_SEED, random_seed=Config.RANDOM_SEED,
+                 relationship_map=Config.RELATIONSHIP_MAP, data_access=None):
         self.fake = Faker()
         Faker.seed(faker_seed)
         random.seed(random_seed)
@@ -49,7 +49,7 @@ class SponsorDataGenerator:
         address = Address(
             building_number=self.fake.building_number(),
             street=self.fake.street_name().upper(),
-            apartment=f'{self.fake.secondary_address().replace(".", "").upper()}' if random.random() < 0.5 else '',
+            apartment=f"{self.fake.secondary_address().replace(".", "").upper()}" if random.random() < 0.5 else "",
             city=self.fake.city().upper(),
             state=self.fake.state_abbr(False, False).upper(),
             zipcode=self.fake.zipcode()
@@ -69,7 +69,7 @@ class SponsorDataGenerator:
 
     def generate_sponsor_and_beneficiaries(self, total):
         existing_users = len(self.repo.existing_ssns)
-        remaining = config.USER_LIMIT - existing_users
+        remaining = Config.USER_LIMIT - existing_users
 
         if remaining <= 0:
             logger.warning("User limit already reached. No data generated.")
@@ -80,7 +80,7 @@ class SponsorDataGenerator:
 
         while generated < total and remaining > 0:
             sponsor = self.create_sponsor()
-            num_beneficiaries = min(random.randint(config.MIN_BENEFICIARIES, config.MAX_BENEFICIARIES), remaining)
+            num_beneficiaries = min(random.randint(Config.MIN_BENEFICIARIES, Config.MAX_BENEFICIARIES), remaining)
             for _ in range(num_beneficiaries):
                 beneficiary = self.create_beneficiary(sponsor)
                 sponsor.beneficiaries.append(beneficiary)
@@ -103,7 +103,7 @@ class SponsorDataGenerator:
 
     def create_sponsor(self):
         sponsor_ssn = self.generate_ssn()
-        sponsor_id = f'{sponsor_ssn.replace("-", "")}V11111111'
+        sponsor_id = f"{sponsor_ssn.replace("-", "")}V11111111"
         sponsor_last_name = self.fake.last_name().upper()
         sponsor_address = self.create_address()
         sponsor_amt_data = create_amt_data()
@@ -129,7 +129,7 @@ class SponsorDataGenerator:
     def create_beneficiary(self, sponsor):
         relationship = random.choice(list(self.relationship_map.keys()))
         beneficiary_ssn = self.generate_ssn()
-        beneficiary_id = f'{beneficiary_ssn.replace("-", "")}V11111111'
+        beneficiary_id = f"{beneficiary_ssn.replace("-", "")}V11111111"
         beneficiary_amt_data = create_amt_data()
 
         beneficiary = Beneficiary(

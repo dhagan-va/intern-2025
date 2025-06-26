@@ -46,18 +46,20 @@ class EDI834Generator:
 
         for code, value in member.deductibles.items():
             segments.append(Seg.AMT(code, str(value), error_ctrl, beneficiary_id).to_edi())
-            log_data[f"sum_amt_{code}"] = log_data.get(f"sum_amt_{code}", 0) + value
-            log_data[f"count_amt_{code}"] = log_data.get(f"count_amt_{code}", 0) + 1
+            log_data["amt"][f"{code}"]["sum"] += value
+            log_data["amt"][f"{code}"]["count"] += 1
         for code, value in member.visit_counts.items():
             segments.append(Seg.AMT(code, str(value), error_ctrl, beneficiary_id).to_edi())
-            log_data[f"sum_amt_{code}"] = log_data.get(f"sum_amt_{code}", 0) + value
-            log_data[f"count_amt_{code}"] = log_data.get(f"count_amt_{code}", 0) + 1
+            log_data["amt"][f"{code}"]["sum"] += value
+            log_data["amt"][f"{code}"]["count"] += 1
 
         segments += [Seg.HD().to_edi(),
                      Seg.DTP().to_edi(),
                      Seg.SE(len(segments) + 3, self.transaction_control_number).to_edi()
                      ]
 
+        if self.error_ctrl.error_inserted is True:
+            log_data["errors"]["error_ct_834"] += 1
         logger.debug(f"Completed {len(segments)} segments for member {beneficiary_id}")
         return segments
 
@@ -78,7 +80,10 @@ class EDI834Generator:
 
         for sponsor in sponsors:
             logger.debug(f"Sponsor {sponsor.sponsor_id} has {len(sponsor.beneficiaries)} beneficiaries")
+            log_data["family"]["size"] += len(sponsor.beneficiaries)
             all_segments.extend(self.create_transaction(sponsor))
+
+        log_data["family"]["count"] = len(sponsors)
 
         all_segments.append(Seg.GE(self.transaction_control_number).to_edi())
         all_segments.append(Seg.IEA().to_edi())
@@ -143,6 +148,9 @@ class EDI270Generator:
                     Seg.GE(1).to_edi(),
                     Seg.IEA().to_edi()
                     ]
+
+        if self.error_ctrl.error_inserted is True:
+            log_data["errors"]["error_ct_270"] += 1
         return segments
 
     def combine_segments(self):

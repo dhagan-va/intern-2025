@@ -106,7 +106,7 @@ class Test270Message(unittest.TestCase):
         self.error_rate_270 = 1
         Run270Generator(max_messages=self.messages_270, error_rate=self.error_rate_270)
         self.path = Config.get_edi_path(Config.EDI270_PATH, Config.EDI270_FILE_NAME)
-        self.logger = config.get_logger(__name__)
+        self.logger = Config.get_logger(__name__)
 
         with open(self.path) as f:
             self.lines = [line.strip() for line in f if line.strip()]

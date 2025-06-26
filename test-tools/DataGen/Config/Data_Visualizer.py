@@ -53,66 +53,99 @@ def create_md():
         f.write("# Data Visualizer \n\n")
 
         f.write("## Transaction Counts\n")
-        f.write("```mermaid\n")
-        f.write("xychart-beta\n")
-        f.write('    title "Number of Messages"\n')
-        f.write('    x-axis ["834", "270"]\n')
-        f.write('    y-axis "Count" 0 --> {}\n'.format(
-            max(log_data["messages"]["count_834"], log_data["messages"]["count_270"]) + 100))
-        f.write(f'    bar [{log_data["messages"]["count_834"]}, {log_data["messages"]["count_270"]}]\n')
-        f.write("```\n\n")
+        f.writelines(create_mermaid_bar_graph(
+            title="Number of Messages",
+            x=[834, 270],
+            y="Count",
+            values=[log_data["messages"]["count_834"], log_data["messages"]["count_270"]],
+            y_max=max(log_data["messages"]["count_834"], log_data["messages"]["count_270"]) + 100
+        ))
 
         f.write("## Throughput\n")
-        f.write("```mermaid\n")
-        f.write("xychart-beta\n")
-        f.write('    title "Throughput (Transactions per Second)"\n')
-        f.write('    x-axis ["834", "270"]\n')
-        f.write('    y-axis "TPS" 0 --> {}\n'.format(
-            max(throughput_834, throughput_270) + 1))
-        f.write(f'    bar [{throughput_834:.2f}, {throughput_270:.2f}]\n')
-        f.write("```\n\n")
+        f.writelines(create_mermaid_bar_graph(
+            title="Throughput (Transactions per Second)",
+            x=[834, 270],
+            y="TPS",
+            values=[throughput_834, throughput_270],
+            y_max=max(throughput_834, throughput_270) + 1
+        ))
 
         f.write("## Error Count\n")
-        f.write("```mermaid\n")
-        f.write("xychart-beta\n")
-        f.write('    title "Error Count in Messages"\n')
-        f.write('    x-axis ["834", "270"]\n')
-        f.write('    y-axis "Errors" 0 --> {}\n'.format(
-            max(log_data["errors"]["error_ct_834"], log_data["errors"]["error_ct_270"]) + 1))
-        f.write(f'    bar [{log_data["errors"]["error_ct_834"]}, {log_data["errors"]["error_ct_270"]}]\n')
-        f.write("```\n\n")
+        f.writelines(create_mermaid_bar_graph(
+            title="Error Count in Messages",
+            x=[834, 270],
+            y="Errors",
+            values=[log_data["errors"]["error_ct_834"], log_data["errors"]["error_ct_270"]],
+            y_max=max(log_data["errors"]["error_ct_834"], log_data["errors"]["error_ct_270"]) + 1
+        ))
 
         f.write("## Error Rate\n")
-        f.write("```mermaid\n")
-        f.write("xychart-beta\n")
-        f.write('    title "Error Rate (%)"\n')
-        f.write('    x-axis ["834", "270"]\n')
-        f.write('    y-axis "Percent" 0 --> 5\n')
-        f.write(f'    bar [{log_data["errors"]["error_rate_834"] * 100:.2f}, {log_data["errors"]["error_rate_270"] * 100:.2f}]\n')
-        f.write("```\n\n")
+        f.writelines(create_mermaid_bar_graph(
+            title="Error Rate (%)",
+            x=[834, 270],
+            y="Percent",
+            values=[log_data["errors"]["error_rate_834"] * 100, log_data["errors"]["error_rate_270"] * 100],
+            y_max=5
+        ))
 
-        f.write("## AMT (Deductible) Averages\n")
-        f.write("```mermaid\n")
-        f.write("xychart-beta\n")
-        f.write('    title "AMT Averages"\n')
-        f.write('    x-axis ["D2", "FK", "R"]\n')
-        f.write('    y-axis "Amount" 0 --> {}\n'.format(
-            int(max(avg_d2, avg_fk, avg_r)) + 1000))
-        f.write(f'    bar [{avg_d2:.2f}, {avg_fk:.2f}, {avg_r:.2f}]\n')
-        f.write("```\n\n")
+        # f.write("## Family Size Distribution\n")
+        # family_size_counts = localdb.get_family_size_distribution()  # e.g., {1: 50, 2: 130, 3: 90, 4: 30}
+        # family_sizes = list(family_size_counts.keys())
+        # counts = list(family_size_counts.values())
+        # f.write("```mermaid\n")
+        # f.write("xychart-beta\n")
+        # f.write('    title "Family Size Histogram"\n')
+        # f.write(f'    x-axis {family_sizes}\n')
+        # f.write(f'    y-axis "Count" 0 --> {max(counts) + 1}\n')
+        # f.write(f'    bar {counts}\n')
+        # f.write("```\n\n")
+        #
+        # f.write("## Beneficiary Types\n")
+        # bene_type_counts = localdb.get_beneficiary_type_distribution()  # e.g., {"Spouse": 40, "Child": 150}
+        # bene_types = list(bene_type_counts.keys())
+        # bene_vals = list(bene_type_counts.values())
+        # f.write("```mermaid\n")
+        # f.write("xychart-beta\n")
+        # f.write('    title "Beneficiary Types"\n')
+        # f.write(f'    x-axis {bene_types}\n')
+        # f.write(f'    y-axis "Count" 0 --> {max(bene_vals) + 1}\n')
+        # f.write(f'    bar {bene_vals}\n')
+        # f.write("```\n\n")
 
-        f.write("## AMT (Visit) Averages\n")
-        f.write("```mermaid\n")
-        f.write("xychart-beta\n")
-        f.write('    title "AMT Averages"\n')
-        f.write('    x-axis ["D2", "FK", "R"]\n')
-        f.write('    y-axis "Amount" 0 --> {}\n'.format(
-            int(max(avg_c1, avg_p3, avg_b9)) + 1))
-        f.write(f'    bar [{avg_c1:.2f}, {avg_p3:.2f}, {avg_b9:.2f}]\n')
-        f.write("```\n\n")
+        f.write("## AMT (deductible) Averages\n")
+        f.writelines(create_mermaid_bar_graph(
+            title="AMT (deductible) Averages",
+            x=['D2', 'FK', 'R'],
+            y="Amount",
+            values=[avg_d2, avg_fk, avg_r],
+            y_max=max(avg_d2, avg_fk, avg_r) + 1000
+        ))
+
+        f.write("## AMT (visit) Averages\n")
+        f.writelines(create_mermaid_bar_graph(
+            title="AMT (visit) Averages",
+            x=["C1", "P3", "B9"],
+            y="Number of Visits",
+            values=[avg_c1, avg_p3, avg_b9],
+            y_max=max(avg_c1, avg_p3, avg_b9) + 1
+        ))
 
         f.write("## Average 270s per Beneficiary\n")
         bene_count = len(localdb.all_bene)
         avg_270s_per_bene = log_data["messages"]["count_270"] / bene_count if bene_count else 0
         f.write(f"- Average 270s per Beneficiary: **{avg_270s_per_bene:.2f}**\n")
 
+
+def create_mermaid_bar_graph(title, x, y, values, y_max):
+    x = "[" + ", ".join(f'"{str(item)}"' for item in x) + "]"
+
+    segments = ["```mermaid\n",
+                "xychart-beta\n",
+                f'    title "{title}"\n',
+                f'    x-axis {x}\n',
+                f'    y-axis "{y}" 0 --> {y_max}\n',
+                f'    bar {values}\n',
+                "```\n",
+                "\n\n"]
+
+    return segments

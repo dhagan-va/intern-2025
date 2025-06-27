@@ -70,8 +70,8 @@ def Run270Generator(max_messages=None, error_rate=None):
 if __name__ == "__main__":
     curr = datetime.now()
 
-    Run834Generator(100, 0.01)
-    Run270Generator(100, 0)
+    Run834Generator(5, 0)
+    Run270Generator(5, 0)
     end = datetime.now() - curr
     logger.info(f"It took {end} to generate the output")
 

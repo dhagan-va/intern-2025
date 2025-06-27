@@ -72,7 +72,8 @@ N1_PAYER_QUALIFIER = "CLAIMS XM"
 N1_PAYER_ID = "831002042"
 
 # Test size generator
-NUMBER_OF_TESTS = fit_range_to_half_bel(avg=10627, std=13948, min_val=1, max_val=246778, shape=BellShapes.NORMAL)
+NUMBER_OF_TESTS_834 = fit_range_to_half_bel(avg=10627, std=13948, min_val=1, max_val=246778, shape=BellShapes.NORMAL)
+NUMBER_OF_TESTS_270 = fit_range_to_half_bel(avg=5000, std=2500, min_val=1, max_val=75000, shape=BellShapes.NORMAL)
 
 # Message Error Rate
 TOTAL_ERROR_RATE = 0.005  # 0.5%
@@ -81,8 +82,12 @@ TOTAL_ERROR_RATE = 0.005  # 0.5%
 TOGGLE_NEW_LINE = True
 
 
-def number_of_tests(n=None):
-    return NUMBER_OF_TESTS if n is None else n
+def number_of_tests_834(n=None):
+    return NUMBER_OF_TESTS_834 if n is None else n
+
+
+def number_of_tests_270(n=None):
+    return NUMBER_OF_TESTS_270 if n is None else n
 
 
 def get_error_rate(n=None):

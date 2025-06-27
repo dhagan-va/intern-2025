@@ -3,14 +3,14 @@ from datetime import datetime
 from Config import Config
 from FileCreation.DataGenerator import SponsorDataGenerator
 from FileCreation.EDIGenerator import EDI834Generator, EDI270Generator
-from Config.Config import logger, number_of_tests, get_error_rate
+from Config.Config import logger, number_of_tests_834, number_of_tests_270, get_error_rate
 from Config.Data_Visualizer import log_data, create_md
 
 
 def Run834Generator(max_messages=None, error_rate=None):
     # Setup/Initialization
     now = datetime.now()
-    max_messages = number_of_tests(max_messages)
+    max_messages = number_of_tests_834(max_messages)
     log_data["messages"]["count_834"] = max_messages
     error_rate = get_error_rate(error_rate)
     log_data["errors"]["error_rate_834"] = error_rate
@@ -47,7 +47,7 @@ def Run834Generator(max_messages=None, error_rate=None):
 def Run270Generator(max_messages=None, error_rate=None):
     # Setup/Initialization
     now = datetime.now()
-    max_messages = number_of_tests(max_messages)
+    max_messages = number_of_tests_270(max_messages)
     log_data["messages"]["count_270"] = max_messages
     error_rate = get_error_rate(error_rate)
     log_data["errors"]["error_rate_270"] = error_rate
@@ -70,8 +70,8 @@ def Run270Generator(max_messages=None, error_rate=None):
 if __name__ == "__main__":
     curr = datetime.now()
 
-    Run834Generator(5, 0)
-    Run270Generator(5, 0)
+    Run834Generator()
+    Run270Generator()
     end = datetime.now() - curr
     logger.info(f"It took {end} to generate the output")
 

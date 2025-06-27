@@ -17,7 +17,7 @@ STATISTICS_MD = f"Statistics_Visualizer.md"
 ROOT_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 DOWNLOAD_DIRECTORY = os.path.join(ROOT_PATH, "Downloads")
 LOCAL_DATABASE_DIRECTORY = os.path.join(ROOT_PATH, "Output", "Local_DB")
-MARKDOWN_DIRECTORY = os.path.join(ROOT_PATH, "Output")
+MARKDOWN_DIRECTORY = os.path.join(ROOT_PATH)
 EDI834_PATH = os.path.join(ROOT_PATH, "Output", "EDI834_Output")
 EDI270_PATH = os.path.join(ROOT_PATH, "Output", "EDI270_Output")
 

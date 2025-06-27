@@ -74,6 +74,12 @@ def create_md():
 
     message_types = [834, 270]
     message_count = [log_data["messages"]["count_834"], log_data["messages"]["count_270"]]
+    total_messages = 0
+    
+    for key, value in log_data["messages"].items():
+        if key.startswith("count_"):
+            total_messages += value
+    
     localdb = LocalDBFunctions()
 
     avg_family_size = log_data["family"]["size"] / log_data["family"]["count"]
@@ -94,7 +100,13 @@ def create_md():
         f.writelines(INTRO)
 
         f.write("## Transaction Counts\n")
-        f.writelines(create_pie_chart("Message type distribution", message_types, message_count))
+        f.writelines(create_pie_chart(
+            title="Message type distribution",
+            labels=message_types,
+            values=message_count
+        ))
+
+        f.write(f"Total Number of Messages Generated: **{total_messages}**\n")
 
         f.write("## Throughput\n")
         f.writelines(create_bar_graph(

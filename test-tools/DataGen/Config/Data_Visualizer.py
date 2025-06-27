@@ -3,6 +3,22 @@ import os
 from Config import Config
 from Repository.Local_Database_Functions import LocalDBFunctions
 
+INTRO = [
+    "## What Are 834 and 270 EDI Files?\n\n",
+    "**EDI 834 - Benefit Enrollment and Maintenance**  \n",
+    "The 834 file is used to electronically transmit enrollment data between employers, insurance providers, "
+    "and government agencies. It includes information about plan members (sponsors and beneficiaries), such as:\n",
+    "- Enrollment or termination status (in our case it's enrollment)\n",
+    "- Subscriber and dependent details\n",
+    "- Coverage effective dates\n\n",
+    "**EDI 270 - Eligibility Inquiry**  \n",
+    "The 270 file is used to request information about a member's health insurance eligibility and benefits. "
+    "It is typically sent by healthcare providers to insurers to confirm:\n",
+    "- Active coverage\n",
+    "- Service eligibility\n",
+    "- Co-pays, deductibles, or benefit limits\n\n"
+]
+
 RELATIONSHIP_LABELS = {
     '01': 'Spouse (01)',
     '19': 'Child (19)',
@@ -74,6 +90,8 @@ def create_md():
 
     with open(path, "w") as f:
         f.write("# Data Visualizer \n\n")
+
+        f.writelines(INTRO)
 
         f.write("## Transaction Counts\n")
         f.writelines(create_pie_chart("Message type distribution", message_types, message_count))

@@ -2,22 +2,24 @@ import uuid
 
 import FileCreation.EDISegments as Seg
 from Config import Config
+from Config.Config import logger
+from Config.Data_Visualizer import log_data
 from FileCreation.ErrorInjector import ErrorInjector
 from Repository.Local_Database_Functions import LocalDBFunctions
 from Repository.NPI_Functions import NPIFunctions
-from Config.Config import logger
-from Config.Data_Visualizer import log_data
+
+localdb_funcs = LocalDBFunctions()
 
 
 class EDI834Generator:
     def __init__(self, sender=Config.SENDER_ID, receiver=Config.RECEIVER_ID, relationship_map=Config.RELATIONSHIP_MAP,
-                 max_messages=None, error_rate=None):
+                 num_messages=None, error_rate=None):
         self.sender = sender
         self.receiver = receiver
         self.relationship_map = relationship_map
         self.transaction_control_number = 0
-        self.max_messages = max_messages
-        self.error_ctrl = ErrorInjector(max_messages, error_rate)
+        self.num_messages = num_messages
+        self.error_ctrl = ErrorInjector(num_messages, error_rate)
         logger.debug(f"Initialized EDI834Generator")
 
     def create_member(self, member, error_ctrl):
@@ -30,7 +32,8 @@ class EDI834Generator:
 
         segments = [Seg.ST(834, self.transaction_control_number).to_edi(),
                     Seg.BGN(uuid.uuid4().hex.upper()).to_edi(),
-                    Seg.N1("P5", Config.N1_SPONSOR_QUALIFIER, Config.N1_SPONSOR_ID, error_ctrl, beneficiary_id).to_edi(),
+                    Seg.N1("P5", Config.N1_SPONSOR_QUALIFIER, Config.N1_SPONSOR_ID, error_ctrl,
+                           beneficiary_id).to_edi(),
                     Seg.N1("IN", Config.N1_PAYER_QUALIFIER, Config.N1_PAYER_ID, error_ctrl, beneficiary_id).to_edi(),
                     Seg.INS(relationship_code).to_edi(),
                     Seg.REF("0F", sponsor_id, error_ctrl).to_edi(),
@@ -94,12 +97,12 @@ class EDI834Generator:
 
 
 class EDI270Generator:
-    def __init__(self, max_messages=None, provider_csv_path=None, error_rate=None):
-        self.localdb_funcs = LocalDBFunctions()
+    def __init__(self, num_messages=None, provider_csv_path=None, error_rate=None):
+        self.localdb_funcs = localdb_funcs
         self.npi_funcs = NPIFunctions(provider_csv_path)
-        self.max_messages = max_messages
+        self.num_messages = num_messages
         self.provider_csv_path = provider_csv_path
-        self.error_ctrl = ErrorInjector(max_messages, error_rate)
+        self.error_ctrl = ErrorInjector(num_messages, error_rate)
 
     @staticmethod
     def split_provider_name(name, entity_type):
@@ -123,7 +126,7 @@ class EDI270Generator:
         last, first = self.split_provider_name(provider["name"], provider["entity_type"])
 
         if not provider:
-            logger.warning(f"No provider found for state: {state}. Using fallback")
+            logger.warning(f"No provider found for state: {state}. Using fallback.")
             provider = {
                 "name": "Ryan's company",
                 "npi": "0000000000",
@@ -155,6 +158,19 @@ class EDI270Generator:
 
     def combine_segments(self):
         all_segments = []
-        for i in range(1, self.max_messages + 1):
+        for i in range(1, self.num_messages + 1):
             all_segments.extend(self.create_transaction(i, self.error_ctrl))
         return all_segments
+
+
+class EDI837PGenerator:
+    def __init__(self, num_messages=None, error_rate=None):
+        self.localdb_funcs = localdb_funcs
+        self.num_messages = num_messages
+        self.error_ctrl = ErrorInjector(num_messages, error_rate)
+
+    def create_transaction(self, num, error_ctrl):
+        self.error_ctrl.reset_error_inserted()
+
+
+

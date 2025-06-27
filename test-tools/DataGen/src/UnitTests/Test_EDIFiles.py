@@ -25,7 +25,7 @@ class Test834Message(unittest.TestCase):
         self.logger = Config.get_logger(__name__)
         self.messages = 7
         self.error_rate = 0
-        Run834Generator(max_messages=self.messages, error_rate=self.error_rate)
+        Run834Generator(num_messages=self.messages, error_rate=self.error_rate)
         self.path = Config.get_edi_path(Config.EDI834_PATH, Config.EDI834_FILE_NAME)
         with open(self.path) as f:
             self.lines = [line.strip() for line in f if line.strip()]
@@ -67,7 +67,7 @@ class Test834Message(unittest.TestCase):
                 self.assertGreaterEqual(float(amount_str), 0, f"Invalid AMT: {line}")
 
     def test_834_error_rates(self):
-        injector = ErrorInjector(max_messages=self.messages, error_rate=self.error_rate)
+        injector = ErrorInjector(num_messages=self.messages, error_rate=self.error_rate)
         expected = self.messages * self.error_rate
 
         actual_inserts = 0
@@ -100,11 +100,11 @@ class Test270Message(unittest.TestCase):
 
         self.messages_834 = 5
         self.error_rate_834 = 0
-        Run834Generator(max_messages=self.messages_834, error_rate=self.error_rate_834)
+        Run834Generator(num_messages=self.messages_834, error_rate=self.error_rate_834)
 
         self.messages_270 = 100
         self.error_rate_270 = 1
-        Run270Generator(max_messages=self.messages_270, error_rate=self.error_rate_270)
+        Run270Generator(num_messages=self.messages_270, error_rate=self.error_rate_270)
         self.path = Config.get_edi_path(Config.EDI270_PATH, Config.EDI270_FILE_NAME)
         self.logger = Config.get_logger(__name__)
 
@@ -136,7 +136,7 @@ class Test270Message(unittest.TestCase):
                 self.assertFalse(any(c in parts[9] for c in ("~", ":")), f"Invalid char in SSN: {parts[9]}")
 
     def test_270_error_rates(self):
-        injector = ErrorInjector(max_messages=self.messages_270, error_rate=self.error_rate_270)
+        injector = ErrorInjector(num_messages=self.messages_270, error_rate=self.error_rate_270)
         expected = self.messages_270 * self.error_rate_270
 
         actual_inserts = 0

@@ -73,7 +73,7 @@ N1_PAYER_ID = "831002042"
 
 # Test size generator
 NUMBER_OF_TESTS_834 = fit_range_to_half_bel(avg=10627, std=13948, min_val=1, max_val=246778, shape=BellShapes.NORMAL)
-NUMBER_OF_TESTS_270 = fit_range_to_half_bel(avg=5000, std=2500, min_val=1, max_val=75000, shape=BellShapes.NORMAL)
+NUMBER_OF_TESTS_270 = fit_range_to_half_bel(avg=15000, std=5000, min_val=1, max_val=75000, shape=BellShapes.NORMAL)
 
 # Message Error Rate
 TOTAL_ERROR_RATE = 0.005  # 0.5%

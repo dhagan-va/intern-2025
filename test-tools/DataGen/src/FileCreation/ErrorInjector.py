@@ -5,10 +5,10 @@ from Config.Config import logger
 
 
 class ErrorInjector:
-    def __init__(self, max_messages, error_rate):
+    def __init__(self, num_messages, error_rate):
         self.random_seed = Config.RANDOM_SEED
         self.error_rate = Config.get_error_rate(error_rate)
-        self.max_errors = max_messages * self.error_rate
+        self.max_errors = num_messages * self.error_rate
         self.error_count = 0
         self.error_inserted = False
         random.seed(self.random_seed)

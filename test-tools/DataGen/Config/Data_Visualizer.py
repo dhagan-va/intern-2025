@@ -3,6 +3,13 @@ import os
 from Config import Config
 from Repository.Local_Database_Functions import LocalDBFunctions
 
+RELATIONSHIP_LABELS = {
+    '01': 'Spouse (01)',
+    '19': 'Child (19)',
+    '26': 'Caregiver (26)',
+    '25': 'Ex-Spouse (25)'
+}
+
 # relationship map
 log_data = {
     "messages": {
@@ -19,7 +26,19 @@ log_data = {
     },
     "family": {
         "size": 0,
-        "count": 0
+        "count": 0,
+        "size_distribution": {
+            1: 0,
+            2: 0,
+            3: 0,
+            4: 0
+        },
+        "relationship_distribution": {
+            '01': 0,
+            '19': 0,
+            '26': 0,
+            '25': 0
+        }
     },
     "amt": {
         "D2": {"sum": 0, "count": 0},
@@ -37,11 +56,15 @@ def create_md():
         os.makedirs(Config.MARKDOWN_DIRECTORY)
     path = os.path.join(Config.MARKDOWN_DIRECTORY, Config.STATISTICS_MD)
 
+    message_types = [834, 270]
+    message_count = [log_data["messages"]["count_834"], log_data["messages"]["count_270"]]
     localdb = LocalDBFunctions()
 
     avg_family_size = log_data["family"]["size"] / log_data["family"]["count"]
+
     throughput_834 = log_data["messages"]["count_834"] / log_data["messages"]["time_834"]
     throughput_270 = log_data["messages"]["count_270"] / log_data["messages"]["time_270"]
+
     avg_d2 = log_data["amt"]["D2"]["sum"] / log_data["amt"]["D2"]["count"]
     avg_fk = log_data["amt"]["FK"]["sum"] / log_data["amt"]["FK"]["count"]
     avg_r = log_data["amt"]["R"]["sum"] / log_data["amt"]["R"]["count"]
@@ -53,16 +76,10 @@ def create_md():
         f.write("# Data Visualizer \n\n")
 
         f.write("## Transaction Counts\n")
-        f.writelines(create_mermaid_bar_graph(
-            title="Number of Messages",
-            x=[834, 270],
-            y="Count",
-            values=[log_data["messages"]["count_834"], log_data["messages"]["count_270"]],
-            y_max=max(log_data["messages"]["count_834"], log_data["messages"]["count_270"]) + 100
-        ))
+        f.writelines(create_pie_chart("Message type distribution", message_types, message_count))
 
         f.write("## Throughput\n")
-        f.writelines(create_mermaid_bar_graph(
+        f.writelines(create_bar_graph(
             title="Throughput (Transactions per Second)",
             x=[834, 270],
             y="TPS",
@@ -71,7 +88,7 @@ def create_md():
         ))
 
         f.write("## Error Count\n")
-        f.writelines(create_mermaid_bar_graph(
+        f.writelines(create_bar_graph(
             title="Error Count in Messages",
             x=[834, 270],
             y="Errors",
@@ -80,7 +97,7 @@ def create_md():
         ))
 
         f.write("## Error Rate\n")
-        f.writelines(create_mermaid_bar_graph(
+        f.writelines(create_bar_graph(
             title="Error Rate (%)",
             x=[834, 270],
             y="Percent",
@@ -88,17 +105,55 @@ def create_md():
             y_max=5
         ))
 
+        f.write("## Family Size Distribution\n")
+        size_dist = log_data["family"]["size_distribution"]
+        size_labels = list(size_dist.keys())
+        size_values = list(size_dist.values())
+
+        f.writelines(create_bar_graph(
+            title="Family Size Histogram",
+            x=size_labels,
+            y="Count",
+            values=size_values,
+            y_max=max(size_values) + 1
+        ))
+
+        f.writelines(create_pie_chart(
+            title="Family Size Breakdown",
+            labels=size_labels,
+            values=size_values
+        ))
+
+        f.write("## Beneficiary Types\n")
+        rel_dist = log_data["family"]["relationship_distribution"]
+        rel_labels = [RELATIONSHIP_LABELS.get(code, code) for code in rel_dist.keys()]
+        rel_values = list(rel_dist.values())
+
+        f.writelines(create_bar_graph(
+            title="Beneficiary Code Distribution",
+            x=rel_labels,
+            y="Count",
+            values=rel_values,
+            y_max=max(rel_values) + 1
+        ))
+
+        f.writelines(create_pie_chart(
+            title="Beneficiary Relationship Types",
+            labels=rel_labels,
+            values=rel_values
+        ))
+
         f.write("## AMT (deductible) Averages\n")
-        f.writelines(create_mermaid_bar_graph(
+        f.writelines(create_bar_graph(
             title="AMT (deductible) Averages",
-            x=['D2', 'FK', 'R'],
+            x=["D2", "FK", "R"],
             y="Amount",
             values=[avg_d2, avg_fk, avg_r],
             y_max=max(avg_d2, avg_fk, avg_r) + 1000
         ))
 
         f.write("## AMT (visit) Averages\n")
-        f.writelines(create_mermaid_bar_graph(
+        f.writelines(create_bar_graph(
             title="AMT (visit) Averages",
             x=["C1", "P3", "B9"],
             y="Number of Visits",
@@ -112,9 +167,8 @@ def create_md():
         f.write(f"- Average 270s per Beneficiary: **{avg_270s_per_bene:.2f}**\n")
 
 
-def create_mermaid_bar_graph(title, x, y, values, y_max):
+def create_bar_graph(title, x, y, values, y_max):
     x = "[" + ", ".join(f'"{str(item)}"' for item in x) + "]"
-
     segments = ["```mermaid\n",
                 "xychart-beta\n",
                 f'    title "{title}"\n',
@@ -123,5 +177,18 @@ def create_mermaid_bar_graph(title, x, y, values, y_max):
                 f'    bar {values}\n',
                 "```\n",
                 "\n\n"]
+
+    return segments
+
+
+def create_pie_chart(title, labels, values):
+    segments = ["```mermaid\n",
+                f'pie title {title}\n',
+                ]
+    for label, value in zip(labels, values):
+        segments.append(f'    "{label}" : {value}\n')
+
+    segments.append("```\n")
+    segments.append("\n\n")
 
     return segments

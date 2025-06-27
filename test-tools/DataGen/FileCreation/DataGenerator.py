@@ -6,6 +6,7 @@ from Config import Config
 from Config.Config import logger
 from DataLayer.Datatypes import Address, Sponsor, Beneficiary
 from Repository.Local_Database_Functions import LocalDBFunctions
+from Config.Data_Visualizer import log_data
 
 
 def create_amt_data():
@@ -81,6 +82,7 @@ class SponsorDataGenerator:
         while generated < total and remaining > 0:
             sponsor = self.create_sponsor()
             num_beneficiaries = min(random.randint(Config.MIN_BENEFICIARIES, Config.MAX_BENEFICIARIES), remaining)
+            log_data["family"]["size_distribution"][num_beneficiaries] += 1
             for _ in range(num_beneficiaries):
                 beneficiary = self.create_beneficiary(sponsor)
                 sponsor.beneficiaries.append(beneficiary)
@@ -128,6 +130,8 @@ class SponsorDataGenerator:
 
     def create_beneficiary(self, sponsor):
         relationship = random.choice(list(self.relationship_map.keys()))
+        relationship_code = self.relationship_map[relationship]
+        log_data["family"]["relationship_distribution"][relationship_code] += 1
         beneficiary_ssn = self.generate_ssn()
         beneficiary_id = f'{beneficiary_ssn.replace("-", "")}V11111111'
         beneficiary_amt_data = create_amt_data()

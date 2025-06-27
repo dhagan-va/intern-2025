@@ -26,7 +26,6 @@ RELATIONSHIP_LABELS = {
     '25': 'Ex-Spouse (25)'
 }
 
-# relationship map
 log_data = {
     "messages": {
         "count_834": 0,
@@ -82,7 +81,7 @@ def create_md():
     
     localdb = LocalDBFunctions()
 
-    # avg_family_size = log_data["family"]["size"] / log_data["family"]["count"]
+    avg_family_size = log_data["family"]["size"] / log_data["family"]["count"]
 
     throughput_834 = log_data["messages"]["count_834"] / log_data["messages"]["time_834"]
     throughput_270 = log_data["messages"]["count_270"] / log_data["messages"]["time_270"]

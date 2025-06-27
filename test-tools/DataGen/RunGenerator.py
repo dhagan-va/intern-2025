@@ -1,10 +1,10 @@
 from datetime import datetime
 
-from src.Config import Config
-from src.FileCreation.DataGenerator import SponsorDataGenerator
-from src.FileCreation.EDIGenerator import EDI834Generator, EDI270Generator
-from src.Config.Config import logger, number_of_tests, get_error_rate
-from src.Config.Data_Visualizer import create_md, log_data
+from Config import Config
+from FileCreation.DataGenerator import SponsorDataGenerator
+from FileCreation.EDIGenerator import EDI834Generator, EDI270Generator
+from Config.Config import logger, number_of_tests, get_error_rate
+from Config.Data_Visualizer import log_data, create_md
 
 
 def Run834Generator(max_messages=None, error_rate=None):

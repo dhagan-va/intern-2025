@@ -118,7 +118,7 @@ class EDI270Generator:
 
     def create_transaction(self, num, error_ctrl):
         self.error_ctrl.reset_error_inserted()
-        beneficiary = self.localdb_funcs.get_random_beneficiary()
+        beneficiary = self.localdb_funcs.get_random_beneficiary(270)
         state = beneficiary.address.state
         error_id = beneficiary.beneficiary_id
 
@@ -166,11 +166,25 @@ class EDI270Generator:
 class EDI837PGenerator:
     def __init__(self, num_messages=None, error_rate=None):
         self.localdb_funcs = localdb_funcs
+        self.transaction_control_number = 0
         self.num_messages = num_messages
         self.error_ctrl = ErrorInjector(num_messages, error_rate)
 
     def create_transaction(self, num, error_ctrl):
-        self.error_ctrl.reset_error_inserted()
+        self.transaction_control_number += 1
+        segments = []
 
+        return segments
 
+    def combine_segments(self):
+        all_segments = [Seg.ISA().to_edi(),
+                        Seg.GS("HC").to_edi()
+                        ]
 
+        for i in range(self.num_messages):
+            self.create_transaction(i, self.error_ctrl)
+
+        all_segments.append(Seg.GE(self.transaction_control_number).to_edi())
+        all_segments.append(Seg.IEA().to_edi())
+
+        return all_segments

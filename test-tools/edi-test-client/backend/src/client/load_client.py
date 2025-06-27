@@ -24,6 +24,7 @@ class LoadClient:
         self._rps = cfg.rps
         self._rps_lock = threading.Lock()
         self.threads = cfg.threads
+        self._trans_lock = threading.Lock()
 
         self._running = False
         self._pool = None
@@ -118,3 +119,9 @@ class LoadClient:
 
         curr_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         self._log.info("RPS updated at %s to %.1f", curr_time, new_rps)
+
+    def update_transaction(self, new_transaction):
+        with self._trans_lock:
+            self.transaction = new_transaction
+        curr_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        self._log.info("Transaction updated at %s to %d", curr_time, new_transaction)

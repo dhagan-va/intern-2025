@@ -19,12 +19,12 @@ def rps_listener(client: LoadClient):
             line = input()
             line = line.strip()
             client.update_rps(float(line))
-        elif line.lower == "t":
+        elif line.lower() == "t":
             line = input()
             line = line.strip()
-            client.update_rps(float(line))
+            client.update_transaction(int(line))
         else:
-            client.update_rps(float(line))
+            print("invalid")
 
 
 def main():

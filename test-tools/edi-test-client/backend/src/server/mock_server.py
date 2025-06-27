@@ -7,10 +7,10 @@ app = Flask(__name__)
 def endpoint_270():
     return samples.SAMPLE_271
 
-@app.post("/276")
+@app.post("/276/")
 def endpoint_276():
     return samples.SAMPLE_277
 
-@app.post("/278")
+@app.post("/278/")
 def endpoint_278():
     return samples.SAMPLE_278

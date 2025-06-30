@@ -33,7 +33,7 @@ log_data = {
         "count_837": 0,
         "time_834": 0,
         "time_270": 0,
-        "time_837": 0,
+        "time_837": 1,
     },
     "errors": {
         "error_ct_834": 0,

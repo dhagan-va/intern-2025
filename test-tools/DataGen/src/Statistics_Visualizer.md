@@ -27,9 +27,9 @@ Total Number of Messages Generated: **10**
 ```mermaid
 xychart-beta
     title "Throughput (Transactions per Second)"
-    x-axis ["834", "270"]
-    y-axis "TPS" 0 --> 31.674658437678296
-    bar [30.674658437678296, 20.32520325203252]
+    x-axis ["834", "270", "837"]
+    y-axis "TPS" 0 --> 93.5925925925926
+    bar [92.5925925925926, 21.929824561403507, 0.0]
 ```
 
 
@@ -37,9 +37,9 @@ xychart-beta
 ```mermaid
 xychart-beta
     title "Error Count in Messages"
-    x-axis ["834", "270"]
+    x-axis ["834", "270", "837"]
     y-axis "Errors" 0 --> 1
-    bar [0, 0]
+    bar [0, 0, 0]
 ```
 
 
@@ -47,9 +47,9 @@ xychart-beta
 ```mermaid
 xychart-beta
     title "Error Rate (%)"
-    x-axis ["834", "270"]
+    x-axis ["834", "270", "837"]
     y-axis "Percent" 0 --> 5
-    bar [0, 0]
+    bar [0, 0, 0]
 ```
 
 
@@ -112,4 +112,4 @@ xychart-beta
 
 
 ## Average 270s per Beneficiary
-- Average 270s per Beneficiary: **0.00**
+- Average 270s per Beneficiary: **0.20**

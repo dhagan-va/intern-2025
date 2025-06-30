@@ -170,7 +170,8 @@ class EDI270Generator:
 
 class EDI837PGenerator:
     def __init__(self, beneficiaries, providers, num_messages=None, error_rate=None):
-
+        self.beneficiaries = beneficiaries
+        self.providers = providers
         self.localdb_funcs = localdb_funcs
         self.transaction_control_number = 0
         self.num_messages = num_messages
@@ -178,7 +179,7 @@ class EDI837PGenerator:
 
     def create_claim_anesthesia(self, num, error_ctrl):
         self.transaction_control_number += 1
-        bene = localdb_funcs.bene_270[num]
+        bene = self.beneficiaries[num]
         segments = [Seg.ST("837", num).to_edi(),
                     Seg.BHT("19", "00").to_edi(),
                     Seg.NM1("41", "2", "random medical group", "",

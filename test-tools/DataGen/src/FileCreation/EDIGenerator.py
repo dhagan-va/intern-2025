@@ -190,6 +190,10 @@ class EDI837PGenerator:
             return parts[0], parts[1]
 
     def create_claim_anesthesia(self, num, error_ctrl):
+        if num - 1 >= len(self.beneficiaries) or num - 1 >= len(self.providers) or num - 1 < 0:
+            logger.error(f"Index out of bounds for claim {num}. Beneficiaries or providers list is too short.")
+            return []
+
         bene = self.beneficiaries[num - 1]
         provider = self.providers[num - 1]
         last, first = self.split_provider_name(provider["name"], provider["entity_type"])

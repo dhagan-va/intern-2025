@@ -343,12 +343,13 @@ class EQ:
 
 
 class SBR:
-    def __init__(self, relationship_code):
+    def __init__(self, relationship_code, group_id):
         self.relationship_code = relationship_code
+        self.group_id = group_id
 
     def to_edi(self):
         logger.debug(f"Generating SBR with relationship {self.relationship_code} segment")
-        return f"SBR*{self.relationship_code}*******ithinksomethingissupposedtobeherebutidkwhatitis~\n"
+        return f"SBR*P*{self.relationship_code}*{self.group_id}******HM~\n"
 
 
 class DMG:

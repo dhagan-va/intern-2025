@@ -309,7 +309,7 @@ class BHT:
     def to_edi(self):
         logger.debug(f"Generating BHT segment")
         # unsure of the value of BHT03
-        return f"BHT*00{self.transaction_id}*{self.purpose_code}*123456789*{self.date}*{self.time}*~\n"
+        return f"BHT*00{self.transaction_id}*{self.purpose_code}*123456789*{self.date}*{self.time}*CH~\n"
 
 
 class HL:

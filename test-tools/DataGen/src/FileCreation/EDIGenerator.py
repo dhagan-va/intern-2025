@@ -207,11 +207,11 @@ class EDI837PGenerator:
                                                        error_id).to_edi(),
                     Seg.N4(provider.get("city", "Random City"), provider.get("state", "Random State"),
                            provider.get("zipcode", "12345"), error_ctrl, error_id).to_edi(),
-                    Seg.REF("EI", provider.get("ein", "123456789"), error_ctrl).to_edi(),
+                    Seg.REF("EI", "123456789", error_ctrl).to_edi(),
                     Seg.HL("2", "1", 22, 0, error_ctrl, error_id).to_edi(), Seg.SBR("P").to_edi(),
                     Seg.NM1("IL", "1", bene.last_name, bene.first_name, bene.middle_name, "MI", bene.beneficiary_id,
                             error_ctrl).to_edi(),
-                    Seg.N3(bene.address.street, bene.address.building_number, bene.address.apartment,
+                    Seg.N3(bene.address.building_number, bene.address.street, bene.address.apartment,
                            error_ctrl).to_edi(),
                     Seg.N4(bene.address.city, bene.address.state, bene.address.zipcode, error_ctrl, error_id).to_edi(),
                     Seg.DMG(bene.dob.strftime("%Y%m%d"), bene.gender).to_edi(),
@@ -222,7 +222,7 @@ class EDI837PGenerator:
                     Seg.PRV("PE", "PXC", "207L00000X").to_edi(), Seg.LX("1").to_edi(),
                     Seg.SV1("HC:00142:QK:QS:P1", "827", "MJ", "61", 1).to_edi(), Seg.DTP("472", "D8").to_edi(),
                     ]
-        segments.append(Seg.SE(len(segments), self.transaction_control_number).to_edi())
+        segments.append(Seg.SE(len(segments) + 1, self.transaction_control_number).to_edi())
 
         self.transaction_control_number += 1
         return segments

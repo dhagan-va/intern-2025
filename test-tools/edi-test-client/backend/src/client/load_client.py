@@ -8,9 +8,9 @@ import sys
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 from config import Setting
-import reqs
-from stats import LiveStats
-import results
+from client import reqs
+from client.stats import LiveStats
+from client import results
 
 
 class LoadClient:

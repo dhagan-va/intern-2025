@@ -146,7 +146,7 @@ class SponsorDataGenerator:
             dob=self.fake.date_of_birth(),
             first_name=sponsor_first.upper(),
             last_name=sponsor.last_name,
-            gender=self.fake.gen,
+            gender=beneficiary_gender,
             address=sponsor.address,
             phone=self.fake.basic_phone_number(),
             insurance_company=sponsor.insurance_company,

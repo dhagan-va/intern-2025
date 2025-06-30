@@ -198,22 +198,26 @@ class EDI837PGenerator:
 
         segments = [Seg.ST("837", num).to_edi(),
                     Seg.BHT("19", "00").to_edi(),
+                    # Submitter/receiver
                     Seg.NM1("41", "2", "Submitter Group", "",
                             "", "46", "133052274", error_ctrl).to_edi(),
                     # Not randomized bc I'm not sure what the submitter group should be
                     Seg.PER("IC", "2403018701", error_ctrl, error_id).to_edi(),
                     Seg.NM1("40", "2", "Receiver Group", "", "", "46", "84146", error_ctrl).to_edi(),
+                    # Billing provider
                     Seg.HL("1", "", 20, 1, error_ctrl, error_id).to_edi(),
                     Seg.NM1("85", provider["entity_type"], last, first, "", "XX", provider["npi"], error_ctrl, error_id).to_edi(),
-                    Seg.N3().to_edi(),
-                    Seg.N4().to_edi(),
-                    Seg.REF().to_edi(),
-                    Seg.HL().to_edi(),
-                    Seg.SBR().to_edi(),
-                    Seg.NM1().to_edi(),
-                    Seg.N3().to_edi(),
-                    Seg.N4().to_edi(),
-                    Seg.DMG().to_edi(),
+                    # split address_line so that building number is first item
+                    Seg.N3(provider.get("address_line_1", "Random Street"), provider.get("address_line_2", "Random Apt"), "", error_ctrl, error_id).to_edi(),
+                    Seg.N4(provider.get("city", "Random City"), provider.get("state", "Random State"), provider.get("zipcode", "12345"), error_ctrl, error_id).to_edi(),
+                    Seg.REF("EI", provider.get("ein", "123456789"), error_ctrl).to_edi(),
+
+                    Seg.HL("2", "1", 22, 0, error_ctrl, error_id).to_edi(),
+                    Seg.SBR("P").to_edi(),
+                    Seg.NM1("IL", "1", bene.last_name, bene.first_name, bene.middle_name, "MI", bene.beneficiary_id, error_ctrl).to_edi(),
+                    Seg.N3(bene.address.street, bene.address.building_number, bene.address.apartment, error_ctrl).to_edi(),
+                    Seg.N4(bene.address.city, bene.address.state, bene.address.zipcode, error_ctrl).to_edi(),
+                    Seg.DMG(bene.dob.strftime("%Y%m%d"), bene.gender).to_edi(),
                     Seg.NM1().to_edi(),
                     Seg.CLM().to_edi(),
                     Seg.HI().to_edi(),

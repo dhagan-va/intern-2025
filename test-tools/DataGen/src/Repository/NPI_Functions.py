@@ -81,6 +81,7 @@ class NPIFunctions:
                 usecols=[
                     "NPI",
                     "Entity Type Code",
+                    "Employer Identification Number (EIN)",
                     "Provider Organization Name (Legal Business Name)",
                     "Provider Last Name (Legal Name)",
                     "Provider First Name",
@@ -135,6 +136,7 @@ class NPIFunctions:
             "npi": provider["NPI"],
             "name": name,
             "entity_type": entity_type,
+            "ein": provider.get("Employer Identification Number (EIN)", ""),
             "address_line_1": provider.get("Provider First Line Business Practice Location Address", ""),
             "address_line_2": provider.get("Provider Second Line Business Practice Location Address", ""),
             "city": provider.get("Provider Business Practice Location Address City Name", ""),

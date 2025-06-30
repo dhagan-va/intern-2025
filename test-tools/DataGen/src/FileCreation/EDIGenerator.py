@@ -195,9 +195,10 @@ class EDI837PGenerator:
         last, first = self.split_provider_name(provider["name"], provider["entity_type"])
         error_id = bene.beneficiary_id
 
-        segments = [Seg.ST("837", num).to_edi(), Seg.BHT("19", "00").to_edi(), Seg.NM1("41", "2", "Submitter Group", "",
-                                                                                       "", "46", "133052274",
-                                                                                       error_ctrl).to_edi(),
+        segments = [Seg.ST("837", num).to_edi(),
+                    Seg.BHT("19", "00").to_edi(),
+                    Seg.NM1("41", "2", "Submitter Group",
+                            "", "", "46", "133052274", error_ctrl).to_edi(),
                     Seg.PER("IC", "2403018701", error_ctrl, error_id).to_edi(),
                     Seg.NM1("40", "2", "Receiver Group", "", "", "46", "84146", error_ctrl).to_edi(),
                     Seg.HL("1", "", 20, 1, error_ctrl, error_id).to_edi(),

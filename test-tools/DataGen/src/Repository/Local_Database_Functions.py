@@ -15,7 +15,6 @@ class LocalDBFunctions(DataAccess):
             file = get_local_db_path()
         self.data = []
         self.all_bene = []
-        self.used_providers = []
         self.file = file
         self.existing_ssns = set()
         self.loadfile()

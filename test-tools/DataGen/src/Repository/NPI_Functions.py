@@ -80,10 +80,16 @@ class NPIFunctions:
                 self.csv_path,
                 usecols=[
                     "NPI",
+                    "Entity Type Code",
                     "Provider Organization Name (Legal Business Name)",
                     "Provider Last Name (Legal Name)",
                     "Provider First Name",
-                    "Provider Business Mailing Address State Name"
+                    "Provider Business Practice Location Address City Name",
+                    "Provider Business Practice Location Address State Name",
+                    "Provider Business Practice Location Address Postal Code",
+                    "Provider First Line Business Practice Location Address",
+                    "Provider Second Line Business Practice Location Address",
+                    "Provider Business Practice Location Address Telephone Number"
                 ],
                 dtype=str,
                 low_memory=False
@@ -97,7 +103,7 @@ class NPIFunctions:
     def get_random_provider(self, state):
         org_col = "Provider Organization Name (Legal Business Name)"
         last_col = "Provider Last Name (Legal Name)"
-        state_col = "Provider Business Mailing Address State Name"
+        state_col = "Provider Business Practice Location Address State Name"
         if not state:
             msg = "State must be provided to select provider"
             logger.error(msg)
@@ -129,6 +135,11 @@ class NPIFunctions:
             "npi": provider["NPI"],
             "name": name,
             "entity_type": entity_type,
-            "state": provider[state_col]
+            "address_line_1": provider.get("Provider First Line Business Practice Location Address", ""),
+            "address_line_2": provider.get("Provider Second Line Business Practice Location Address", ""),
+            "city": provider.get("Provider Business Practice Location Address City Name", ""),
+            "state": provider.get("Provider Business Practice Location Address State Name", ""),
+            "zipcode": provider.get("Provider Business Practice Location Address Postal Code", ""),
+            "phone": provider.get("Provider Business Practice Location Address Telephone Number", "")
         }
 

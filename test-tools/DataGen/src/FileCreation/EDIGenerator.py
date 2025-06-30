@@ -101,6 +101,7 @@ class EDI270Generator:
         self.bene_270 = []
         self.providers = []
         self.localdb_funcs = localdb_funcs
+        self.localdb_funcs.loadfile()
         self.npi_funcs = NPIFunctions(provider_csv_path)
         self.num_messages = num_messages
         self.provider_csv_path = provider_csv_path
@@ -143,8 +144,8 @@ class EDI270Generator:
                     Seg.ST(270, num).to_edi(),
                     Seg.BHT("22", "13").to_edi(),
                     Seg.HL(1, "", 20, 1, error_ctrl, error_id).to_edi(),
-                    Seg.NM1("PR", 2, beneficiary.insurance_company, "", "", "PI",
-                            beneficiary.insurance_FID, error_ctrl, error_id).to_edi(),
+                    Seg.NM1("PR", 2, Config.N1_PAYER_QUALIFIER, "", "", "PI",
+                            Config.N1_PAYER_ID, error_ctrl, error_id).to_edi(),
                     Seg.HL(2, 1, 21, 1, error_ctrl, error_id).to_edi(),
                     Seg.NM1("1P", provider["entity_type"], last, first, "", "XX", provider["npi"], error_ctrl,
                             error_id).to_edi(),
@@ -172,19 +173,59 @@ class EDI837PGenerator:
     def __init__(self, beneficiaries, providers, num_messages=None, error_rate=None):
         self.beneficiaries = beneficiaries
         self.providers = providers
-        self.localdb_funcs = localdb_funcs
         self.transaction_control_number = 0
         self.num_messages = num_messages
         self.error_ctrl = ErrorInjector(num_messages, error_rate)
 
+    @staticmethod
+    def split_provider_name(name, entity_type):
+        if entity_type == "2":
+            return name, ""
+
+        parts = name.replace(",", "").split()
+
+        if len(parts) == 1:
+            return parts[0], ""
+        else:
+            return parts[0], parts[1]
+
     def create_claim_anesthesia(self, num, error_ctrl):
         self.transaction_control_number += 1
         bene = self.beneficiaries[num]
+        provider = self.providers[num]
+        last, first = self.split_provider_name(provider["name"], provider["entity_type"])
+        error_id = bene.beneficiary_id
+
         segments = [Seg.ST("837", num).to_edi(),
                     Seg.BHT("19", "00").to_edi(),
-                    Seg.NM1("41", "2", "random medical group", "",
+                    Seg.NM1("41", "2", "Submitter Group", "",
                             "", "46", "133052274", error_ctrl).to_edi(),
-                    Seg.PER("IC", )
+                    # Not randomized bc I'm not sure what the submitter group should be
+                    Seg.PER("IC", "2403018701", error_ctrl, error_id).to_edi(),
+                    Seg.NM1("40", "2", "Receiver Group", "", "", "46", "84146", error_ctrl).to_edi(),
+                    Seg.HL("1", "", 20, 1, error_ctrl, error_id).to_edi(),
+                    Seg.NM1("85", provider["entity_type"], last, first, "", "XX", provider["npi"], error_ctrl, error_id).to_edi(),
+                    Seg.N3().to_edi(),
+                    Seg.N4().to_edi(),
+                    Seg.REF().to_edi(),
+                    Seg.HL().to_edi(),
+                    Seg.SBR().to_edi(),
+                    Seg.NM1().to_edi(),
+                    Seg.N3().to_edi(),
+                    Seg.N4().to_edi(),
+                    Seg.DMG().to_edi(),
+                    Seg.NM1().to_edi(),
+                    Seg.CLM().to_edi(),
+                    Seg.HI().to_edi(),
+                    Seg.NM1().to_edi(),
+                    Seg.PRV().to_edi(),
+                    Seg.REF().to_edi(),
+                    Seg.NM1().to_edi(),
+                    Seg.N3().to_edi(),
+                    Seg.N4().to_edi(),
+                    Seg.LX().to_edi(),
+                    Seg.SV1().to_edi(),
+                    Seg.DTP().to_edi(),
                     ]
 
         segments.append(Seg.SE(len(segments), self.transaction_control_number))

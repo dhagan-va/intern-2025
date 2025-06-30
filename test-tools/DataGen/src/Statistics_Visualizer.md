@@ -28,8 +28,8 @@ Total Number of Messages Generated: **10**
 xychart-beta
     title "Throughput (Transactions per Second)"
     x-axis ["834", "270", "837"]
-    y-axis "TPS" 0 --> 93.5925925925926
-    bar [92.5925925925926, 21.929824561403507, 0.0]
+    y-axis "TPS" 0 --> 112.11111111111111
+    bar [111.11111111111111, 23.04158083677805, 0.0]
 ```
 
 
@@ -112,4 +112,4 @@ xychart-beta
 
 
 ## Average 270s per Beneficiary
-- Average 270s per Beneficiary: **0.20**
+- Average 270s per Beneficiary: **1.00**

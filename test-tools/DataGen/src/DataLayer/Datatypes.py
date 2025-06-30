@@ -36,6 +36,7 @@ class Base:
     dob: date
     first_name: str
     last_name: str
+    gender: str
     address: Address
     phone: str
     insurance_company: str
@@ -57,6 +58,7 @@ class Beneficiary(Base):
             "dob": self.dob.isoformat(),
             "first_name": self.first_name,
             "last_name": self.last_name,
+            "gender": self.gender,
             "address": self.address.to_dict(),
             "phone": self.phone,
             "insurance_company": self.insurance_company,
@@ -76,6 +78,7 @@ class Beneficiary(Base):
             dob=date.fromisoformat(data["dob"]),
             first_name=data["first_name"],
             last_name=data["last_name"],
+            gender=data["gender"],
             address=Address.from_dict(data["address"]),
             phone=data["phone"],
             insurance_company=data["insurance_company"],
@@ -103,6 +106,7 @@ class Sponsor(Base):
             "dob": self.dob.isoformat(),
             "first_name": self.first_name,
             "last_name": self.last_name,
+            "gender": self.gender,
             "address": self.address.to_dict(),
             "phone": self.phone,
             "insurance_company": self.insurance_company,
@@ -121,6 +125,7 @@ class Sponsor(Base):
             dob=date.fromisoformat(data["dob"]),
             first_name=data["first_name"],
             last_name=data["last_name"],
+            gender=data["gender"],
             address=Address.from_dict(data["address"]),
             phone=data["phone"],
             insurance_company=data["insurance_company"],

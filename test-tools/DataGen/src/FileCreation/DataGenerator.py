@@ -109,12 +109,15 @@ class SponsorDataGenerator:
         sponsor_last_name = self.fake.last_name().upper()
         sponsor_address = self.create_address()
         sponsor_amt_data = create_amt_data()
+        sponsor_gender = self.fake.passport_gender()
+        sponsor_first = self.fake.first_name_male() if sponsor_gender == 'M' else self.fake.first_name_female()
 
         sponsor = Sponsor(
             ssn=sponsor_ssn,
             dob=self.fake.date_of_birth(),
-            first_name=self.fake.first_name().upper(),
+            first_name=sponsor_first.upper(),
             last_name=sponsor_last_name,
+            gender=sponsor_gender,
             address=sponsor_address,
             phone=self.fake.basic_phone_number(),
             insurance_company=self.fake.company().upper(),
@@ -135,12 +138,15 @@ class SponsorDataGenerator:
         beneficiary_ssn = self.generate_ssn()
         beneficiary_id = f'{beneficiary_ssn.replace("-", "")}V11111111'
         beneficiary_amt_data = create_amt_data()
+        beneficiary_gender = self.fake.passport_gender()
+        sponsor_first = self.fake.first_name_male() if beneficiary_gender == 'M' else self.fake.first_name_female()
 
         beneficiary = Beneficiary(
             ssn=beneficiary_ssn,
             dob=self.fake.date_of_birth(),
-            first_name=self.fake.first_name().upper(),
+            first_name=sponsor_first.upper(),
             last_name=sponsor.last_name,
+            gender=self.fake.gen,
             address=sponsor.address,
             phone=self.fake.basic_phone_number(),
             insurance_company=sponsor.insurance_company,

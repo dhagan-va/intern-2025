@@ -223,7 +223,8 @@ class EDI837PGenerator:
                     Seg.NM1("82", "1", last, first, "", "XX", provider["npi"], error_ctrl).to_edi(),
                     Seg.PRV("PE", "PXC", "207L00000X").to_edi(),
                     Seg.LX("1").to_edi(),
-                    Seg.SV1("HC:00142:QK:QS:P1", "827", "MJ", "61", 1).to_edi(), Seg.DTP("472", "D8").to_edi(),
+                    Seg.SV1("HC:00142:QK:QS:P1", "827", "MJ", "61", 1).to_edi(),
+                    Seg.DTP("472", "D8").to_edi(),
                     ]
 
         segments.append(Seg.SE(len(segments) + 1, self.transaction_control_number).to_edi())

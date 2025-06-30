@@ -95,7 +95,7 @@ if __name__ == "__main__":
 
     Run834Generator(5, 0)
     edi270 = Run270Generator(5, 0)
-    # Run837PGenerator(edi270.bene_270, edi270.providers, 5, 0)
+    Run837PGenerator(edi270.bene_270, edi270.providers, 5, 0)
 
     end = datetime.now() - curr
     logger.info(f"It took {end} to generate the output")

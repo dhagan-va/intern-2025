@@ -50,19 +50,20 @@ class IEA:
 
 # Group Header
 class GS:
-    def __init__(self, functional_id, sender=Config.SENDER_ID, receiver=Config.RECEIVER_ID, nl_toggle=True):
+    def __init__(self, functional_id, sender=Config.SENDER_ID, receiver=Config.RECEIVER_ID, version="005010X220A1", nl_toggle=True):
         now = datetime.now()
         self.functional_id = functional_id
         self.sender = sender
         self.receiver = receiver
         self.date = now.strftime("%Y%m%d")
         self.time = now.strftime("%H%M%S")
+        self.version = version
         self.nl_toggle = nl_toggle
 
     def to_edi(self):
         nl = "~\n" if self.nl_toggle else "~"
         logger.debug("Generating GS segment")
-        return f"GS*{self.functional_id}*{self.sender}*{self.receiver}*{self.date}*{self.time}*61*X*005010X220A1{nl}"
+        return f"GS*{self.functional_id}*{self.sender}*{self.receiver}*{self.date}*{self.time}*61*X*{self.version}{nl}"
 
 
 # Group Trailer
@@ -286,13 +287,15 @@ class HD:
 
 # Date/Time Period
 class DTP:
-    def __init__(self):
+    def __init__(self, date_type, date_format):
         now = datetime.now()
+        self.date_type = date_type
+        self.date_format = date_format
         self.date = now.strftime("%Y%m%d")
 
     def to_edi(self):
         logger.debug(f"Generating DTP segment for date {self.date}")
-        return f"DTP*348*D8*{self.date}~\n"
+        return f"DTP*{self.date_type}*{self.date_format}*{self.date}~\n"
 
 
 class BHT:
@@ -306,7 +309,7 @@ class BHT:
     def to_edi(self):
         logger.debug(f"Generating BHT segment")
         # unsure of the value of BHT03
-        return f"BHT*00{self.transaction_id}*{self.purpose_code}*123456789*{self.date}*{self.time}~\n"
+        return f"BHT*00{self.transaction_id}*{self.purpose_code}*123456789*{self.date}*{self.time}*~\n"
 
 
 class HL:
@@ -337,3 +340,79 @@ class EQ:
     def to_edi(self):
         logger.debug(f"Generating EQ segment")
         return f"EQ*{self.service_code}~\n"
+
+
+class SBR:
+    def __init__(self, relationship_code):
+        self.relationship_code = relationship_code
+
+    def to_edi(self):
+        logger.debug(f"Generating SBR with relationship {self.relationship_code} segment")
+        return f"SBR*{self.relationship_code}*******ithinksomethingissupposedtobeherebutidkwhatitis~\n"
+
+
+class DMG:
+    def __init__(self, dob, gender):
+        self.dob = dob
+        self.gender = gender
+
+    def to_edi(self):
+        logger.debug("Generating DMG segment")
+        return f"DMG*D8*{self.dob}*{self.gender}~\n"
+
+
+class CLM:
+    def __init__(self, claim_id, charge_amt, place_of_service, fac_code_qual, claim_freq):
+        self.claim_id = claim_id
+        self.charge_amt = charge_amt
+        self.place_of_service = place_of_service
+        self.fac_code_qual = fac_code_qual
+        self.claim_freq = claim_freq
+
+    def to_edi(self):
+        logger.debug("Generating CLM segment")
+        return (f"CLM*{self.claim_id}*{self.charge_amt}***{self.place_of_service}:"
+                f"{self.fac_code_qual}:{self.claim_freq}*Y*A*Y*Y~\n")
+
+
+class HI:
+    def __init__(self, qualifier, code):
+        self.qualifier = qualifier
+        self.code = code
+
+    def to_edi(self):
+        logger.debug("Generating HI segment")
+        return f"HI*{self.qualifier}:{self.code}~\n"
+
+
+class PRV:
+    def __init__(self, provider_code, ref_type, taxonomy):
+        self.provider_code = provider_code
+        self.ref_type = ref_type
+        self.taxonomy = taxonomy
+
+    def to_edi(self):
+        logger.debug("Generating PRV segment")
+        return f"PRV*{self.provider_code}*{self.ref_type}*{self.taxonomy}~\n"
+
+
+class LX:
+    def __init__(self, number):
+        self.number = number
+
+    def to_edi(self):
+        logger.debug(f"Generating LX segment line {self.number}")
+        return f"LX*{self.number}~\n"
+
+
+class SV1:
+    def __init__(self, proc_code, charge_amt, unit, quantity, diagnosis_ptr):
+        self.proc_code = proc_code
+        self.charge_amt = charge_amt
+        self.unit = unit
+        self.quantity = quantity
+        self.diagnosis_ptr = diagnosis_ptr
+
+    def to_edi(self):
+        logger.debug("Generating SV1 segment")
+        return f"SV1*{self.proc_code}*{self.charge_amt}*{self.unit}*{self.quantity}***{self.diagnosis_ptr}~\n"

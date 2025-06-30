@@ -57,7 +57,7 @@ class EDI834Generator:
             log_data["amt"][f"{code}"]["count"] += 1
 
         segments += [Seg.HD().to_edi(),
-                     Seg.DTP().to_edi(),
+                     Seg.DTP(348, "D8").to_edi(),
                      Seg.SE(len(segments) + 3, self.transaction_control_number).to_edi()
                      ]
 
@@ -173,7 +173,7 @@ class EDI837PGenerator:
     def __init__(self, beneficiaries, providers, num_messages=None, error_rate=None):
         self.beneficiaries = beneficiaries
         self.providers = providers
-        self.transaction_control_number = 0
+        self.transaction_control_number = 1
         self.num_messages = num_messages
         self.error_ctrl = ErrorInjector(num_messages, error_rate)
 
@@ -190,58 +190,50 @@ class EDI837PGenerator:
             return parts[0], parts[1]
 
     def create_claim_anesthesia(self, num, error_ctrl):
-        self.transaction_control_number += 1
-        bene = self.beneficiaries[num]
-        provider = self.providers[num]
+        bene = self.beneficiaries[num - 1]
+        provider = self.providers[num - 1]
         last, first = self.split_provider_name(provider["name"], provider["entity_type"])
         error_id = bene.beneficiary_id
 
-        segments = [Seg.ST("837", num).to_edi(),
-                    Seg.BHT("19", "00").to_edi(),
-                    # Submitter/receiver
-                    Seg.NM1("41", "2", "Submitter Group", "",
-                            "", "46", "133052274", error_ctrl).to_edi(),
-                    # Not randomized bc I'm not sure what the submitter group should be
+        segments = [Seg.ST("837", num).to_edi(), Seg.BHT("19", "00").to_edi(), Seg.NM1("41", "2", "Submitter Group", "",
+                                                                                       "", "46", "133052274",
+                                                                                       error_ctrl).to_edi(),
                     Seg.PER("IC", "2403018701", error_ctrl, error_id).to_edi(),
                     Seg.NM1("40", "2", "Receiver Group", "", "", "46", "84146", error_ctrl).to_edi(),
-                    # Billing provider
                     Seg.HL("1", "", 20, 1, error_ctrl, error_id).to_edi(),
-                    Seg.NM1("85", provider["entity_type"], last, first, "", "XX", provider["npi"], error_ctrl, error_id).to_edi(),
-                    # split address_line so that building number is first item
-                    Seg.N3(provider.get("address_line_1", "Random Street"), provider.get("address_line_2", "Random Apt"), "", error_ctrl, error_id).to_edi(),
-                    Seg.N4(provider.get("city", "Random City"), provider.get("state", "Random State"), provider.get("zipcode", "12345"), error_ctrl, error_id).to_edi(),
+                    Seg.NM1("85", provider["entity_type"], last, first, "", "XX", provider["npi"], error_ctrl,
+                            error_id).to_edi(), Seg.N3(provider.get("address_line_1", "Random Street"),
+                                                       provider.get("address_line_2", "Random Apt"), "", error_ctrl,
+                                                       error_id).to_edi(),
+                    Seg.N4(provider.get("city", "Random City"), provider.get("state", "Random State"),
+                           provider.get("zipcode", "12345"), error_ctrl, error_id).to_edi(),
                     Seg.REF("EI", provider.get("ein", "123456789"), error_ctrl).to_edi(),
-
-                    Seg.HL("2", "1", 22, 0, error_ctrl, error_id).to_edi(),
-                    Seg.SBR("P").to_edi(),
-                    Seg.NM1("IL", "1", bene.last_name, bene.first_name, bene.middle_name, "MI", bene.beneficiary_id, error_ctrl).to_edi(),
-                    Seg.N3(bene.address.street, bene.address.building_number, bene.address.apartment, error_ctrl).to_edi(),
-                    Seg.N4(bene.address.city, bene.address.state, bene.address.zipcode, error_ctrl).to_edi(),
+                    Seg.HL("2", "1", 22, 0, error_ctrl, error_id).to_edi(), Seg.SBR("P").to_edi(),
+                    Seg.NM1("IL", "1", bene.last_name, bene.first_name, bene.middle_name, "MI", bene.beneficiary_id,
+                            error_ctrl).to_edi(),
+                    Seg.N3(bene.address.street, bene.address.building_number, bene.address.apartment,
+                           error_ctrl).to_edi(),
+                    Seg.N4(bene.address.city, bene.address.state, bene.address.zipcode, error_ctrl, error_id).to_edi(),
                     Seg.DMG(bene.dob.strftime("%Y%m%d"), bene.gender).to_edi(),
-                    Seg.NM1().to_edi(),
-                    Seg.CLM().to_edi(),
-                    Seg.HI().to_edi(),
-                    Seg.NM1().to_edi(),
-                    Seg.PRV().to_edi(),
-                    Seg.REF().to_edi(),
-                    Seg.NM1().to_edi(),
-                    Seg.N3().to_edi(),
-                    Seg.N4().to_edi(),
-                    Seg.LX().to_edi(),
-                    Seg.SV1().to_edi(),
-                    Seg.DTP().to_edi(),
+                    Seg.NM1("PR", 2, Config.N1_PAYER_QUALIFIER, "", "", "PI",
+                            Config.N1_PAYER_ID, error_ctrl, error_id).to_edi(),
+                    Seg.CLM("CLAIM2003", "827", "22", "B", "1").to_edi(), Seg.HI("BK", "36616").to_edi(),
+                    Seg.NM1("82", "1", last, first, "", "XX", provider["npi"], error_ctrl).to_edi(),
+                    Seg.PRV("PE", "PXC", "207L00000X").to_edi(), Seg.LX("1").to_edi(),
+                    Seg.SV1("HC:00142:QK:QS:P1", "827", "MJ", "61", 1).to_edi(), Seg.DTP("472", "D8").to_edi(),
                     ]
+        segments.append(Seg.SE(len(segments), self.transaction_control_number).to_edi())
 
-        segments.append(Seg.SE(len(segments), self.transaction_control_number))
+        self.transaction_control_number += 1
         return segments
 
     def combine_segments(self):
         all_segments = [Seg.ISA().to_edi(),
-                        Seg.GS("HC").to_edi()
+                        Seg.GS("HC", Config.SENDER_ID, Config.RECEIVER_ID, "005010X222A1").to_edi()
                         ]
 
-        for i in range(self.num_messages):
-            self.create_claim_anesthesia(i, self.error_ctrl)
+        for i in range(1, self.num_messages + 1):
+            all_segments.extend(self.create_claim_anesthesia(i, self.error_ctrl))
 
         all_segments.append(Seg.GE(self.transaction_control_number).to_edi())
         all_segments.append(Seg.IEA().to_edi())

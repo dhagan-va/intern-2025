@@ -22,14 +22,14 @@ pie title Message type distribution
 ```
 
 
-Total Number of Messages Generated: **10**
+Total Number of Messages Generated: **15**
 ## Throughput
 ```mermaid
 xychart-beta
     title "Throughput (Transactions per Second)"
     x-axis ["834", "270", "837"]
-    y-axis "TPS" 0 --> 93.5925925925926
-    bar [92.5925925925926, 19.76284584980237, 0.0]
+    y-axis "TPS" 0 --> 5001.0
+    bar [106.38297872340425, 20.491803278688526, 5000.0]
 ```
 
 

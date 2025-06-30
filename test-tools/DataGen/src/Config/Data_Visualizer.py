@@ -30,14 +30,18 @@ log_data = {
     "messages": {
         "count_834": 0,
         "count_270": 0,
+        "count_837": 0,
         "time_834": 0,
         "time_270": 0,
+        "time_837": 0,
     },
     "errors": {
         "error_ct_834": 0,
         "error_ct_270": 0,
+        "error_ct_837": 0,
         "error_rate_834": 0,
-        "error_rate_270": 0
+        "error_rate_270": 0,
+        "error_rate_837": 0
     },
     "family": {
         "size": 0,
@@ -74,17 +78,18 @@ def create_md():
     message_types = [834, 270]
     message_count = [log_data["messages"]["count_834"], log_data["messages"]["count_270"]]
     total_messages = 0
-    
+
     for key, value in log_data["messages"].items():
         if key.startswith("count_"):
             total_messages += value
-    
+
     localdb = LocalDBFunctions()
 
     avg_family_size = log_data["family"]["size"] / log_data["family"]["count"]
 
     throughput_834 = log_data["messages"]["count_834"] / log_data["messages"]["time_834"]
     throughput_270 = log_data["messages"]["count_270"] / log_data["messages"]["time_270"]
+    throughput_837 = log_data["messages"]["count_837"] / log_data["messages"]["time_837"]
 
     avg_d2 = log_data["amt"]["D2"]["sum"] / log_data["amt"]["D2"]["count"]
     avg_fk = log_data["amt"]["FK"]["sum"] / log_data["amt"]["FK"]["count"]
@@ -110,27 +115,30 @@ def create_md():
         f.write("## Throughput\n")
         f.writelines(create_bar_graph(
             title="Throughput (Transactions per Second)",
-            x=[834, 270],
+            x=[834, 270, 837],
             y="TPS",
-            values=[throughput_834, throughput_270],
-            y_max=max(throughput_834, throughput_270) + 1
+            values=[throughput_834, throughput_270, throughput_837],
+            y_max=max(throughput_834, throughput_270, throughput_837) + 1
         ))
 
         f.write("## Error Count\n")
         f.writelines(create_bar_graph(
             title="Error Count in Messages",
-            x=[834, 270],
+            x=[834, 270, 837],
             y="Errors",
-            values=[log_data["errors"]["error_ct_834"], log_data["errors"]["error_ct_270"]],
-            y_max=max(log_data["errors"]["error_ct_834"], log_data["errors"]["error_ct_270"]) + 1
+            values=[log_data["errors"]["error_ct_834"], log_data["errors"]["error_ct_270"],
+                    log_data["errors"]["error_ct_837"]],
+            y_max=max(log_data["errors"]["error_ct_834"], log_data["errors"]["error_ct_270"],
+                      log_data["errors"]["error_ct_837"]) + 1
         ))
 
         f.write("## Error Rate\n")
         f.writelines(create_bar_graph(
             title="Error Rate (%)",
-            x=[834, 270],
+            x=[834, 270, 837],
             y="Percent",
-            values=[log_data["errors"]["error_rate_834"] * 100, log_data["errors"]["error_rate_270"] * 100],
+            values=[log_data["errors"]["error_rate_834"] * 100, log_data["errors"]["error_rate_270"] * 100,
+                    log_data["errors"]["error_rate_837"] * 100],
             y_max=5
         ))
 

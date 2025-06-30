@@ -173,7 +173,8 @@ class NM1:
             "34": "SSN",
             "XX": "NPI",
             "MI": "Member ID",
-            "PI": "Payer ID"
+            "PI": "Payer ID",
+            "41": "Submitter"
         }.get(self.id_qualifier, "ID code")
 
         if self.error_ctrl and self.error_ctrl.should_insert():
@@ -192,7 +193,8 @@ class NM1:
 
 # Administrative Communications Contact
 class PER:
-    def __init__(self, phone_number, error_ctrl, error_id):
+    def __init__(self, contact_func, phone_number, error_ctrl, error_id):
+        self.contact_func = contact_func
         self.phone_number = phone_number
         self.error_ctrl = error_ctrl
         self.error_id = error_id
@@ -206,7 +208,7 @@ class PER:
             phone_number = erroneous
         else:
             logger.debug("Generating PER segment")
-        return f"PER*IP**TE*{phone_number}~\n"
+        return f"PER*{self.contact_func}**TE*{phone_number}~\n"
 
 
 # Address Information
@@ -294,15 +296,17 @@ class DTP:
 
 
 class BHT:
-    def __init__(self):
+    def __init__(self, transaction_id, purpose_code):
         now = datetime.now()
+        self.transaction_id = transaction_id
+        self.purpose_code = purpose_code
         self.date = now.strftime("%Y%m%d")
         self.time = now.strftime("%H%M")
 
     def to_edi(self):
         logger.debug(f"Generating BHT segment")
         # unsure of the value of BHT03
-        return f"BHT*0022*13*123456789*{self.date}*{self.time}~\n"
+        return f"BHT*00{self.transaction_id}*{self.purpose_code}*123456789*{self.date}*{self.time}~\n"
 
 
 class HL:

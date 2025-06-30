@@ -15,7 +15,7 @@ class LocalDBFunctions(DataAccess):
             file = get_local_db_path()
         self.data = []
         self.all_bene = []
-        self.bene_270 = []
+        self.used_providers = []
         self.file = file
         self.existing_ssns = set()
         self.loadfile()
@@ -33,15 +33,12 @@ class LocalDBFunctions(DataAccess):
                 self.add_ssns_to_set(sponsor)
         logging.debug(f"There are {len(self.existing_ssns)} users in the database")
 
-    def get_random_beneficiary(self, file=None):
+    def get_random_beneficiary(self):
         if not self.all_bene:
             logging.error("There are no beneficiaries to choose")
             raise ValueError("There are no beneficiaries to choose")
 
         selected = random.choice(self.all_bene)
-
-        if file == 270:
-            self.bene_270.append(selected)
 
         return selected
 

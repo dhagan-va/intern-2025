@@ -29,7 +29,7 @@ xychart-beta
     title "Throughput (Transactions per Second)"
     x-axis ["834", "270", "837"]
     y-axis "TPS" 0 --> 5001.0
-    bar [102.0428988346701, 19.762923964126344, 5000.0]
+    bar [87.71929824561403, 17.79359430604982, 5000.0]
 ```
 
 
@@ -112,4 +112,4 @@ xychart-beta
 
 
 ## Average 270s per Beneficiary
-- Average 270s per Beneficiary: **0.50**
+- Average 270s per Beneficiary: **1.00**

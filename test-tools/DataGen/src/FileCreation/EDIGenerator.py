@@ -170,9 +170,11 @@ class EDI270Generator:
 
 
 class EDI837PGenerator:
-    def __init__(self, beneficiaries, providers, num_messages=None, error_rate=None):
+    def __init__(self, beneficiaries, providers, relationship_map=Config.RELATIONSHIP_MAP, num_messages=None,
+                 error_rate=None):
         self.beneficiaries = beneficiaries
         self.providers = providers
+        self.relationship_map = relationship_map
         self.transaction_control_number = 1
         self.num_messages = num_messages
         self.error_ctrl = ErrorInjector(num_messages, error_rate)
@@ -197,6 +199,7 @@ class EDI837PGenerator:
         bene = self.beneficiaries[num - 1]
         provider = self.providers[num - 1]
         last, first = self.split_provider_name(provider["name"], provider["entity_type"])
+        bene_relationship = self.relationship_map.get(bene.relationship)
         error_id = bene.beneficiary_id
 
         segments = [Seg.ST("837", num).to_edi(),
@@ -213,8 +216,8 @@ class EDI837PGenerator:
                     Seg.N4(provider.get("city", "Random City"), provider.get("state", "Random State"),
                            provider.get("zipcode", "12345"), error_ctrl, error_id).to_edi(),
                     Seg.REF("EI", "123456789", error_ctrl).to_edi(),
-                    Seg.HL("2", "1", 22, 0, error_ctrl, error_id).to_edi(),
-                    Seg.SBR(bene.relationship, "123456").to_edi(),
+                    Seg.HL("2", "1", 22, 1, error_ctrl, error_id).to_edi(),
+                    Seg.SBR("18", "123456").to_edi(),
                     Seg.NM1("IL", "1", bene.last_name, bene.first_name, bene.middle_name,
                             "MI", bene.beneficiary_id, error_ctrl).to_edi(),
                     Seg.N3(bene.address.building_number, bene.address.street, bene.address.apartment,

@@ -1,7 +1,7 @@
 """
 Defines data classes for database
 """
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, asdict
 from datetime import date
 from typing import List, Dict, Optional
 
@@ -138,3 +138,18 @@ class Sponsor(Base):
                 Beneficiary.from_dict(b) for b in data.get("beneficiaries", [])
             ]
         )
+
+
+@dataclass
+class ClaimTransaction:
+    claim_id: str
+    service_line_id: str
+    beneficiary_id: str
+    provider_npi: str
+    amount: float
+    payer_claim_id: Optional[str] = None
+    status: Optional[str] = None
+    payment: Optional[float] = None
+
+    def to_dict(self):
+        return asdict(self)

@@ -75,8 +75,9 @@ def create_md():
         os.makedirs(Config.MARKDOWN_DIRECTORY)
     path = os.path.join(Config.MARKDOWN_DIRECTORY, Config.STATISTICS_MD)
 
-    message_types = [834, 270]
-    message_count = [log_data["messages"]["count_834"], log_data["messages"]["count_270"]]
+    message_types = [834, 270, 837]
+    message_count = [log_data["messages"]["count_834"], log_data["messages"]["count_270"],
+                     log_data["messages"]["count_837"]]
     total_messages = 0
 
     for key, value in log_data["messages"].items():

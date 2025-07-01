@@ -12,9 +12,9 @@ from Config.Data_Visualizer import log_data
 def create_amt_data():
     data = {
         "deductibles": {
-            "D2": random.randint(Config.MIN_DEDUCTIBLES, Config.MAX_DEDUCTIBLES),
-            "FK": random.randint(Config.MIN_DEDUCTIBLES, Config.MAX_DEDUCTIBLES),
-            "R": random.randint(Config.MIN_DEDUCTIBLES, Config.MAX_DEDUCTIBLES)
+            "D2": round(random.uniform(Config.MIN_DEDUCTIBLES, Config.MAX_DEDUCTIBLES), 2),
+            "FK": round(random.uniform(Config.MIN_DEDUCTIBLES, Config.MAX_DEDUCTIBLES), 2),
+            "R": round(random.uniform(Config.MIN_DEDUCTIBLES, Config.MAX_DEDUCTIBLES), 2)
         },
         "visit_counts": {
             "C1": random.randint(Config.MIN_VISITS, Config.MAX_VISITS),

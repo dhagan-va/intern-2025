@@ -49,7 +49,7 @@ class Beneficiary(Base):
     beneficiary_id: str
     relationship: str
     middle_name: Optional[str] = None
-    deductibles: Dict[str, int] = field(default_factory=dict)
+    deductibles: Dict[str, float] = field(default_factory=dict)
     visit_counts: Dict[str, int] = field(default_factory=dict)
 
     def to_dict(self):

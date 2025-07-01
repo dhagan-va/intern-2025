@@ -27,3 +27,9 @@ class TransactionFunctions:
 
     def get_transactions(self):
         return self.transactions
+
+    def get_transaction_by_id(self, claim_id):
+        for tx in self.transactions:
+            if tx.claim_id == claim_id:
+                return tx
+        return None

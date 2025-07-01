@@ -6,23 +6,20 @@ import random
 from Config import Config
 from DataLayer.Datatypes import Sponsor
 from DataLayer.Interfaces import DataAccess
-from Config.Config import get_local_db_path, logger
+from Config.Config import get_local_db_path, logger, LOCAL_DATABASE_DIRECTORY, LOCAL_DATABASE
 
 
 class LocalDBFunctions(DataAccess):
-    def __init__(self, file=None):
-        if file is None:
-            file = get_local_db_path(Config.LOCAL_DATABASE_DIRECTORY, Config.LOCAL_DATABASE)
+    def __init__(self, file=get_local_db_path(LOCAL_DATABASE_DIRECTORY, LOCAL_DATABASE)):
         self.data = []
         self.all_bene = []
         self.file = file
         self.existing_ssns = set()
-        self.loadfile()
+        self.load_localdb()
 
-    def loadfile(self):
+    def load_localdb(self):
         if not os.path.exists(self.file):
-            open(self.file, "w").close()
-            logger.debug(f"{self.file} created")
+            return
         with open(self.file, "r") as f:
             for line in f:
                 sponsor_dict = json.loads(line)

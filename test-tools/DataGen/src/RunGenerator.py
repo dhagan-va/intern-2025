@@ -21,7 +21,7 @@ def Run834Generator(num_messages=None, error_rate=None):
     new_sponsors = data_creation.store_sponsor_and_beneficiaries(num_messages)
 
     logger.info(f"Data loading Initiated")
-    data_creation.repo.loadfile()
+    data_creation.repo.load_localdb()
     logger.info(f"Data Loading took: {datetime.now() - now}")
     logger.info(f"Data generation complete")
     logger.info(f"Data generation took: {datetime.now() - now}")

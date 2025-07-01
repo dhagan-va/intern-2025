@@ -29,7 +29,7 @@ xychart-beta
     title "Throughput (Transactions per Second)"
     x-axis ["834", "270", "837"]
     y-axis "TPS" 0 --> 5001.0
-    bar [87.71929824561403, 17.79359430604982, 5000.0]
+    bar [98.03921568627452, 19.841269841269842, 5000.0]
 ```
 
 

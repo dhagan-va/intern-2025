@@ -101,7 +101,7 @@ class EDI270Generator:
         self.bene_270 = []
         self.providers = []
         self.localdb_funcs = localdb_funcs
-        self.localdb_funcs.loadfile()
+        self.localdb_funcs.load_localdb()
         self.npi_funcs = NPIFunctions(provider_csv_path)
         self.num_messages = num_messages
         self.provider_csv_path = provider_csv_path

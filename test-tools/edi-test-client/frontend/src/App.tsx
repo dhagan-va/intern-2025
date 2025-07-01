@@ -73,7 +73,104 @@ function App() {
   };
 
   return (
-<></> );
+    <div>
+      <h1>EDI Test Client Dashboard</h1>
+
+      <div>
+        <h2>Status</h2>
+        {status ? (
+          <div>
+            <p>Running: {status.running ? "Yes" : "No"}</p>
+            <p>RPS: {status.rps}</p>
+            <p>Transaction: {status.transaction}</p>
+            <p>Threads: {status.threads}</p>
+            <p>Endpoint: {status.endpoint}</p>
+          </div>
+        ) : (
+          <p>Loading...</p>
+        )}
+      </div>
+
+      <div>
+        <h2>Controls</h2>
+        <button onClick={() => apiCall("start")} disabled={status?.running}>
+          START
+        </button>
+        <button onClick={() => apiCall("stop")} disabled={!status?.running}>
+          STOP
+        </button>
+        {message && <div>{message}</div>}
+      </div>
+
+      <div>
+        <h2>Configuration</h2>
+        <div>
+          <label>RPS:</label>
+          <input
+            type="number"
+            step="0.1"
+            value={rpsInput}
+            onChange={(e) => setRpsInput(e.target.value)}
+          />
+          <button
+            onClick={() =>
+              apiCall("rps", "POST", { rps: parseFloat(rpsInput) })
+            }
+          >
+            Update
+          </button>
+        </div>
+
+        <div>
+          <label>Transaction:</label>
+          <select
+            value={transactionInput}
+            onChange={(e) => setTransactionInput(e.target.value)}
+          >
+            <option value="270">270</option>
+            <option value="276">276</option>
+            <option value="278">278</option>
+          </select>
+          <button
+            onClick={() =>
+              apiCall("transaction", "POST", {
+                transaction: parseInt(transactionInput),
+              })
+            }
+          >
+            Update
+          </button>
+        </div>
+      </div>
+
+      <div>
+        <h2>Statistics</h2>
+        {stats ? (
+          <div>
+            <p>Total Requests: {stats.total_requests}</p>
+            <p>Average Latency: {stats.average_latency.toFixed(2)} ms</p>
+            <p>Successful: {stats.successful_requests}</p>
+            <p>Failed: {stats.failed_requests}</p>
+            <p>Current RPS: {stats.current_rps}</p>
+            {stats.timestamp && <p>Updated: {stats.timestamp}</p>}
+
+            <div>
+              <strong>Status Codes:</strong>
+              <ul>
+                {Object.entries(stats.status_codes).map(([code, count]) => (
+                  <li key={code}>
+                    {code}: {count}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </div>
+        ) : (
+          <p>Loading...</p>
+        )}
+      </div>
+    </div>
+  );
 }
 
 export default App;

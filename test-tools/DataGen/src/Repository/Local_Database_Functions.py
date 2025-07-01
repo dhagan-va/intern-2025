@@ -29,14 +29,16 @@ class LocalDBFunctions(DataAccess):
                 self.add_ssns_to_set(sponsor)
         logging.debug(f"There are {len(self.existing_ssns)} users in the database")
 
-    def get_random_beneficiary(self):
+    def get_random_beneficiary(self, count):
         if not self.all_bene:
             logging.error("There are no beneficiaries to choose")
             raise ValueError("There are no beneficiaries to choose")
 
-        selected = random.choice(self.all_bene)
+        if count > len(self.all_bene):
+            logging.warning("Requested more than available. Returning all available")
+            count = len(self.all_bene)
 
-        return selected
+        return random.sample(self.all_bene, count)
 
     def save_sponsor(self, sponsor):
         total_users = len(self.existing_ssns)

@@ -26,6 +26,11 @@ def create_amt_data():
     return data
 
 
+def generate_claim_transactions(num_claims):
+    localdb = LocalDBFunctions()
+    beneficiaries = localdb.get_random_beneficiary(num_claims)
+
+
 class SponsorDataGenerator:
     def __init__(self, faker_seed=Config.FAKER_SEED, random_seed=Config.RANDOM_SEED,
                  relationship_map=Config.RELATIONSHIP_MAP, data_access=None):

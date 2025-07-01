@@ -2,12 +2,13 @@ import os
 import json
 
 from DataLayer.Datatypes import ClaimTransaction
-from Config.Config import logger, get_local_db_path, LOCAL_DATABASE_DIRECTORY, TRANSACTIONS_DATABASE
+from Config.Config import logger, get_local_db_path, TRANSACTIONS_DATABASE_DIRECTORY, TRANSACTIONS_DATABASE
 
 
 class TransactionFunctions:
-    def __init__(self, path=get_local_db_path(LOCAL_DATABASE_DIRECTORY, TRANSACTIONS_DATABASE)):
-        self.path = path
+    def __init__(self):
+        self.path = get_local_db_path(TRANSACTIONS_DATABASE_DIRECTORY, TRANSACTIONS_DATABASE)
+        os.makedirs(self.path, exist_ok=True)
         self.transactions = []
         self.load_transaction_db()
 

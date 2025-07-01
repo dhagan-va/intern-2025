@@ -12,13 +12,14 @@ EDI834_FILE_NAME = f'834.VFMP.{DATE.year}.{DATE.strftime("%y%m%d")}.{DATE.strfti
 EDI270_FILE_NAME = f'270.VFMP.{DATE.year}.{DATE.strftime("%y%m%d")}.{DATE.strftime("%H%M")}.{DATE.strftime("%Y%m%d1")}.edi'
 EDI837_FILE_NAME = f'837.VFMP.{DATE.year}.{DATE.strftime("%y%m%d")}.{DATE.strftime("%H%M")}.{DATE.strftime("%Y%m%d1")}.edi'
 LOCAL_DATABASE = f"localdb.jsonl"
-TRANSACTIONS_DATABASE = f"transactions.jsonl"
+TRANSACTIONS_DATABASE = f'transactions.{DATE.strftime("%Y%m%d")}.jsonl'
 STATISTICS_MD = f"Statistics_Visualizer.md"
 
 # Paths
 ROOT_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 DOWNLOAD_DIRECTORY = os.path.join(ROOT_PATH, "Downloads")
 LOCAL_DATABASE_DIRECTORY = os.path.join(ROOT_PATH, "Output", "Local_DB")
+TRANSACTIONS_DATABASE_DIRECTORY = os.path.join(ROOT_PATH, "Output", "Transactions_DB")
 MARKDOWN_DIRECTORY = os.path.join(ROOT_PATH)
 EDI834_PATH = os.path.join(ROOT_PATH, "Output", "EDI834_Output")
 EDI270_PATH = os.path.join(ROOT_PATH, "Output", "EDI270_Output")

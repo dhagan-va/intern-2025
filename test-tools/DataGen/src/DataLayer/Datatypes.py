@@ -148,8 +148,6 @@ class ClaimTransaction:
     provider_npi: str
     amount: float
     payer_claim_id: Optional[str] = None
-    status: Optional[str] = None
-    payment: Optional[float] = None
 
     def to_dict(self):
         return asdict(self)

@@ -5,9 +5,10 @@ from Config.Config import logger, number_of_tests_834, number_of_tests_270, get_
 from Config.Data_Visualizer import log_data, create_md
 from FileCreation.DataGenerator import SponsorDataGenerator
 from FileCreation.EDIGenerator import EDI834Generator, EDI270Generator, EDI837PGenerator
+from Repository.Transaction_Storage_Functions import TransactionFunctions
 
 
-def Run834Generator(num_messages=None, error_rate=None):
+def Run834Generator(sponsors, num_messages=None, error_rate=None):
     # Setup/Initialization
     now = datetime.now()
     num_messages = number_of_tests_834(num_messages)
@@ -15,28 +16,16 @@ def Run834Generator(num_messages=None, error_rate=None):
     error_rate = get_error_rate(error_rate)
     log_data["errors"]["error_rate_834"] = error_rate
 
-    # Generate Fake Data
-    logger.info(f"Generating {num_messages} total members")
-    data_creation = SponsorDataGenerator()
-    new_sponsors = data_creation.store_sponsor_and_beneficiaries(num_messages)
-
-    logger.info(f"Data loading Initiated")
-    data_creation.repo.load_localdb()
-    logger.info(f"Data Loading took: {datetime.now() - now}")
-    logger.info(f"Data generation complete")
-    logger.info(f"Data generation took: {datetime.now() - now}")
-
     # Generate EDI File
     edi_generator = EDI834Generator(num_messages=num_messages, error_rate=error_rate)
     logger.info("Generating EDI file from stored data")
-    edi_file = edi_generator.combine_segments(new_sponsors)
+    edi_file = edi_generator.combine_segments(sponsors)
     logger.info("EDI file generation complete")
     logger.info(f"File generation took: {datetime.now() - now}")
 
     # Create Directory/Write to file
-    f = open(Config.get_edi_path(Config.EDI834_PATH, Config.EDI834_FILE_NAME), 'w')
-    f.writelines(edi_file)
-    f.close()
+    with open(Config.get_edi_path(Config.EDI834_PATH, Config.EDI834_FILE_NAME), 'w') as f:
+        f.writelines(edi_file)
 
     # Display amount of time it takes to create
     end_time = datetime.now() - now
@@ -59,9 +48,9 @@ def Run270Generator(num_messages=None, error_rate=None):
     logger.info(f"Generating transactions into EDI file")
     edi_out = edi.combine_segments()
 
-    f = open(Config.get_edi_path(Config.EDI270_PATH, Config.EDI270_FILE_NAME), 'w')
-    f.writelines(edi_out)
-    f.close()
+    with open(Config.get_edi_path(Config.EDI270_PATH, Config.EDI270_FILE_NAME), 'w') as f:
+        f.writelines(edi_out)
+
     end_time = datetime.now() - now
     log_data["messages"]["time_270"] = end_time.total_seconds()
     logger.info(f"It took {end_time} to generate {num_messages} transactions for the 270 file")
@@ -82,9 +71,9 @@ def Run837PGenerator(beneficiaries, providers, num_messages=None, error_rate=Non
     logger.info(f"Generating transactions into EDI file")
     edi_out = edi837.combine_segments()
 
-    f = open(Config.get_edi_path(Config.EDI837_PATH, Config.EDI837_FILE_NAME), 'w')
-    f.writelines(edi_out)
-    f.close()
+    with open(Config.get_edi_path(Config.EDI837_PATH, Config.EDI837_FILE_NAME), 'w') as f:
+        f.writelines(edi_out)
+
     end_time = datetime.now() - now
     log_data["messages"]["time_837"] = end_time.total_seconds()
     logger.info(f"It took {end_time} to generate {num_messages} transactions for the 837 file")
@@ -93,9 +82,15 @@ def Run837PGenerator(beneficiaries, providers, num_messages=None, error_rate=Non
 if __name__ == "__main__":
     curr = datetime.now()
 
-    Run834Generator(5, 0)
+    data_creation = SponsorDataGenerator()
+    sponsors = data_creation.store_sponsor_and_beneficiaries(10)
+
     edi270 = Run270Generator(5, 0)
-    Run837PGenerator(edi270.bene_270, edi270.providers, 5, 0)
+
+    transaction_store = TransactionFunctions()
+    Run837PGenerator(transaction_store, 5, 0)
+
+    Run834Generator(sponsors, 5, 0)
 
     end = datetime.now() - curr
     logger.info(f"It took {end} to generate the output")

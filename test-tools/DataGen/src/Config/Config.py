@@ -12,6 +12,7 @@ EDI834_FILE_NAME = f'834.VFMP.{DATE.year}.{DATE.strftime("%y%m%d")}.{DATE.strfti
 EDI270_FILE_NAME = f'270.VFMP.{DATE.year}.{DATE.strftime("%y%m%d")}.{DATE.strftime("%H%M")}.{DATE.strftime("%Y%m%d1")}.edi'
 EDI837_FILE_NAME = f'837.VFMP.{DATE.year}.{DATE.strftime("%y%m%d")}.{DATE.strftime("%H%M")}.{DATE.strftime("%Y%m%d1")}.edi'
 LOCAL_DATABASE = f"localdb.jsonl"
+TRANSACTIONS_DATABASE = f"transactions.jsonl"
 STATISTICS_MD = f"Statistics_Visualizer.md"
 
 # Paths
@@ -36,10 +37,10 @@ def get_edi_path(edi_path, edi_file):
     return os.path.join(edi_path, edi_file)
 
 
-def get_local_db_path():
-    os.makedirs(LOCAL_DATABASE_DIRECTORY, exist_ok=True)
-    logger.info(f"Directory exists: {LOCAL_DATABASE_DIRECTORY}")
-    return os.path.join(LOCAL_DATABASE_DIRECTORY, LOCAL_DATABASE)
+def get_local_db_path(db_path, db_file):
+    os.makedirs(db_path, exist_ok=True)
+    logger.info(f"Directory exists: {db_path}")
+    return os.path.join(db_path, db_file)
 
 
 # Constants and config

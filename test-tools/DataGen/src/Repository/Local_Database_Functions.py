@@ -12,7 +12,7 @@ from Config.Config import get_local_db_path, logger
 class LocalDBFunctions(DataAccess):
     def __init__(self, file=None):
         if file is None:
-            file = get_local_db_path()
+            file = get_local_db_path(Config.LOCAL_DATABASE_DIRECTORY, Config.LOCAL_DATABASE)
         self.data = []
         self.all_bene = []
         self.file = file

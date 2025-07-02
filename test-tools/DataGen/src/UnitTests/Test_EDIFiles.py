@@ -21,7 +21,7 @@ class Test834Message(unittest.TestCase):
 
         os.makedirs(Log_Config.LOG_DIRECTORY, exist_ok=True)
         Config.get_edi_path(Config.EDI834_PATH, Config.EDI834_FILE_NAME)
-        Config.get_local_db_path(Config.LOCAL_DATABASE_DIRECTORY, Config.LOCAL_DATABASE)
+        Config.get_local_db_path(Config.FAMILY_DATABASE_DIRECTORY, Config.FAMILY_DATABASE_JSONL)
         self.logger = Config.get_logger(__name__)
         self.messages = 7
         self.error_rate = 0

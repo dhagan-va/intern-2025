@@ -6,11 +6,11 @@ import random
 from Config import Config
 from DataLayer.Datatypes import Sponsor
 from DataLayer.Interfaces import DataAccess
-from Config.Config import get_local_db_path, logger, LOCAL_DATABASE_DIRECTORY, LOCAL_DATABASE
+from Config.Config import get_local_db_path, logger, FAMILY_DATABASE_DIRECTORY, FAMILY_DATABASE_JSONL
 
 
 class LocalDBFunctions(DataAccess):
-    def __init__(self, file=get_local_db_path(LOCAL_DATABASE_DIRECTORY, LOCAL_DATABASE)):
+    def __init__(self, file=get_local_db_path(FAMILY_DATABASE_DIRECTORY, FAMILY_DATABASE_JSONL)):
         self.data = []
         self.all_bene = []
         self.file = file

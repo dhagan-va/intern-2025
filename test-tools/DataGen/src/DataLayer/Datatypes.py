@@ -143,6 +143,7 @@ class Sponsor(Base):
 @dataclass
 class ClaimTransaction:
     state: str
+    date: date
     claim_id: str
     service_line_id: str
     sponsor_id: str
@@ -152,4 +153,28 @@ class ClaimTransaction:
     payer_claim_id: Optional[str] = None
 
     def to_dict(self):
-        return asdict(self)
+        return {
+            "state": self.state,
+            "date": self.date.isoformat(),
+            "claim_id": self.claim_id,
+            "service_line_id": self.service_line_id,
+            "sponsor_id": self.sponsor_id,
+            "beneficiary_id": self.beneficiary_id,
+            "provider_npi": self.provider_npi,
+            "amount": self.amount,
+            "payer_claim_id": self.payer_claim_id
+        }
+
+    @staticmethod
+    def from_dict(data):
+        return ClaimTransaction(
+            state=data["state"],
+            date=date.fromisoformat(data["date"]),
+            claim_id=data["claim_id"],
+            service_line_id=data["service_line_id"],
+            sponsor_id=data["sponsor_id"],
+            beneficiary_id=data["beneficiary_id"],
+            provider_npi=data["provider_npi"],
+            amount=data["amount"],
+            payer_claim_id=data["payer_claim_id"]
+        )

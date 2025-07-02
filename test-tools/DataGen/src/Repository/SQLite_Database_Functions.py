@@ -1,7 +1,7 @@
-import json
 import sqlite3
 
 from Config.Config import get_local_db_path, FAMILY_DATABASE_DIRECTORY, FAMILY_DATABASE_SQLITE
+from Config.Config import logger
 
 
 class SQLiteDBFunctions:
@@ -16,7 +16,20 @@ class SQLiteDBFunctions:
                 CREATE TABLE IF NOT EXISTS sponsors (
                     sponsor_id TEXT PRIMARY KEY,
                     ssn TEXT,
-                    data TEXT
+                    dob TEXT,
+                    first_name TEXT,
+                    middle_name TEXT,
+                    last_name TEXT,
+                    gender TEXT,
+                    phone TEXT,
+                    insurance_company TEXT,
+                    insurance_FID TEXT,
+                    building_number TEXT,
+                    street TEXT,
+                    apartment TEXT,
+                    city TEXT,
+                    state TEXT,
+                    zipcode TEXT
                 )
             """)
         self.cursor.execute("""
@@ -24,29 +37,137 @@ class SQLiteDBFunctions:
                     sponsor_id TEXT,
                     beneficiary_id TEXT,
                     ssn TEXT,
-                    data TEXT,
+                    dob TEXT,
+                    first_name TEXT,
+                    middle_name TEXT,
+                    last_name TEXT,
+                    gender TEXT,
+                    phone TEXT,
+                    insurance_company TEXT,
+                    insurance_FID TEXT,
+                    relationship TEXT,
+                    building_number TEXT,
+                    street TEXT,
+                    apartment TEXT,
+                    city TEXT,
+                    state TEXT,
+                    zipcode TEXT,
                     PRIMARY KEY (sponsor_id, beneficiary_id),
                     FOREIGN KEY (sponsor_id) REFERENCES sponsors(sponsor_id)
                 )
             """)
+        self.cursor.execute("""
+            CREATE TABLE IF NOT EXISTS deductibles (
+                sponsor_id TEXT,
+                beneficiary_id TEXT,  -- NULL if it's a sponsor-level deductible
+                code TEXT,
+                amount REAL,
+                PRIMARY KEY (sponsor_id, beneficiary_id, code),
+                FOREIGN KEY (sponsor_id, beneficiary_id) REFERENCES beneficiaries(sponsor_id, beneficiary_id)
+            )
+        """)
+        self.cursor.execute("""
+                CREATE TABLE IF NOT EXISTS visit_counts (
+                    sponsor_id TEXT,
+                    beneficiary_id TEXT,  -- NULL if it's a sponsor-level visit count
+                    code TEXT,
+                    count INTEGER,
+                    PRIMARY KEY (sponsor_id, beneficiary_id, code),
+                    FOREIGN KEY (sponsor_id, beneficiary_id) REFERENCES beneficiaries(sponsor_id, beneficiary_id)
+                )
+            """)
         self.connect.commit()
 
-    def save_sponsor(self, sponsor):
-        sponsor_data = sponsor.to_dict()
-        sponsor_json = json.dumps(sponsor_data)
+    def save_sponsor(self, sponsor, commit=True):
         self.cursor.execute("""
-            INSERT OR REPLACE INTO sponsors (sponsor_id, ssn, data) VALUES (?, ?, ?) 
-        """, (sponsor.sponsor_id, sponsor.ssn, sponsor_json))
+                INSERT OR REPLACE INTO sponsors (
+                    sponsor_id, ssn, dob, first_name, middle_name, last_name, gender,
+                    phone, insurance_company, insurance_FID, building_number, street,
+                    apartment, city, state, zipcode
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """, (
+            sponsor.sponsor_id,
+            sponsor.ssn,
+            sponsor.dob.isoformat(),
+            sponsor.first_name,
+            sponsor.middle_name,
+            sponsor.last_name,
+            sponsor.gender,
+            sponsor.phone,
+            sponsor.insurance_company,
+            sponsor.insurance_FID,
+            sponsor.address.building_number,
+            sponsor.address.street,
+            sponsor.address.apartment,
+            sponsor.address.city,
+            sponsor.address.state,
+            sponsor.address.zipcode
+        ))
+
+        for code, amount in sponsor.deductibles.items():
+            self.cursor.execute("""
+                    INSERT OR REPLACE INTO deductibles (sponsor_id, beneficiary_id, code, amount)
+                    VALUES (?, NULL, ?, ?)
+                """, (sponsor.sponsor_id, code, amount))
+
+        for code, count in sponsor.visit_counts.items():
+            self.cursor.execute("""
+                    INSERT OR REPLACE INTO visit_counts (sponsor_id, beneficiary_id, code, count)
+                    VALUES (?, NULL, ?, ?)
+                """, (sponsor.sponsor_id, code, count))
 
         for bene in sponsor.beneficiaries:
-            bene_data = bene.to_dict()
-            bene_json = json.dumps(bene_data)
             self.cursor.execute("""
-            INSERT OR REPLACE INTO beneficiaries (sponsor_id, beneficiary_id, ssn, data)
-            VALUES (?, ?, ?, ?)
-        """, (bene.sponsor_id, bene.beneficiary_id, bene.ssn, bene_json))
+                    INSERT OR REPLACE INTO beneficiaries (
+                        sponsor_id, beneficiary_id, ssn, dob, first_name, middle_name, last_name,
+                        gender, phone, insurance_company, insurance_FID, relationship,
+                        building_number, street, apartment, city, state, zipcode
+                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                """, (
+                bene.sponsor_id,
+                bene.beneficiary_id,
+                bene.ssn,
+                bene.dob.isoformat(),
+                bene.first_name,
+                bene.middle_name,
+                bene.last_name,
+                bene.gender,
+                bene.phone,
+                bene.insurance_company,
+                bene.insurance_FID,
+                bene.relationship,
+                bene.address.building_number,
+                bene.address.street,
+                bene.address.apartment,
+                bene.address.city,
+                bene.address.state,
+                bene.address.zipcode
+            ))
 
-        self.connect.commit()
+            for code, amount in bene.deductibles.items():
+                self.cursor.execute("""
+                        INSERT OR REPLACE INTO deductibles (sponsor_id, beneficiary_id, code, amount)
+                        VALUES (?, ?, ?, ?)
+                    """, (sponsor.sponsor_id, bene.beneficiary_id, code, amount))
+
+            for code, count in bene.visit_counts.items():
+                self.cursor.execute("""
+                        INSERT OR REPLACE INTO visit_counts (sponsor_id, beneficiary_id, code, count)
+                        VALUES (?, ?, ?, ?)
+                    """, (sponsor.sponsor_id, bene.beneficiary_id, code, count))
+        if commit:
+            self.connect.commit()
+
+    def save_many_sponsors(self, sponsors):
+        try:
+            self.connect.execute("BEGIN TRANSACTION")
+            for sponsor in sponsors:
+                self.save_sponsor(sponsor, commit=False)
+            self.connect.commit()
+        except Exception as e:
+            self.connect.rollback()
+            logger.error(f"No sponsors were saved due to an error: {e}")
+            raise e
 
     def total_beneficiaries(self):
         self.cursor.execute("SELECT COUNT(*) FROM beneficiaries")

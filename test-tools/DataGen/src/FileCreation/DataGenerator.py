@@ -30,8 +30,7 @@ def create_amt_data():
 def generate_claim_transactions(num_claims, sponsors):
     transactions = []
     localdb = get_database_backend()
-    npi_csv_path = download_weekly_npi_data(Config.DOWNLOAD_DIRECTORY)
-    npi_funcs = NPIFunctions(npi_csv_path)
+    npi_funcs = NPIFunctions(Config.NPI_CSV_PATH)
     beneficiaries = localdb.get_random_beneficiary(num_claims)
     for bene in beneficiaries:
         provider = npi_funcs.get_random_provider(bene.address.state)
@@ -82,7 +81,7 @@ class SponsorDataGenerator:
                 logger.debug(f"Duplicate SSN created (skipping): {ssn}")
 
     def generate_sponsor_and_beneficiaries(self, total):
-        existing_users = len(self.repo.existing_ssns)
+        existing_users = self.repo.total_beneficiaries()
         remaining = Config.USER_LIMIT - existing_users
 
         if remaining <= 0:
@@ -110,10 +109,8 @@ class SponsorDataGenerator:
 
     def store_sponsor_and_beneficiaries(self, total):
         sponsors = self.generate_sponsor_and_beneficiaries(total)
-        for sponsor in sponsors:
-            self.repo.save_sponsor(sponsor)
-            logger.debug(f"Sponsor {sponsor.sponsor_id} with {len(sponsor.beneficiaries)} beneficiaries saved")
-        logger.info(f"Finished generating {len(sponsors)} sponsors")
+        self.repo.save_many_sponsors(sponsors)
+        logger.info(f"Saved {len(sponsors)} sponsors")
         return sponsors
 
     def create_sponsor(self):

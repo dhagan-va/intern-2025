@@ -31,8 +31,8 @@ log_data = {
         "count_834": 0,
         "count_270": 0,
         "count_837": 0,
-        "time_834": 0,
-        "time_270": 0,
+        "time_834": 1,
+        "time_270": 1,
         "time_837": 1,
     },
     "errors": {
@@ -45,7 +45,7 @@ log_data = {
     },
     "family": {
         "size": 0,
-        "count": 0,
+        "count": 1,
         "size_distribution": {
             1: 0,
             2: 0,
@@ -60,12 +60,12 @@ log_data = {
         }
     },
     "amt": {
-        "D2": {"sum": 0, "count": 0},
-        "FK": {"sum": 0, "count": 0},
-        "R": {"sum": 0, "count": 0},
-        "C1": {"sum": 0, "count": 0},
-        "P3": {"sum": 0, "count": 0},
-        "B9": {"sum": 0, "count": 0}
+        "D2": {"sum": 0, "count": 1},
+        "FK": {"sum": 0, "count": 1},
+        "R": {"sum": 0, "count": 1},
+        "C1": {"sum": 0, "count": 1},
+        "P3": {"sum": 0, "count": 1},
+        "B9": {"sum": 0, "count": 1}
     }
 }
 

@@ -6,7 +6,7 @@ from Config.Data_Visualizer import log_data, create_md
 from FileCreation.DataGenerator import SponsorDataGenerator, generate_claim_transactions
 from FileCreation.EDIGenerator import EDI834Generator, EDI270Generator, EDI837PGenerator
 from Repository.Transaction_Storage_Functions import TransactionFunctions
-from Repository.Local_Database_Functions import LocalDBFunctions
+from Repository.DatabaseFactory import get_database_backend
 
 
 def Run834Generator(sponsors, num_messages=None, error_rate=None):
@@ -81,10 +81,11 @@ def Run837PGenerator(beneficiaries, providers, num_messages=None, error_rate=Non
 
 
 def GenerateSponsors(num_gen):
-    localdb_funcs = LocalDBFunctions()
+    db = get_database_backend()
     data_creation = SponsorDataGenerator()
-    current_users = len(localdb_funcs.all_bene)
-    max_users = Config.USER_LIMIT
+    current_users = db.total_beneficiaries()
+    if current_users < 500_000:
+        num_gen = 500_000 - current_users
 
     sponsors_created = data_creation.store_sponsor_and_beneficiaries(num_gen)
     return sponsors_created

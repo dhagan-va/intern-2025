@@ -3,6 +3,9 @@ from abc import ABC, abstractmethod
 
 class DataAccess(ABC):
     @abstractmethod
+    def save_sponsor(self, sponsor): pass
+
+    @abstractmethod
     def ssn_exists(self, ssn): pass
 
     @abstractmethod

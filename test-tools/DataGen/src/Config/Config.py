@@ -14,7 +14,7 @@ EDI837_FILE_NAME = f'837.VFMP.{DATE.year}.{DATE.strftime("%y%m%d")}.{DATE.strfti
 
 FAMILY_DATABASE_JSONL = "localdb.jsonl"
 FAMILY_DATABASE_SQLITE = "localdb.sqlite"
-TRANSACTIONS_DATABASE = "transactions.jsonl"
+TRANSACTIONS_DATABASE = "transactions.sqlite"
 
 STATISTICS_MD = f"Statistics_Visualizer.md"
 

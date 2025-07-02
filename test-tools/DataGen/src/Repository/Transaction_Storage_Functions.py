@@ -1,38 +1,33 @@
-import os
-import json
+import sqlite3
 
-from DataLayer.Datatypes import ClaimTransaction
-from Config.Config import logger, get_local_db_path, TRANSACTIONS_DATABASE_DIRECTORY, TRANSACTIONS_DATABASE
+from Config.Config import get_local_db_path, TRANSACTIONS_DATABASE_DIRECTORY, TRANSACTIONS_DATABASE
 
 
 class TransactionFunctions:
-    def __init__(self):
-        self.path = get_local_db_path(TRANSACTIONS_DATABASE_DIRECTORY, TRANSACTIONS_DATABASE)
-        os.makedirs(self.path, exist_ok=True)
-        self.transactions = []
+    def __init__(self, file=get_local_db_path(TRANSACTIONS_DATABASE_DIRECTORY, TRANSACTIONS_DATABASE)):
+        self.file = file
+        self.connect = sqlite3.connect(self.file)
+        self.cursor = self.connect.cursor()
+        self.init_tables()
 
-    def load_transaction_db(self, file_name):
-        self.transactions = []
-        with open(file_name, "r") as f:
-            for line in f:
-                if line.strip():
-                    data = json.loads(line)
-                    self.transactions.append(ClaimTransaction(**data))
-
-    def save_transaction(self, transaction):
-        with open(self.path, "a") as f:
-            json.dump(transaction.to_dict(), f)
-            f.write("\n")
-        self.transactions.append(transaction)
-
-    def get_transactions(self):
-        return self.transactions
-
-    def reset_transactions(self):
-        self.transactions = []
-
-    def get_transaction_by_id(self, claim_id):
-        for tx in self.transactions:
-            if tx.claim_id == claim_id:
-                return tx
-        return None
+    def init_tables(self):
+        self.cursor.execute("""
+                CREATE TABLE IF NOT EXISTS sponsors (
+                    sponsor_id TEXT PRIMARY KEY,
+                    ssn TEXT,
+                    dob TEXT,
+                    first_name TEXT,
+                    middle_name TEXT,
+                    last_name TEXT,
+                    gender TEXT,
+                    phone TEXT,
+                    insurance_company TEXT,
+                    insurance_FID TEXT,
+                    building_number TEXT,
+                    street TEXT,
+                    apartment TEXT,
+                    city TEXT,
+                    state TEXT,
+                    zipcode TEXT
+                )
+            """)

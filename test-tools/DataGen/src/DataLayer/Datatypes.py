@@ -142,8 +142,10 @@ class Sponsor(Base):
 
 @dataclass
 class ClaimTransaction:
+    state: str
     claim_id: str
     service_line_id: str
+    sponsor_id: str
     beneficiary_id: str
     provider_npi: str
     amount: float

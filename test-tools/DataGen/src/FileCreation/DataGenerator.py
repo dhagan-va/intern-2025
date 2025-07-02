@@ -4,8 +4,9 @@ from faker import Faker
 
 from Config import Config
 from Config.Config import logger
-from DataLayer.Datatypes import Address, Sponsor, Beneficiary
+from DataLayer.Datatypes import Address, Sponsor, Beneficiary, ClaimTransaction
 from Repository.Local_Database_Functions import LocalDBFunctions
+from Repository.NPI_Functions import NPIFunctions, download_weekly_npi_data
 from Config.Data_Visualizer import log_data
 
 
@@ -26,9 +27,26 @@ def create_amt_data():
     return data
 
 
-def generate_claim_transactions(num_claims):
+def generate_claim_transactions(num_claims, sponsors):
+    transactions = []
     localdb = LocalDBFunctions()
+    npi_csv_path = download_weekly_npi_data(Config.DOWNLOAD_DIRECTORY)
+    npi_funcs = NPIFunctions(npi_csv_path)
     beneficiaries = localdb.get_random_beneficiary(num_claims)
+    for bene in beneficiaries:
+        provider = npi_funcs.get_random_provider(bene.address.state)
+        claim = ClaimTransaction(
+            state="0",
+            claim_id=str("12345"),
+            service_line_id=str("12345"),
+            sponsor_id=sponsor.sponsor_id,
+            beneficiary_id=bene.beneficiary_id,
+            provider_npi=provider["npi"],
+            amount=round(random.uniform(50, 1500), 2),
+            payer_claim_id=None
+        )
+        transactions.append(claim)
+    return transactions
 
 
 class SponsorDataGenerator:

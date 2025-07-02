@@ -23,6 +23,7 @@ def get_client():
 
 @app.post("/start")
 def start_client():
+    """Starts the current client instance."""
     client = get_client()
     if client._running:
         return jsonify({"message": "Client already running"}), 400
@@ -32,11 +33,26 @@ def start_client():
 
 @app.post("/stop")
 def stop_client():
+    """Stops the current client instance"""
     client = get_client()
     if not client._running:
         return jsonify({"message": "Client not running"}), 400
     client.stop()
     return jsonify({"message": "Client stopped"})
+
+
+@app.post("/reset")
+def reset_client():
+    """Reset the client - stops current instance and creates a new one"""
+    global client_instance
+
+    if client_instance and client_instance._running:
+        client_instance.stop()
+
+    cfg = load_settings()
+    client_instance = LoadClient(cfg)
+
+    return jsonify({"message": "Client reset successfully"})
 
 
 @app.get("/status")

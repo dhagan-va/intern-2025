@@ -99,6 +99,7 @@ function App() {
         <button onClick={() => apiCall("stop")} disabled={!status?.running}>
           STOP
         </button>
+        <button onClick={() => apiCall("reset")}>RESET</button>
         {message && <div>{message}</div>}
       </div>
 

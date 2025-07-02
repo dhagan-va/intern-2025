@@ -1,5 +1,6 @@
 import "./App.css";
 import { useState, useEffect } from "react";
+import { StatusDisplay } from "./components/StatusDisplay";
 import {
   BarChart,
   Bar,
@@ -91,21 +92,7 @@ function App() {
   return (
     <div>
       <h1>EDI Test Client Dashboard</h1>
-
-      <div>
-        <h2>Status</h2>
-        {status ? (
-          <div>
-            <p>Running: {status.running ? "Yes" : "No"}</p>
-            <p>RPS: {status.rps}</p>
-            <p>Transaction: {status.transaction}</p>
-            <p>Threads: {status.threads}</p>
-            <p>Endpoint: {status.endpoint}</p>
-          </div>
-        ) : (
-          <p>Loading...</p>
-        )}
-      </div>
+      <StatusDisplay status={status} />
 
       <div>
         <h2>Controls</h2>

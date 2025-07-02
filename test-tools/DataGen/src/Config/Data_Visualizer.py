@@ -1,7 +1,7 @@
 import os
 
 from Config import Config
-from Repository.Local_Database_Functions import LocalDBFunctions
+from Repository.DatabaseFactory import get_database_backend
 
 INTRO = [
     "## What Are 834 and 270 EDI Files?\n\n",
@@ -84,7 +84,7 @@ def create_md():
         if key.startswith("count_"):
             total_messages += value
 
-    localdb = LocalDBFunctions()
+    db = get_database_backend()
 
     avg_family_size = log_data["family"]["size"] / log_data["family"]["count"]
 
@@ -200,7 +200,7 @@ def create_md():
         ))
 
         f.write("## Average 270s per Beneficiary\n")
-        bene_count = len(localdb.all_bene)
+        bene_count = db.total_beneficiaries()
         avg_270s_per_bene = log_data["messages"]["count_270"] / bene_count if bene_count else 0
         f.write(f"- Average 270s per Beneficiary: **{avg_270s_per_bene:.2f}**\n")
 

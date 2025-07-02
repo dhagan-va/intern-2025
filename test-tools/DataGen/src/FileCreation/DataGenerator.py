@@ -6,7 +6,7 @@ from Config import Config
 from Config.Config import logger
 from DataLayer.Datatypes import Address, Sponsor, Beneficiary, ClaimTransaction
 from Repository.DatabaseFactory import get_database_backend
-from Repository.NPI_Functions import NPIFunctions, download_weekly_npi_data
+from Repository.NPI_Functions import NPIFunctions
 from Config.Data_Visualizer import log_data
 
 
@@ -81,30 +81,21 @@ class SponsorDataGenerator:
                 logger.debug(f"Duplicate SSN created (skipping): {ssn}")
 
     def generate_sponsor_and_beneficiaries(self, total):
-        existing_users = self.repo.total_beneficiaries()
-        remaining = Config.USER_LIMIT - existing_users
-
-        if remaining <= 0:
-            logger.warning("User limit already reached. No data generated.")
-            return []
-
         generated = 0
         new_sponsors = []
 
-        while generated < total and remaining > 0:
+        while generated < total:
             sponsor = self.create_sponsor()
-            num_beneficiaries = min(random.randint(Config.MIN_BENEFICIARIES, Config.MAX_BENEFICIARIES), remaining)
+            num_beneficiaries = random.randint(Config.MIN_BENEFICIARIES, Config.MAX_BENEFICIARIES)
             log_data["family"]["size_distribution"][num_beneficiaries] += 1
             for _ in range(num_beneficiaries):
                 beneficiary = self.create_beneficiary(sponsor)
                 sponsor.beneficiaries.append(beneficiary)
                 generated += 1
-                remaining -= 1
-                if generated >= total or remaining <= 0:
+                if generated >= total:
                     break
 
             new_sponsors.append(sponsor)
-
         return new_sponsors
 
     def store_sponsor_and_beneficiaries(self, total):

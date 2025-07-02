@@ -95,8 +95,7 @@ class Test270Message(unittest.TestCase):
         os.makedirs(Log_Config.LOG_DIRECTORY, exist_ok=True)
         os.makedirs(Config.DOWNLOAD_DIRECTORY, exist_ok=True)
 
-        npi_csv_path = download_weekly_npi_data(Config.DOWNLOAD_DIRECTORY)
-        self.npi_funcs = NPIFunctions(npi_csv_path)
+        self.npi_funcs = NPIFunctions(Config.NPI_CSV_PATH)
 
         self.messages_834 = 5
         self.error_rate_834 = 0

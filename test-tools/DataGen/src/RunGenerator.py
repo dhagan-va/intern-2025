@@ -100,7 +100,7 @@ def CreateDailyClaimDB(num_gen, sponsor_list):
 
 if __name__ == "__main__":
     curr = datetime.now()
-    num = 5
+    num = 1
 
     sponsors = GenerateSponsors(num)
     # CreateDailyClaimDB(num, sponsors)

@@ -59,15 +59,15 @@ xychart-beta
 xychart-beta
     title "Family Size Histogram"
     x-axis ["1", "2", "3", "4"]
-    y-axis "Count" 0 --> 1
-    bar [0, 0, 0, 0]
+    y-axis "Count" 0 --> 2
+    bar [0, 1, 0, 0]
 ```
 
 
 ```mermaid
 pie title Family Size Breakdown
     "1" : 0
-    "2" : 0
+    "2" : 1
     "3" : 0
     "4" : 0
 ```
@@ -78,8 +78,8 @@ pie title Family Size Breakdown
 xychart-beta
     title "Beneficiary Code Distribution"
     x-axis ["Spouse (01)", "Child (19)", "Caregiver (26)", "Ex-Spouse (25)"]
-    y-axis "Count" 0 --> 1
-    bar [0, 0, 0, 0]
+    y-axis "Count" 0 --> 2
+    bar [0, 0, 0, 1]
 ```
 
 
@@ -88,7 +88,7 @@ pie title Beneficiary Relationship Types
     "Spouse (01)" : 0
     "Child (19)" : 0
     "Caregiver (26)" : 0
-    "Ex-Spouse (25)" : 0
+    "Ex-Spouse (25)" : 1
 ```
 
 

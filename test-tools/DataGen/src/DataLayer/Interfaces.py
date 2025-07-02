@@ -3,6 +3,8 @@ from abc import ABC, abstractmethod
 
 class DataAccess(ABC):
     @abstractmethod
+    def total_beneficiaries(self): pass
+    @abstractmethod
     def save_sponsor(self, sponsor): pass
 
     @abstractmethod

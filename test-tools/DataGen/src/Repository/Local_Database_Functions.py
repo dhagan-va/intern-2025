@@ -55,6 +55,9 @@ class LocalDBFunctions(DataAccess):
         self.add_ssns_to_set(sponsor)
         logger.debug(f"Saved sponsor: {sponsor_dict}")
 
+    def total_beneficiaries(self):
+        return len(self.all_bene)
+
     def add_ssns_to_set(self, sponsor):
         self.existing_ssns.add(sponsor.ssn)
         logger.debug(f"Added sponsor SSN to set: {sponsor.ssn}")

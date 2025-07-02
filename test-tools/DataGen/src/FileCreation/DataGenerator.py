@@ -51,7 +51,7 @@ def generate_claim_transactions(num_claims, sponsors):
 
 class SponsorDataGenerator:
     def __init__(self, faker_seed=Config.FAKER_SEED, random_seed=Config.RANDOM_SEED,
-                 relationship_map=Config.RELATIONSHIP_MAP, data_access=None):
+                 relationship_map=Config.RELATIONSHIP_MAP):
         self.fake = Faker()
         Faker.seed(faker_seed)
         random.seed(random_seed)

@@ -84,8 +84,10 @@ def GenerateSponsors(num_gen):
     db = get_database_backend()
     data_creation = SponsorDataGenerator()
     current_users = db.total_beneficiaries()
-    if current_users < 500_000:
-        num_gen = 500_000 - current_users
+
+    # want to create at least 100_000 users for db
+    if current_users < 100_000:
+        num_gen = 100_000 - current_users
 
     sponsors_created = data_creation.store_sponsor_and_beneficiaries(num_gen)
     return sponsors_created

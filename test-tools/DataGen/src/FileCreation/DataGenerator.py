@@ -5,7 +5,7 @@ from faker import Faker
 from Config import Config
 from Config.Config import logger
 from DataLayer.Datatypes import Address, Sponsor, Beneficiary, ClaimTransaction
-from Repository.Local_Database_Functions import LocalDBFunctions
+from Repository.DatabaseFactory import get_database_backend
 from Repository.NPI_Functions import NPIFunctions, download_weekly_npi_data
 from Config.Data_Visualizer import log_data
 
@@ -29,7 +29,7 @@ def create_amt_data():
 
 def generate_claim_transactions(num_claims, sponsors):
     transactions = []
-    localdb = LocalDBFunctions()
+    localdb = get_database_backend()
     npi_csv_path = download_weekly_npi_data(Config.DOWNLOAD_DIRECTORY)
     npi_funcs = NPIFunctions(npi_csv_path)
     beneficiaries = localdb.get_random_beneficiary(num_claims)
@@ -57,17 +57,7 @@ class SponsorDataGenerator:
         random.seed(random_seed)
         self.relationship_map = relationship_map
         self.used_ssns = set()
-
-        if data_access:
-            self.repo = data_access
-            logger.debug("Using local storage")
-        else:
-            try:
-                self.repo = MongoDBFunctions()
-                logger.info("Using MongoDB for storage")
-            except Exception as e:
-                logger.warning("MongoDB is not available")
-                self.repo = LocalDBFunctions()
+        self.repo = get_database_backend()
 
     def create_address(self):
         address = Address(

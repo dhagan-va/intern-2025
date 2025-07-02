@@ -10,6 +10,8 @@ import {
   Tooltip,
   ResponsiveContainer,
 } from "recharts";
+import { useApiCall } from "./hooks/useApiCall";
+import { ControlPanel } from "./components/ControlPanel";
 
 const API_BASE = "http://localhost:5001";
 
@@ -32,11 +34,11 @@ interface Stats {
 }
 
 function App() {
+  const { apiCall, message } = useApiCall();
   const [status, setStatus] = useState<Status | null>(null);
   const [stats, setStats] = useState<Stats | null>(null);
   const [rpsInput, setRpsInput] = useState("");
   const [transactionInput, setTransactionInput] = useState("");
-  const [message, setMessage] = useState("");
 
   useEffect(() => {
     const fetchData = async () => {
@@ -67,21 +69,6 @@ function App() {
     return () => clearInterval(interval);
   }, []);
 
-  const apiCall = async (endpoint: string, method = "POST", body?: object) => {
-    try {
-      const response = await fetch(`${API_BASE}/${endpoint}`, {
-        method,
-        headers: body ? { "Content-Type": "application/json" } : {},
-        body: body ? JSON.stringify(body) : undefined,
-      });
-      const data = await response.json();
-      setMessage(data.message || data.error);
-    } catch (error) {
-      console.error(`Error with ${endpoint}:`, error);
-      setMessage(`Error with ${endpoint}`);
-    }
-  };
-
   const statusCodeData = stats
     ? Object.entries(stats.status_codes).map(([code, count]) => ({
         code,
@@ -93,19 +80,7 @@ function App() {
     <div>
       <h1>EDI Test Client Dashboard</h1>
       <StatusDisplay status={status} />
-
-      <div>
-        <h2>Controls</h2>
-        <button onClick={() => apiCall("start")} disabled={status?.running}>
-          START
-        </button>
-        <button onClick={() => apiCall("stop")} disabled={!status?.running}>
-          STOP
-        </button>
-        <button onClick={() => apiCall("reset")}>RESET</button>
-        {message && <div>{message}</div>}
-      </div>
-
+      <ControlPanel status={status} />
       <div>
         <h2>Configuration</h2>
         <div>

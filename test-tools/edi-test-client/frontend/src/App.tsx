@@ -1,5 +1,14 @@
 import "./App.css";
 import { useState, useEffect } from "react";
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+} from "recharts";
 
 const API_BASE = "http://localhost:5001";
 
@@ -72,6 +81,13 @@ function App() {
     }
   };
 
+  const statusCodeData = stats
+    ? Object.entries(stats.status_codes).map(([code, count]) => ({
+        code,
+        count,
+      }))
+    : [];
+
   return (
     <div>
       <h1>EDI Test Client Dashboard</h1>
@@ -143,6 +159,21 @@ function App() {
           </button>
         </div>
       </div>
+
+      {statusCodeData.length > 0 && (
+        <div>
+          <h2>Status Code Distribution</h2>
+          <ResponsiveContainer width="100%" height={300}>
+            <BarChart data={statusCodeData}>
+              <CartesianGrid strokeDasharray="3 3" />
+              <XAxis dataKey="code" />
+              <YAxis />
+              <Tooltip />
+              <Bar dataKey="count" fill="#8884d8" />
+            </BarChart>
+          </ResponsiveContainer>
+        </div>
+      )}
 
       <div>
         <h2>Statistics</h2>

@@ -45,7 +45,7 @@ class TransactionFunctions:
         self.connect.commit()
 
     def save_claim_transaction(self, claim, commit=True):
-        logger.info(f"Saving claim transaction {claim.claim_id}")
+        logger.debug(f"Saving claim transaction {claim.claim_id}")
         self.cursor.execute("""
             INSERT OR REPLACE INTO claim_transactions (
                 claim_id, status, date, service_line_id,

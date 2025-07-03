@@ -24,8 +24,8 @@ def generate_claim_transactions(num_claims, transaction_funcs):
         claim = ClaimTransaction(
             status="created",
             date=date.today(),
-            claim_id=f"CLM{bene.beneficiary_id[5:]}",
-            service_line_id=f"SRV{bene.beneficiary_id[5:]}",
+            claim_id=f"CLM{bene.beneficiary_id}",
+            service_line_id=f"SRV{bene.beneficiary_id}",
             sponsor_id=sponsor_id,
             beneficiary_id=bene.beneficiary_id,
             provider_npi=provider["npi"],

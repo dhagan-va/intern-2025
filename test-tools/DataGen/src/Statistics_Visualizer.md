@@ -18,19 +18,19 @@ The 270 file is used to request information about a member's health insurance el
 ```mermaid
 pie title Message type distribution
     "834" : 0
-    "270" : 5
+    "270" : 1000
     "837" : 0
 ```
 
 
-Total Number of Messages Generated: **5**
+Total Number of Messages Generated: **1000**
 ## Throughput
 ```mermaid
 xychart-beta
     title "Throughput (Transactions per Second)"
     x-axis ["834", "270", "837"]
-    y-axis "TPS" 0 --> 1667.6666666666667
-    bar [0.0, 1666.6666666666667, 0.0]
+    y-axis "TPS" 0 --> 4465.305644221626
+    bar [0.0, 4464.305644221626, 0.0]
 ```
 
 
@@ -113,4 +113,4 @@ xychart-beta
 
 
 ## Average 270s per Beneficiary
-- Average 270s per Beneficiary: **0.00**
+- Average 270s per Beneficiary: **0.01**

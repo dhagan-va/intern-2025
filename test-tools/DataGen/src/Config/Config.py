@@ -14,7 +14,6 @@ EDI837_FILE_NAME = f'837.VFMP.{DATE.year}.{DATE.strftime("%y%m%d")}.{DATE.strfti
 
 FAMILY_DATABASE_JSONL = "localdb.jsonl"
 FAMILY_DATABASE_SQLITE = "localdb.sqlite"
-TRANSACTIONS_DATABASE = "transactions.sqlite"
 
 STATISTICS_MD = f"Statistics_Visualizer.md"
 
@@ -26,7 +25,6 @@ ROOT_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 
 DOWNLOAD_DIRECTORY = os.path.join(ROOT_PATH, "Downloads")
 FAMILY_DATABASE_DIRECTORY = os.path.join(ROOT_PATH, "Output", "Local_DB")
-TRANSACTIONS_DATABASE_DIRECTORY = os.path.join(ROOT_PATH, "Output", "Transactions_DB")
 
 MARKDOWN_DIRECTORY = os.path.join(ROOT_PATH)
 

@@ -2,12 +2,51 @@ import random
 
 from faker import Faker
 
+from datetime import date
 from Config import Config
 from Config.Config import logger
 from DataLayer.Datatypes import Address, Sponsor, Beneficiary, ClaimTransaction
 from Repository.DatabaseFactory import get_database_backend
+from Repository.Transaction_Storage_Functions import TransactionFunctions
 from Repository.NPI_Functions import NPIFunctions
 from Config.Data_Visualizer import log_data
+
+
+def generate_claim_transactions(num_claims):
+    transaction_repo = TransactionFunctions()
+    localdb = transaction_repo.family_db
+    npi_funcs = transaction_repo.npi_funcs
+
+    beneficiaries = localdb.get_random_beneficiary(num_claims)
+    transactions = []
+
+    for bene in beneficiaries:
+        sponsor_id = bene.sponsor_id
+        provider = npi_funcs.get_random_provider(bene.address.state)
+
+        claim = ClaimTransaction(
+            status="0",
+            date=date.today(),
+            claim_id=f"CLM{bene.beneficiary_id[5:]}",
+            service_line_id=f"SRV{bene.beneficiary_id[5:]}",
+            sponsor_id=sponsor_id,
+            beneficiary_id=bene.beneficiary_id,
+            provider_npi=provider["npi"],
+            provider_name=provider["name"],
+            provider_entity_type=provider["entity_type"],
+            provider_address_1=provider["address_line_1"],
+            provider_address_2=provider["address_line_2"],
+            provider_city=provider["city"],
+            provider_state=provider["state"],
+            provider_zip=provider["zipcode"],
+            provider_phone=provider["phone"],
+            amount=round(random.uniform(50, 1500), 2),
+            payer_claim_id=None
+        )
+        transactions.append(claim)
+    transaction_repo.save_many_claims(transactions)
+    print(transactions)
+    return transactions
 
 
 def create_amt_data():
@@ -25,27 +64,6 @@ def create_amt_data():
     }
     logger.debug(f"Created AMT data: {data}")
     return data
-
-
-def generate_claim_transactions(num_claims, sponsors):
-    transactions = []
-    localdb = get_database_backend()
-    npi_funcs = NPIFunctions(Config.NPI_CSV_PATH)
-    beneficiaries = localdb.get_random_beneficiary(num_claims)
-    for bene in beneficiaries:
-        provider = npi_funcs.get_random_provider(bene.address.state)
-        claim = ClaimTransaction(
-            status="0",
-            claim_id=str("12345"),
-            service_line_id=str("12345"),
-            sponsor_id=sponsor.sponsor_id,
-            beneficiary_id=bene.beneficiary_id,
-            provider_npi=provider["npi"],
-            amount=round(random.uniform(50, 1500), 2),
-            payer_claim_id=None
-        )
-        transactions.append(claim)
-    return transactions
 
 
 class SponsorDataGenerator:

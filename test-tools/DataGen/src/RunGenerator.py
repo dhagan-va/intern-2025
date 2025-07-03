@@ -5,11 +5,10 @@ from Config.Config import logger, number_of_tests_834, number_of_tests_270, get_
 from Config.Data_Visualizer import log_data, create_md
 from FileCreation.DataGenerator import SponsorDataGenerator, generate_claim_transactions
 from FileCreation.EDIGenerator import EDI834Generator, EDI270Generator, EDI837PGenerator
-from Repository.Transaction_Storage_Functions import TransactionFunctions
 from Repository.DatabaseFactory import get_database_backend
 
 
-def Run834Generator(sponsors, num_messages=None, error_rate=None):
+def Run834Generator(num_messages=None, error_rate=None):
     # Setup/Initialization
     now = datetime.now()
     num_messages = number_of_tests_834(num_messages)
@@ -93,11 +92,9 @@ def GenerateSponsors(num_gen):
     return sponsors_created
 
 
-def CreateDailyClaimDB(num_gen, sponsor_list):
-    claims = generate_claim_transactions(num_gen, sponsor_list)
-    tx_store = TransactionFunctions()
-    for claim in claims:
-        tx_store.save_transaction(claim)
+def CreateDailyClaimDB(num_gen):
+    claims = generate_claim_transactions(num_gen)
+    return claims
 
 
 if __name__ == "__main__":
@@ -105,9 +102,8 @@ if __name__ == "__main__":
     num = 1
 
     sponsors = GenerateSponsors(num)
-    # CreateDailyClaimDB(num, sponsors)
-    # transaction_store = TransactionFunctions()
-    #
+    CreateDailyClaimDB(num)
+
     # edi270 = Run270Generator(num, 0)
     #
     # Run837PGenerator(transaction_store, num, 0)

@@ -7,7 +7,7 @@ import unittest
 from Config import Config, Log_Config
 from FileCreation.ErrorInjector import ErrorInjector
 from Repository.Local_Database_Functions import LocalDBFunctions
-from Repository.NPI_Functions import NPIFunctions, download_weekly_npi_data
+from Repository.NPI_Functions import NPIFunctions
 from RunGenerator import Run834Generator, Run270Generator
 
 

@@ -1,5 +1,7 @@
 import sqlite3
 
+from datetime import date
+from DataLayer.Datatypes import Address, Beneficiary
 from Config.Config import get_local_db_path, FAMILY_DATABASE_DIRECTORY, FAMILY_DATABASE_SQLITE
 from Config.Config import logger
 
@@ -8,6 +10,7 @@ class SQLiteDBFunctions:
     def __init__(self, file=get_local_db_path(FAMILY_DATABASE_DIRECTORY, FAMILY_DATABASE_SQLITE)):
         self.file = file
         self.connect = sqlite3.connect(self.file)
+        self.connect.row_factory = sqlite3.Row
         self.cursor = self.connect.cursor()
         self.init_tables()
 
@@ -168,6 +171,60 @@ class SQLiteDBFunctions:
             self.connect.rollback()
             logger.error(f"No sponsors were saved due to an error: {e}")
             raise e
+
+    def get_random_beneficiary(self, count):
+        self.cursor.execute(f"""
+            SELECT *
+            FROM beneficiaries
+            ORDER BY RANDOM()
+            LIMIT ?
+        """, (count,))
+        bene_rows = self.cursor.fetchall()
+
+        beneficiaries = []
+        for row in bene_rows:
+            sponsor_id = row["sponsor_id"]
+            beneficiary_id = row["beneficiary_id"]
+
+            self.cursor.execute("""
+                SELECT building_number, street, apartment, city, state, zipcode
+                FROM sponsors
+                WHERE sponsor_id = ?
+            """, (sponsor_id,))
+            sponsor_addr = self.cursor.fetchone()
+            address = Address(**sponsor_addr)
+
+            self.cursor.execute("""
+                SELECT code, amount FROM deductibles
+                WHERE sponsor_id = ? AND  beneficiary_id = ?
+            """, (sponsor_id, beneficiary_id))
+            deductibles = {code: amount for code, amount in self.cursor.fetchall()}
+
+            self.cursor.execute("""
+                SELECT code, count FROM visit_counts
+                WHERE sponsor_id = ? AND beneficiary_id = ?
+            """, (sponsor_id, beneficiary_id))
+            visit_counts = {code: count for code, count in self.cursor.fetchall()}
+
+            bene = Beneficiary(
+                ssn=row["ssn"],
+                dob=date.fromisoformat(row["dob"]),
+                first_name=row["first_name"],
+                last_name=row["last_name"],
+                gender=row["gender"],
+                address=address,
+                phone=row["phone"],
+                insurance_company=row["insurance_company"],
+                insurance_FID=row["insurance_FID"],
+                middle_name=row["middle_name"],
+                sponsor_id=sponsor_id,
+                beneficiary_id=beneficiary_id,
+                relationship=row["relationship"],
+                deductibles=deductibles,
+                visit_counts=visit_counts
+            )
+            beneficiaries.append(bene)
+        return beneficiaries
 
     def total_beneficiaries(self):
         self.cursor.execute("SELECT COUNT(*) FROM beneficiaries")

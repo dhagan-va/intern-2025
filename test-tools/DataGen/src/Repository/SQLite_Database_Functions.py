@@ -4,9 +4,10 @@ from datetime import date
 from DataLayer.Datatypes import Address, Beneficiary
 from Config.Config import get_local_db_path, FAMILY_DATABASE_DIRECTORY, FAMILY_DATABASE_SQLITE
 from Config.Config import logger
+from DataLayer.Interfaces import DataAccess
 
 
-class SQLiteDBFunctions:
+class SQLiteDBFunctions(DataAccess):
     def __init__(self, file=get_local_db_path(FAMILY_DATABASE_DIRECTORY, FAMILY_DATABASE_SQLITE)):
         self.file = file
         self.connect = sqlite3.connect(self.file)
@@ -232,6 +233,11 @@ class SQLiteDBFunctions:
         result = self.cursor.fetchone()
         return result[0] if result else 0
 
+    def get_all_ssns(self):
+        sponsor_ssns = self.cursor.execute("SELECT ssn from sponsors").fetchall()
+        beneficiary_ssns = self.cursor.execute("SELECT ssn from beneficiaries").fetchall()
+        return [row["ssn"] for row in sponsor_ssns + beneficiary_ssns]
+
     def ssn_exists(self, ssn):
         self.cursor.execute("""
             SELECT 1 FROM sponsors WHERE ssn = ?
@@ -240,15 +246,15 @@ class SQLiteDBFunctions:
         """, (ssn, ssn))
         return self.cursor.fetchone() is not None
 
-    # def get_sponsor_by_id(self, sponsor_id):
-    #     pass
-    #
-    # def get_sponsor_field(self, sponsor_id, field):
-    #     pass
-    #
-    # def update_sponsor_field(self, sponsor_id, field, value):
-    #     pass
-    #
+    def get_sponsor_by_id(self, sponsor_id):
+        pass
+
+    def get_sponsor_field(self, sponsor_id, field):
+        pass
+
+    def update_sponsor_field(self, sponsor_id, field, value):
+        pass
+
     def get_beneficiary(self, sponsor_id, beneficiary_id):
         self.cursor.execute("""
                 SELECT * FROM beneficiaries
@@ -298,20 +304,20 @@ class SQLiteDBFunctions:
             visit_counts=visit_counts
         )
 
-    # def get_beneficiary_field(self, sponsor_id, beneficiary_id, field):
-    #     pass
-    #
-    # def update_beneficiary_field(self, sponsor_id, beneficiary_id, field, value):
-    #     pass
-    #
-    # def get_bene_visit(self, sponsor_id, beneficiary_id, code):
-    #     pass
-    #
-    # def get_bene_deductible(self, sponsor_id, beneficiary_id, code):
-    #     pass
-    #
-    # def update_bene_deductible(self, sponsor_id, beneficiary_id, code, value):
-    #     pass
-    #
-    # def update_bene_visit(self, sponsor_id, beneficiary_id, code, value):
-    #     pass
+    def get_beneficiary_field(self, sponsor_id, beneficiary_id, field):
+        pass
+
+    def update_beneficiary_field(self, sponsor_id, beneficiary_id, field, value):
+        pass
+
+    def get_bene_visit(self, sponsor_id, beneficiary_id, code):
+        pass
+
+    def get_bene_deductible(self, sponsor_id, beneficiary_id, code):
+        pass
+
+    def update_bene_deductible(self, sponsor_id, beneficiary_id, code, value):
+        pass
+
+    def update_bene_visit(self, sponsor_id, beneficiary_id, code, value):
+        pass

@@ -14,6 +14,9 @@ class DataAccess(ABC):
     def save_many_sponsors(self, sponsors): pass
 
     @abstractmethod
+    def get_all_ssns(self): pass
+
+    @abstractmethod
     def ssn_exists(self, ssn): pass
 
     @abstractmethod

@@ -80,6 +80,7 @@ def Run834Generator(num_messages=None, error_rate=None):
 
 
 def GenerateSponsors(num_gen):
+    now = datetime.now()
     db = get_database_backend()
     data_creation = SponsorDataGenerator()
     current_users = db.total_beneficiaries()
@@ -89,11 +90,16 @@ def GenerateSponsors(num_gen):
         num_gen = 100_000 - current_users
 
     sponsors_created = data_creation.store_sponsor_and_beneficiaries(num_gen)
+    end_time = datetime.now() - now
+    logger.info(f"It took {end_time} to generate {num_gen} sponsors")
     return sponsors_created
 
 
 def CreateDailyClaimDB(num_gen):
+    now = datetime.now()
     claims = generate_claim_transactions(num_gen, transaction_funcs=transaction_funcs)
+    end_time = datetime.now() - now
+    logger.info(f"It took {end_time} to generate {num_gen} claims")
     return claims
 
 
@@ -101,7 +107,7 @@ if __name__ == "__main__":
     curr = datetime.now()
     num = 1000
 
-    sponsors = GenerateSponsors(1)
+    sponsors = GenerateSponsors(num)
     CreateDailyClaimDB(num)
 
     Run270Generator(num, 0)

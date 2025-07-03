@@ -69,8 +69,9 @@ class SponsorDataGenerator:
         Faker.seed(faker_seed)
         random.seed(random_seed)
         self.relationship_map = relationship_map
-        self.used_ssns = set()
         self.repo = get_database_backend()
+        existing_ssns = self.repo.get_all_ssns()
+        self.used_ssns = set(existing_ssns)
 
     def create_address(self):
         address = Address(
@@ -87,7 +88,7 @@ class SponsorDataGenerator:
     def generate_ssn(self):
         while True:
             ssn = self.fake.ssn()
-            if ssn not in self.used_ssns and not self.repo.ssn_exists(ssn):
+            if ssn not in self.used_ssns:
                 self.used_ssns.add(ssn)
                 logger.debug(f"Generated unique SSN: {ssn}")
                 return ssn

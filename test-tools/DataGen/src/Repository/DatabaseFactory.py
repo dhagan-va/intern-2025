@@ -1,5 +1,5 @@
 from Config.Config import DATABASE_BACKEND
-from Repository.Local_Database_Functions import LocalDBFunctions
+from Repository.JSON_Database_Functions import LocalDBFunctions
 from Repository.SQLite_Database_Functions import SQLiteDBFunctions
 
 

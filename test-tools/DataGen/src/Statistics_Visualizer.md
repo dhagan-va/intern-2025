@@ -29,8 +29,8 @@ Total Number of Messages Generated: **1000**
 xychart-beta
     title "Throughput (Transactions per Second)"
     x-axis ["834", "270", "837"]
-    y-axis "TPS" 0 --> 4465.305644221626
-    bar [0.0, 4464.305644221626, 0.0]
+    y-axis "TPS" 0 --> 4133.265555913686
+    bar [0.0, 4132.265555913686, 0.0]
 ```
 
 
@@ -59,17 +59,17 @@ xychart-beta
 xychart-beta
     title "Family Size Histogram"
     x-axis ["1", "2", "3", "4"]
-    y-axis "Count" 0 --> 2
-    bar [0, 1, 0, 0]
+    y-axis "Count" 0 --> 10042
+    bar [9969, 10000, 10041, 9977]
 ```
 
 
 ```mermaid
 pie title Family Size Breakdown
-    "1" : 0
-    "2" : 1
-    "3" : 0
-    "4" : 0
+    "1" : 9969
+    "2" : 10000
+    "3" : 10041
+    "4" : 9977
 ```
 
 
@@ -78,17 +78,17 @@ pie title Family Size Breakdown
 xychart-beta
     title "Beneficiary Code Distribution"
     x-axis ["Spouse (01)", "Child (19)", "Caregiver (26)", "Ex-Spouse (25)"]
-    y-axis "Count" 0 --> 2
-    bar [0, 0, 0, 1]
+    y-axis "Count" 0 --> 25177
+    bar [24999, 25176, 25022, 24803]
 ```
 
 
 ```mermaid
 pie title Beneficiary Relationship Types
-    "Spouse (01)" : 0
-    "Child (19)" : 0
-    "Caregiver (26)" : 0
-    "Ex-Spouse (25)" : 1
+    "Spouse (01)" : 24999
+    "Child (19)" : 25176
+    "Caregiver (26)" : 25022
+    "Ex-Spouse (25)" : 24803
 ```
 
 

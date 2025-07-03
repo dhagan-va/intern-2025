@@ -35,7 +35,7 @@ def generate_claim_transactions(num_claims, sponsors):
     for bene in beneficiaries:
         provider = npi_funcs.get_random_provider(bene.address.state)
         claim = ClaimTransaction(
-            state="0",
+            status="0",
             claim_id=str("12345"),
             service_line_id=str("12345"),
             sponsor_id=sponsor.sponsor_id,

@@ -142,39 +142,63 @@ class Sponsor(Base):
 
 @dataclass
 class ClaimTransaction:
-    state: str
+    status: str
     date: date
     claim_id: str
     service_line_id: str
     sponsor_id: str
     beneficiary_id: str
     provider_npi: str
+    provider_name: str
+    provider_entity_type: str
+    provider_address_1: str
+    provider_city: str
+    provider_state: str
+    provider_zip: str
+    provider_phone: str
     amount: float
+    provider_address_2: Optional[str] = None
     payer_claim_id: Optional[str] = None
 
     def to_dict(self):
         return {
-            "state": self.state,
+            "status": self.status,
             "date": self.date.isoformat(),
             "claim_id": self.claim_id,
             "service_line_id": self.service_line_id,
             "sponsor_id": self.sponsor_id,
             "beneficiary_id": self.beneficiary_id,
             "provider_npi": self.provider_npi,
+            "provider_name": self.provider_name,
+            "provider_entity_type": self.provider_entity_type,
+            "provider_address_1": self.provider_address_1,
+            "provider_city": self.provider_city,
+            "provider_state": self.provider_state,
+            "provider_zip": self.provider_zip,
+            "provider_phone": self.provider_phone,
             "amount": self.amount,
+            "provider_address_2": self.provider_address_2,
             "payer_claim_id": self.payer_claim_id
         }
 
     @staticmethod
     def from_dict(data):
         return ClaimTransaction(
-            state=data["state"],
+            status=data["status"],
             date=date.fromisoformat(data["date"]),
             claim_id=data["claim_id"],
             service_line_id=data["service_line_id"],
             sponsor_id=data["sponsor_id"],
             beneficiary_id=data["beneficiary_id"],
             provider_npi=data["provider_npi"],
+            provider_name=data["provider_name"],
+            provider_entity_type=data["provider_entity_type"],
+            provider_address_1=data["provider_address_1"],
+            provider_city=data["provider_city"],
+            provider_state=data["provider_state"],
+            provider_zip=data["provider_zip"],
+            provider_phone=data["provider_phone"],
             amount=data["amount"],
+            provider_address_2=data["provider_address_2"],
             payer_claim_id=data["payer_claim_id"]
         )

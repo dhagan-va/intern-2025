@@ -31,3 +31,6 @@ class TransactionFunctions:
                     zipcode TEXT
                 )
             """)
+
+    def get_amount_from_date(self):
+        return

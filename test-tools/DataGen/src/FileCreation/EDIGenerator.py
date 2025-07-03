@@ -98,8 +98,6 @@ class EDI834Generator:
 
 class EDI270Generator:
     def __init__(self, num_messages=None, provider_csv_path=None, error_rate=None):
-        self.bene_270 = []
-        self.providers = []
         self.localdb_funcs = localdb_funcs
         self.localdb_funcs.load_localdb()
         self.npi_funcs = NPIFunctions(provider_csv_path)

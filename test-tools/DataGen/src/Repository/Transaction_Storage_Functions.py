@@ -2,13 +2,17 @@ import sqlite3
 
 from Config.Config import logger, get_local_db_path,FAMILY_DATABASE_DIRECTORY, FAMILY_DATABASE_SQLITE, NPI_CSV_PATH
 from Repository.DatabaseFactory import get_database_backend
+from DataLayer.Datatypes import ClaimTransaction
 from Repository.NPI_Functions import NPIFunctions
+
+transaction_instance = None
 
 
 class TransactionFunctions:
     def __init__(self, file=get_local_db_path(FAMILY_DATABASE_DIRECTORY, FAMILY_DATABASE_SQLITE)):
         self.file = file
         self.connect = sqlite3.connect(self.file)
+        self.connect.row_factory = sqlite3.Row
         self.cursor = self.connect.cursor()
         self.init_tables()
         self.family_db = get_database_backend()
@@ -25,13 +29,13 @@ class TransactionFunctions:
                 beneficiary_id TEXT,
                 provider_npi TEXT,
                 provider_name TEXT,
-                entity_type TEXT,
-                address_line_1 TEXT,
-                address_line_2 TEXT,
-                city TEXT,
-                state TEXT,
-                zipcode TEXT,
-                phone TEXT,
+                provider_entity_type TEXT,
+                provider_address_1 TEXT,
+                provider_address_2 TEXT,
+                provider_city TEXT,
+                provider_state TEXT,
+                provider_zip TEXT,
+                provider_phone TEXT,
                 amount REAL,
                 payer_claim_id TEXT,
                 FOREIGN KEY (sponsor_id, beneficiary_id)
@@ -41,12 +45,13 @@ class TransactionFunctions:
         self.connect.commit()
 
     def save_claim_transaction(self, claim, commit=True):
+        logger.info(f"Saving claim transaction {claim.claim_id}")
         self.cursor.execute("""
             INSERT OR REPLACE INTO claim_transactions (
                 claim_id, status, date, service_line_id,
                 sponsor_id, beneficiary_id, provider_npi, provider_name,
-                entity_type, address_line_1, address_line_2, city, state,
-                zipcode, phone, amount, payer_claim_id
+                provider_entity_type, provider_address_1, provider_address_2, provider_city, provider_state,
+                provider_zip, provider_phone, amount, payer_claim_id
             ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         """, (
             claim.claim_id,
@@ -73,6 +78,7 @@ class TransactionFunctions:
 
     def save_many_claims(self, claims):
         try:
+            logger.info(f"Saving {len(claims)} claim transactions in bulk")
             self.connect.execute("BEGIN TRANSACTION")
             for claim in claims:
                 self.save_claim_transaction(claim, commit=False)
@@ -81,3 +87,22 @@ class TransactionFunctions:
             self.connect.rollback()
             logger.error(f"No sponsors were saved due to an error: {e}")
             raise e
+
+    def get_claim_transactions(self, status, date):
+        logger.info(f"Fetching claim transactions with status={status} and date={date}")
+        self.cursor.execute("""
+            SELECT * FROM claim_transactions
+            WHERE status = ? AND date = ?
+        """, (status, date))
+        rows = self.cursor.fetchall()
+        return [ClaimTransaction.from_dict(dict(row)) for row in rows]
+
+    def update_claims_status(self, claim_ids, new_status):
+        logger.info(f"Updating status of {len(claim_ids)} claims to '{new_status}'")
+        self.cursor.executemany("""
+            UPDATE claim_transactions
+            SET status = ?
+            WHERE claim_id = ?
+        """, [(new_status, cid) for cid in claim_ids])
+        self.connect.commit()
+

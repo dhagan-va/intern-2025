@@ -7,14 +7,12 @@ from Config import Config
 from Config.Config import logger
 from DataLayer.Datatypes import Address, Sponsor, Beneficiary, ClaimTransaction
 from Repository.DatabaseFactory import get_database_backend
-from Repository.Transaction_Storage_Functions import TransactionFunctions
 from Config.Data_Visualizer import log_data
 
 
-def generate_claim_transactions(num_claims):
-    transaction_repo = TransactionFunctions()
-    localdb = transaction_repo.family_db
-    npi_funcs = transaction_repo.npi_funcs
+def generate_claim_transactions(num_claims, transaction_funcs):
+    localdb = transaction_funcs.family_db
+    npi_funcs = transaction_funcs.npi_funcs
 
     beneficiaries = localdb.get_random_beneficiary(num_claims)
     transactions = []
@@ -24,7 +22,7 @@ def generate_claim_transactions(num_claims):
         provider = npi_funcs.get_random_provider(bene.address.state)
 
         claim = ClaimTransaction(
-            status="0",
+            status="created",
             date=date.today(),
             claim_id=f"CLM{bene.beneficiary_id[5:]}",
             service_line_id=f"SRV{bene.beneficiary_id[5:]}",
@@ -43,7 +41,7 @@ def generate_claim_transactions(num_claims):
             payer_claim_id=None
         )
         transactions.append(claim)
-    transaction_repo.save_many_claims(transactions)
+    transaction_funcs.save_many_claims(transactions)
     return transactions
 
 

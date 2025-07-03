@@ -1,24 +1,23 @@
 import uuid
 
+from datetime import date
 import FileCreation.EDISegments as Seg
 from Config import Config
 from Config.Config import logger
 from Config.Data_Visualizer import log_data
 from FileCreation.ErrorInjector import ErrorInjector
-from Repository.Local_Database_Functions import LocalDBFunctions
-from Repository.NPI_Functions import NPIFunctions
-
-localdb_funcs = LocalDBFunctions()
 
 
 class EDI270Generator:
-    def __init__(self, num_messages=None, provider_csv_path=None, error_rate=None):
-        self.localdb_funcs = localdb_funcs
-        self.localdb_funcs.load_localdb()
-        self.npi_funcs = NPIFunctions(provider_csv_path)
+    def __init__(self, transaction_funcs, num_messages=None, error_rate=None):
+        self.transaction_funcs = transaction_funcs
+        self.claims = self.transaction_funcs.get_claim_transactions(
+            status="created",
+            date=date.today().isoformat()
+        )
         self.num_messages = num_messages
-        self.provider_csv_path = provider_csv_path
         self.error_ctrl = ErrorInjector(num_messages, error_rate)
+        logger.info(f"Initializing EDI270Generator with {len(self.claims)} claims")
 
     @staticmethod
     def split_provider_name(name, entity_type):
@@ -34,23 +33,10 @@ class EDI270Generator:
 
     def create_transaction(self, num, error_ctrl):
         self.error_ctrl.reset_error_inserted()
-        beneficiary = self.localdb_funcs.get_random_beneficiary()
-
-        self.bene_270.append(beneficiary)
-        state = beneficiary.address.state
-        error_id = beneficiary.beneficiary_id
-
-        provider = self.npi_funcs.get_random_provider(state)
-        self.providers.append(provider)
-        last, first = self.split_provider_name(provider["name"], provider["entity_type"])
-
-        if not provider:
-            logger.warning(f"No provider found for state: {state}. Using fallback.")
-            provider = {
-                "name": "Ryan's company",
-                "npi": "0000000000",
-                "entity_type": 2
-            }
+        claim = self.claims[num - 1]
+        last, first = self.split_provider_name(claim.provider_name, claim.provider_entity_type)
+        error_id = claim.beneficiary_id
+        bene = self.transaction_funcs.family_db.get_beneficiary(claim.sponsor_id, claim.beneficiary_id)
 
         segments = [Seg.ISA().to_edi(),
                     Seg.GS("HS").to_edi(),
@@ -60,11 +46,11 @@ class EDI270Generator:
                     Seg.NM1("PR", 2, Config.N1_PAYER_QUALIFIER, "", "", "PI",
                             Config.N1_PAYER_ID, error_ctrl, error_id).to_edi(),
                     Seg.HL(2, 1, 21, 1, error_ctrl, error_id).to_edi(),
-                    Seg.NM1("1P", provider["entity_type"], last, first, "", "XX", provider["npi"], error_ctrl,
+                    Seg.NM1("1P", claim.provider_entity_type, last, first, "", "XX", claim.provider_npi, error_ctrl,
                             error_id).to_edi(),
                     Seg.HL(3, 2, 22, 0, error_ctrl, error_id).to_edi(),
-                    Seg.NM1("IL", "1", beneficiary.last_name, beneficiary.first_name,
-                            beneficiary.middle_name, "MI", beneficiary.beneficiary_id, error_ctrl, error_id).to_edi(),
+                    Seg.NM1("IL", "1", bene.last_name, bene.first_name,
+                            bene.middle_name, "MI", bene.beneficiary_id, error_ctrl, error_id).to_edi(),
                     Seg.EQ("30").to_edi(),
                     Seg.SE(10, num).to_edi(),
                     Seg.GE(1).to_edi(),

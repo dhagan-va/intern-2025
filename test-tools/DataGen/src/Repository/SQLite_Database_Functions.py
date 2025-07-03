@@ -163,6 +163,7 @@ class SQLiteDBFunctions:
 
     def save_many_sponsors(self, sponsors):
         try:
+            logger.info(f"Saving {len(sponsors)} sponsors to the database")
             self.connect.execute("BEGIN TRANSACTION")
             for sponsor in sponsors:
                 self.save_sponsor(sponsor, commit=False)
@@ -248,9 +249,55 @@ class SQLiteDBFunctions:
     # def update_sponsor_field(self, sponsor_id, field, value):
     #     pass
     #
-    # def get_beneficiary(self, sponsor_id, beneficiary_id):
-    #     pass
-    #
+    def get_beneficiary(self, sponsor_id, beneficiary_id):
+        self.cursor.execute("""
+                SELECT * FROM beneficiaries
+                WHERE sponsor_id = ? AND beneficiary_id = ?
+            """, (sponsor_id, beneficiary_id))
+        row = self.cursor.fetchone()
+        logger.debug(f"Fetching beneficiary: sponsor_id={sponsor_id}, beneficiary_id={beneficiary_id}")
+        if not row:
+            logger.warning(f"Beneficiary not found for sponsor_id={sponsor_id}, beneficiary_id={beneficiary_id}")
+            return
+
+        self.cursor.execute("""
+                SELECT building_number, street, apartment, city, state, zipcode
+                FROM sponsors
+                WHERE sponsor_id = ?
+            """, (sponsor_id,))
+        sponsor_addr = self.cursor.fetchone()
+        address = Address(**sponsor_addr)
+
+        self.cursor.execute("""
+                SELECT code, amount FROM deductibles
+                WHERE sponsor_id = ? AND beneficiary_id = ?
+            """, (sponsor_id, beneficiary_id))
+        deductibles = {code: amount for code, amount in self.cursor.fetchall()}
+
+        self.cursor.execute("""
+                SELECT code, count FROM visit_counts
+                WHERE sponsor_id = ? AND beneficiary_id = ?
+            """, (sponsor_id, beneficiary_id))
+        visit_counts = {code: count for code, count in self.cursor.fetchall()}
+
+        return Beneficiary(
+            ssn=row["ssn"],
+            dob=date.fromisoformat(row["dob"]),
+            first_name=row["first_name"],
+            middle_name=row["middle_name"],
+            last_name=row["last_name"],
+            gender=row["gender"],
+            phone=row["phone"],
+            insurance_company=row["insurance_company"],
+            insurance_FID=row["insurance_FID"],
+            sponsor_id=row["sponsor_id"],
+            beneficiary_id=row["beneficiary_id"],
+            relationship=row["relationship"],
+            address=address,
+            deductibles=deductibles,
+            visit_counts=visit_counts
+        )
+
     # def get_beneficiary_field(self, sponsor_id, beneficiary_id, field):
     #     pass
     #

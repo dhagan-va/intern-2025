@@ -8,7 +8,6 @@ from Config.Config import logger
 from DataLayer.Datatypes import Address, Sponsor, Beneficiary, ClaimTransaction
 from Repository.DatabaseFactory import get_database_backend
 from Repository.Transaction_Storage_Functions import TransactionFunctions
-from Repository.NPI_Functions import NPIFunctions
 from Config.Data_Visualizer import log_data
 
 
@@ -45,7 +44,6 @@ def generate_claim_transactions(num_claims):
         )
         transactions.append(claim)
     transaction_repo.save_many_claims(transactions)
-    print(transactions)
     return transactions
 
 

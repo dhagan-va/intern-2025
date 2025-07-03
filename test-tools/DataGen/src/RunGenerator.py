@@ -99,9 +99,9 @@ def CreateDailyClaimDB(num_gen):
 
 if __name__ == "__main__":
     curr = datetime.now()
-    num = 1
+    num = 5
 
-    sponsors = GenerateSponsors(num)
+    sponsors = GenerateSponsors(1)
     CreateDailyClaimDB(num)
 
     # edi270 = Run270Generator(num, 0)

@@ -41,13 +41,13 @@ logger = get_logger(__name__)
 # Creates directory if nonexistent
 def get_edi_path(edi_path, edi_file):
     os.makedirs(edi_path, exist_ok=True)
-    logger.info(f"Directory exists: {edi_path}")
+    logger.debug(f"Directory exists: {edi_path}")
     return os.path.join(edi_path, edi_file)
 
 
 def get_local_db_path(db_path, db_file):
     os.makedirs(db_path, exist_ok=True)
-    logger.info(f"Directory exists: {db_path}")
+    logger.debug(f"Directory exists: {db_path}")
     return os.path.join(db_path, db_file)
 
 

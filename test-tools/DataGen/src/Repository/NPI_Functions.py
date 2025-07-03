@@ -69,6 +69,7 @@ class NPIFunctions:
     def __init__(self, csv_path):
         self.csv_path = Path(csv_path)
         self.df = None
+        self.providers_by_state = {}
 
     def load_csv(self):
         if self.df is not None:
@@ -101,28 +102,27 @@ class NPIFunctions:
         return self.df
 
     def get_random_provider(self, state):
+        state = state.upper()
         org_col = "Provider Organization Name (Legal Business Name)"
         last_col = "Provider Last Name (Legal Name)"
         state_col = "Provider Business Practice Location Address State Name"
-        if not state:
-            msg = "State must be provided to select provider"
-            logger.error(msg)
-            raise ValueError(msg)
+        if state not in self.providers_by_state:
+            df = self.load_csv()
 
-        df = self.load_csv()
+            df_filtered = df[
+                (df[org_col].notna() | df[last_col]) &
+                (df[state_col] == state) &
+                (df[org_col].isna() | (df[org_col].str.len() <= 60))
+                ]
 
-        df_filtered = df[
-            (df[org_col].notna() | df[last_col]) &
-            (df[state_col] == state.upper()) &
-            (df[org_col].isna() | (df[org_col].str.len() <= 60))
-            ]
+            if df_filtered.empty:
+                msg = f"Ermtosis, that's not supposed to happen, no provider is found in {state}"
+                logger.error(msg)
+                raise LookupError(msg)
 
-        if df_filtered.empty:
-            msg = f"Ermtosis, that's not supposed to happen, no provider is found in {state}"
-            logger.error(msg)
-            raise LookupError(msg)
+            self.providers_by_state[state] = df_filtered
 
-        provider = df_filtered.sample(n=1).iloc[0]
+        provider = self.providers_by_state[state].sample(n=1).iloc[0]
 
         if pd.notna(provider[org_col]):
             name = provider[org_col]

@@ -10,7 +10,7 @@ from Repository.DatabaseFactory import get_database_backend
 from Config.Data_Visualizer import log_data
 
 
-def generate_claim_transactions(num_claims, transaction_funcs):
+def generate_claim_transactions(num_claims, transaction_funcs, input_date=date.today()):
     localdb = transaction_funcs.family_db
     npi_funcs = transaction_funcs.npi_funcs
 
@@ -23,7 +23,7 @@ def generate_claim_transactions(num_claims, transaction_funcs):
 
         claim = ClaimTransaction(
             status="created",
-            date=date.today(),
+            date=input_date,
             claim_id=f"CLM{bene.beneficiary_id}",
             service_line_id=f"SRV{bene.beneficiary_id}",
             sponsor_id=sponsor_id,

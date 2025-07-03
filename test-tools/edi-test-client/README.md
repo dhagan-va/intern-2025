@@ -1,5 +1,33 @@
 # EDI X12 27x Multi-Threaded Client & Mock Server Test Tool
 
+## Architecture
+
+```mermaid
+graph TB
+    Frontend[React Frontend<br/>Web Dashboard<br/>Port 5173]
+    
+    API[Client API<br/>Flask Server<br/>Port 5001]
+    
+    LoadClient[Load Test Client<br/>Multi-threaded]
+    
+    MockServer[Mock EDI Server<br/>Flask Server<br/>Port 5000]
+    
+    Frontend -->|HTTP Requests| API
+    API -->|Start/Stop/Config| LoadClient
+    LoadClient -->|EDI Transactions| MockServer
+    MockServer -->|EDI Responses| LoadClient
+    LoadClient -->|Statistics| API
+    API -->|Live Data| Frontend
+    
+    classDef frontend fill:#e1f5fe,stroke:#01579b
+    classDef server fill:#f3e5f5,stroke:#4a148c
+    classDef client fill:#e8f5e8,stroke:#1b5e20
+    
+    class Frontend frontend
+    class API,MockServer server
+    class LoadClient client
+```
+
 ## Setup
 
 ### Prerequisites

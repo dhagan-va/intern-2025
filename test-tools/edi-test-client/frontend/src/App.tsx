@@ -1,6 +1,8 @@
 import "./App.css";
 import { useState, useEffect } from "react";
 import { StatusDisplay } from "./components/StatusDisplay";
+import { ConfigMenu } from "./components/ConfigMenu";
+import { StatsDisplay } from "./components/StatsDisplay";
 import {
   BarChart,
   Bar,
@@ -34,7 +36,6 @@ interface Stats {
 }
 
 function App() {
-  const { apiCall, message } = useApiCall();
   const [status, setStatus] = useState<Status | null>(null);
   const [stats, setStats] = useState<Stats | null>(null);
   const [rpsInput, setRpsInput] = useState("");
@@ -81,47 +82,7 @@ function App() {
       <h1>EDI Test Client Dashboard</h1>
       <StatusDisplay status={status} />
       <ControlPanel status={status} />
-      <div>
-        <h2>Configuration</h2>
-        <div>
-          <label>RPS:</label>
-          <input
-            type="number"
-            step="0.1"
-            value={rpsInput}
-            onChange={(e) => setRpsInput(e.target.value)}
-          />
-          <button
-            onClick={() =>
-              apiCall("rps", "POST", { rps: parseFloat(rpsInput) })
-            }
-          >
-            Update
-          </button>
-        </div>
-
-        <div>
-          <label>Transaction:</label>
-          <select
-            value={transactionInput}
-            onChange={(e) => setTransactionInput(e.target.value)}
-          >
-            <option value="270">270</option>
-            <option value="276">276</option>
-            <option value="278">278</option>
-          </select>
-          <button
-            onClick={() =>
-              apiCall("transaction", "POST", {
-                transaction: parseInt(transactionInput),
-              })
-            }
-          >
-            Update
-          </button>
-        </div>
-      </div>
-
+      <ConfigMenu />
       {statusCodeData.length > 0 && (
         <div>
           <h2>Status Code Distribution</h2>
@@ -137,32 +98,7 @@ function App() {
         </div>
       )}
 
-      <div>
-        <h2>Statistics</h2>
-        {stats ? (
-          <div>
-            <p>Total Requests: {stats.total_requests}</p>
-            <p>Average Latency: {stats.average_latency.toFixed(2)} ms</p>
-            <p>Successful: {stats.successful_requests}</p>
-            <p>Failed: {stats.failed_requests}</p>
-            <p>Current RPS: {stats.current_rps}</p>
-            {stats.timestamp && <p>Updated: {stats.timestamp}</p>}
-
-            <div>
-              <strong>Status Codes:</strong>
-              <ul>
-                {Object.entries(stats.status_codes).map(([code, count]) => (
-                  <li key={code}>
-                    {code}: {count}
-                  </li>
-                ))}
-              </ul>
-            </div>
-          </div>
-        ) : (
-          <p>Loading...</p>
-        )}
-      </div>
+      <StatsDisplay stats={stats} />
     </div>
   );
 }

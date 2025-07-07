@@ -83,7 +83,7 @@ def Run834Generator(error_rate=None):
     edi834 = EDI834Generator(transaction_funcs=transaction_funcs, error_rate=error_rate)
     log_data["messages"]["count_837"] = edi834.get_num_messages()
     logger.info("Generating EDI file from stored data")
-    edi_out = edi834.combine_segments(sponsors)
+    edi_out = edi834.combine_segments()
     logger.info("EDI file generation complete")
     logger.info(f"File generation took: {datetime.now() - now}")
 
@@ -132,14 +132,15 @@ if __name__ == "__main__":
     num = 100
 
     yesterday = date.today() - timedelta(days=1)
-
+    week_before = date.today() - timedelta(days=7)
     sponsors = GenerateSponsors(num)
     CreateClaimDB(num, date.today(), "Created")
     CreateClaimDB(num, yesterday, "270 Created")
+    CreateClaimDB(num, week_before, "837 Created")
 
     Run270Generator(num, 0, upload_s3=True)
     Run837PGenerator(0)
-    # Run834Generator(sponsors, num, 0)
+    Run834Generator(0)
 
     end = datetime.now() - curr
     logger.info(f"It took {end} to generate the output")

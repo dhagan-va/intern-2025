@@ -32,6 +32,10 @@ class EDI270Generator:
             return parts[0], parts[1]
 
     def create_transaction(self, num, error_ctrl):
+        if num - 1 >= len(self.claims) or num <= 0:
+            logger.error(f"Index out of range for claim {num}")
+            return
+
         self.error_ctrl.reset_error_inserted()
         claim = self.claims[num - 1]
         last, first = self.split_provider_name(claim.provider_name, claim.provider_entity_type)
@@ -181,8 +185,8 @@ class EDI837PGenerator:
 
 
 class EDI834Generator:
-    def __init__(self, transaction_funcs, sender=Config.SENDER_ID, receiver=Config.RECEIVER_ID, relationship_map=Config.RELATIONSHIP_MAP,
-                 error_rate=None):
+    def __init__(self, transaction_funcs, sender=Config.SENDER_ID, receiver=Config.RECEIVER_ID,
+                 relationship_map=Config.RELATIONSHIP_MAP, error_rate=None):
         self.transaction_funcs = transaction_funcs
         self.sender = sender
         self.receiver = receiver
@@ -201,37 +205,36 @@ class EDI834Generator:
     def get_num_messages(self):
         return self.num_messages
 
-    def create_member(self, member, error_ctrl):
+    def create_member(self, bene, error_ctrl):
         self.transaction_control_number += 1
         self.error_ctrl.reset_error_inserted()
-        sponsor_id = member.sponsor_id
-        relationship_code = self.relationship_map.get(member.relationship)
-        beneficiary_id = member.beneficiary_id
-        logger.debug(f"Creating segments for Beneficiary: {beneficiary_id} under Sponsor: {sponsor_id}")
+        sponsor = self.transaction_funcs.family_db.get_sponsor_by_id(bene.sponsor_id)
+        relationship_code = self.relationship_map.get(bene.relationship)
+        error_id = bene.beneficiary_id
 
         segments = [Seg.ST(834, self.transaction_control_number).to_edi(),
                     Seg.BGN(uuid.uuid4().hex.upper()).to_edi(),
                     Seg.N1("P5", Config.N1_SPONSOR_QUALIFIER, Config.N1_SPONSOR_ID, error_ctrl,
-                           beneficiary_id).to_edi(),
-                    Seg.N1("IN", Config.N1_PAYER_QUALIFIER, Config.N1_PAYER_ID, error_ctrl, beneficiary_id).to_edi(),
+                           error_id).to_edi(),
+                    Seg.N1("IN", Config.N1_PAYER_QUALIFIER, Config.N1_PAYER_ID, error_ctrl, error_id).to_edi(),
                     Seg.INS(relationship_code).to_edi(),
-                    Seg.REF("0F", sponsor_id, error_ctrl).to_edi(),
-                    Seg.REF("6O", beneficiary_id, error_ctrl).to_edi(),
-                    Seg.NM1("IL", "1", member.last_name, member.first_name, member.middle_name, "34", member.ssn,
-                            error_ctrl, beneficiary_id).to_edi(),
-                    Seg.PER("IP", member.phone, error_ctrl, beneficiary_id).to_edi(),
-                    Seg.N3(member.address.building_number, member.address.street, member.address.apartment,
-                           error_ctrl, beneficiary_id).to_edi(),
-                    Seg.N4(member.address.city, member.address.state, member.address.zipcode, error_ctrl,
-                           beneficiary_id).to_edi()
+                    Seg.REF("0F", sponsor.sponsor_id, error_ctrl).to_edi(),
+                    Seg.REF("6O", bene.beneficiary_id, error_ctrl).to_edi(),
+                    Seg.NM1("IL", "1", bene.last_name, bene.first_name, bene.middle_name, "34", bene.ssn,
+                            error_ctrl, error_id).to_edi(),
+                    Seg.PER("IP", bene.phone, error_ctrl, error_id).to_edi(),
+                    Seg.N3(bene.address.building_number, bene.address.street, bene.address.apartment,
+                           error_ctrl, error_id).to_edi(),
+                    Seg.N4(bene.address.city, bene.address.state, bene.address.zipcode, error_ctrl,
+                           error_id).to_edi()
                     ]
 
-        for code, value in member.deductibles.items():
-            segments.append(Seg.AMT(code, str(value), error_ctrl, beneficiary_id).to_edi())
+        for code, value in bene.deductibles.items():
+            segments.append(Seg.AMT(code, str(value), error_ctrl, error_id).to_edi())
             log_data["amt"][f"{code}"]["sum"] += value
             log_data["amt"][f"{code}"]["count"] += 1
-        for code, value in member.visit_counts.items():
-            segments.append(Seg.AMT(code, str(value), error_ctrl, beneficiary_id).to_edi())
+        for code, value in bene.visit_counts.items():
+            segments.append(Seg.AMT(code, str(value), error_ctrl, error_id).to_edi())
             log_data["amt"][f"{code}"]["sum"] += value
             log_data["amt"][f"{code}"]["count"] += 1
 
@@ -242,30 +245,21 @@ class EDI834Generator:
 
         if self.error_ctrl.error_inserted is True:
             log_data["errors"]["error_ct_834"] += 1
-        logger.debug(f"Completed {len(segments)} segments for member {beneficiary_id}")
+        logger.debug(f"Completed {len(segments)} segments for member {bene.beneficiary_id}")
         return segments
 
-    def create_transaction(self, sponsor):
-        logger.debug(
-            f"Generating  {len(sponsor.beneficiaries)} transactions for beneficiaries of Sponsor: {sponsor.sponsor_id}")
-
-        segments = []
-        for beneficiary in sponsor.beneficiaries:
-            segments.extend(self.create_member(beneficiary, self.error_ctrl))
-        return segments
-
-    def combine_segments(self, sponsors):
-        logger.debug(f"Starting EDI 834 generation for {len(list(sponsors))} sponsors")
+    def combine_segments(self):
+        logger.debug(f"Starting EDI 834 generation for {self.num_messages} beneficiaries")
         all_segments = [Seg.ISA().to_edi(),
                         Seg.GS("BE").to_edi()
                         ]
 
-        for sponsor in sponsors:
-            logger.debug(f"Sponsor {sponsor.sponsor_id} has {len(sponsor.beneficiaries)} beneficiaries")
-            log_data["family"]["size"] += len(sponsor.beneficiaries)
-            all_segments.extend(self.create_transaction(sponsor))
+        for claim in self.claims:
+            bene = self.transaction_funcs.family_db.get_beneficiary(claim.sponsor_id, claim.beneficiary_id)
+            log_data["family"]["size"] += 1
+            all_segments.extend(self.create_member(bene, self.error_ctrl))
 
-        log_data["family"]["count"] = len(sponsors)
+        log_data["family"]["count"] = len(self.claims)
 
         all_segments.append(Seg.GE(self.transaction_control_number).to_edi())
         all_segments.append(Seg.IEA().to_edi())

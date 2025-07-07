@@ -299,8 +299,9 @@ class DTP:
 
 
 class BHT:
-    def __init__(self, transaction_id, purpose_code):
+    def __init__(self, transaction_id, purpose_code, file_type=None):
         now = datetime.now()
+        self.file_type = file_type
         self.transaction_id = transaction_id
         self.purpose_code = purpose_code
         self.date = now.strftime("%Y%m%d")
@@ -308,8 +309,10 @@ class BHT:
 
     def to_edi(self):
         logger.debug(f"Generating BHT segment")
-        # unsure of the value of BHT03
-        return f"BHT*00{self.transaction_id}*{self.purpose_code}*123456789*{self.date}*{self.time}*CH~\n"
+        segment = f"BHT*00{self.transaction_id}*{self.purpose_code}*123456789*{self.date}*{self.time}"
+        if self.file_type == "837":
+            segment += "*CH"
+        return segment + "~\n"
 
 
 class HL:
@@ -417,3 +420,12 @@ class SV1:
     def to_edi(self):
         logger.debug("Generating SV1 segment")
         return f"SV1*{self.proc_code}*{self.charge_amt}*{self.unit}*{self.quantity}***{self.diagnosis_ptr}~\n"
+
+
+class PAT:
+    def __init__(self, bene_relationship):
+        self.bene_relationship = bene_relationship
+
+    def to_edi(self):
+        logger.debug("Generating PAT segment")
+        return f"PAT*{self.bene_relationship}~\n"

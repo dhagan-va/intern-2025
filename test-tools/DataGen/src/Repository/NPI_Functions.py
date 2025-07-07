@@ -112,7 +112,7 @@ class NPIFunctions:
             df_filtered = df[
                 (df[org_col].notna() | df[last_col]) &
                 (df[state_col] == state) &
-                (df[org_col].isna() | (df[org_col].str.len() <= 60))
+                (df[org_col].isna() | (df[org_col].str.len() <= 55))
                 ]
 
             if df_filtered.empty:

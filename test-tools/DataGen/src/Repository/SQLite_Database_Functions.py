@@ -1,7 +1,7 @@
 import sqlite3
 
 from datetime import date
-from DataLayer.Datatypes import Address, Beneficiary
+from DataLayer.Datatypes import Address, Beneficiary, Sponsor
 from Config.Config import get_local_db_path, FAMILY_DATABASE_DIRECTORY, FAMILY_DATABASE_SQLITE
 from Config.Config import logger
 from DataLayer.Interfaces import DataAccess
@@ -247,7 +247,40 @@ class SQLiteDBFunctions(DataAccess):
         return self.cursor.fetchone() is not None
 
     def get_sponsor_by_id(self, sponsor_id):
-        pass
+        self.cursor.execute("""
+            SELECT * FROM sponsors
+            WHERE sponsor_id = ?
+        """, (sponsor_id,))
+        row = self.cursor.fetchone()
+        if not row:
+            logger.warning(f"No sponsor found for ID: {sponsor_id}")
+            return
+
+        address = Address(
+            building_number=row["building_number"],
+            street=row["street"],
+            apartment=row["apartment"],
+            city=row["city"],
+            state=row["state"],
+            zipcode=row["zipcode"]
+        )
+
+        return Sponsor(
+            sponsor_id=row["sponsor_id"],
+            ssn=row["ssn"],
+            dob=date.fromisoformat(row["dob"]),
+            first_name=row["first_name"],
+            middle_name=row["middle_name"],
+            last_name=row["last_name"],
+            gender=row["gender"],
+            phone=row["phone"],
+            insurance_company=row["insurance_company"],
+            insurance_FID=row["insurance_FID"],
+            address=address,
+            deductibles={},
+            visit_counts={},
+            beneficiaries=[]
+        )
 
     def get_sponsor_field(self, sponsor_id, field):
         pass

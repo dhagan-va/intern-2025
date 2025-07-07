@@ -1,6 +1,6 @@
 import uuid
+from datetime import date, timedelta
 
-from datetime import date
 import FileCreation.EDISegments as Seg
 from Config import Config
 from Config.Config import logger
@@ -17,7 +17,7 @@ class EDI270Generator:
         )
         self.num_messages = num_messages
         self.error_ctrl = ErrorInjector(num_messages, error_rate)
-        logger.info(f"Initializing EDI270Generator with {len(self.claims)} claims")
+        logger.info(f"Initializing EDI270Generator with {self.num_messages} claims")
 
     @staticmethod
     def split_provider_name(name, entity_type):
@@ -69,14 +69,22 @@ class EDI270Generator:
 
 
 class EDI837PGenerator:
-    def __init__(self, beneficiaries, providers, relationship_map=Config.RELATIONSHIP_MAP, num_messages=None,
-                 error_rate=None):
-        self.beneficiaries = beneficiaries
-        self.providers = providers
+    def __init__(self, transaction_funcs, relationship_map=Config.RELATIONSHIP_MAP, error_rate=None):
+        self.transaction_funcs = transaction_funcs
         self.relationship_map = relationship_map
         self.transaction_control_number = 1
-        self.num_messages = num_messages
-        self.error_ctrl = ErrorInjector(num_messages, error_rate)
+        yesterday = date.today() - timedelta(days=1)
+        self.claims = self.transaction_funcs.get_claim_transactions(
+            status="created",
+            date=yesterday.isoformat()
+        )
+        self.num_messages = len(self.claims)
+        self.error_ctrl = ErrorInjector(self.num_messages, error_rate)
+
+        logger.info(f"Initializing EDI837PGenerator with {self.num_messages} claims")
+
+    def get_num_messages(self):
+        return self.num_messages
 
     @staticmethod
     def split_provider_name(name, entity_type):
@@ -91,43 +99,57 @@ class EDI837PGenerator:
             return parts[0], parts[1]
 
     def create_claim_anesthesia(self, num, error_ctrl):
-        if num - 1 >= len(self.beneficiaries) or num - 1 >= len(self.providers) or num - 1 < 0:
-            logger.error(f"Index out of bounds for claim {num}. Beneficiaries or providers list is too short.")
-            return []
+        if num - 1 >= len(self.claims) or num <= 0:
+            logger.error(f"Index out of range for claim {num}")
+            return
 
-        bene = self.beneficiaries[num - 1]
-        provider = self.providers[num - 1]
-        last, first = self.split_provider_name(provider["name"], provider["entity_type"])
+        claim = self.claims[num - 1]
+        bene = self.transaction_funcs.family_db.get_beneficiary(claim.sponsor_id, claim.beneficiary_id)
+        sponsor = self.transaction_funcs.family_db.get_sponsor_by_id(claim.sponsor_id)
+        last, first = self.split_provider_name(claim.provider_name, claim.provider_entity_type)
         bene_relationship = self.relationship_map.get(bene.relationship)
         error_id = bene.beneficiary_id
 
+        if bene_relationship == "25" or bene_relationship == "26":
+            bene_relationship = "G8"
+
         segments = [Seg.ST("837", num).to_edi(),
-                    Seg.BHT("19", "00").to_edi(),
+                    Seg.BHT("19", "00", "837").to_edi(),
                     Seg.NM1("41", "2", "Submitter Group",
                             "", "", "46", "133052274", error_ctrl).to_edi(),
                     Seg.PER("IC", "2403018701", error_ctrl, error_id).to_edi(),
                     Seg.NM1("40", "2", "Receiver Group", "", "", "46", "84146", error_ctrl).to_edi(),
                     Seg.HL("1", "", 20, 1, error_ctrl, error_id).to_edi(),
-                    Seg.NM1("85", provider["entity_type"], last, first, "", "XX", provider["npi"], error_ctrl,
+                    Seg.NM1("85", claim.provider_entity_type, last, first, "", "XX", claim.provider_npi, error_ctrl,
                             error_id).to_edi(),
-                    Seg.N3(provider.get("address_line_1", "Random Street"),
-                           provider.get("address_line_2", "Random Apt"), "", error_ctrl, error_id).to_edi(),
-                    Seg.N4(provider.get("city", "Random City"), provider.get("state", "Random State"),
-                           provider.get("zipcode", "12345"), error_ctrl, error_id).to_edi(),
+                    Seg.N3(claim.provider_address_1, claim.provider_address_2, "", error_ctrl, error_id).to_edi(),
+                    Seg.N4(claim.provider_city, claim.provider_state, claim.provider_zip, error_ctrl, error_id).to_edi(),
                     Seg.REF("EI", "123456789", error_ctrl).to_edi(),
                     Seg.HL("2", "1", 22, 1, error_ctrl, error_id).to_edi(),
+                    # add SBR for bene
                     Seg.SBR("18", "123456").to_edi(),
-                    Seg.NM1("IL", "1", bene.last_name, bene.first_name, bene.middle_name,
-                            "MI", bene.beneficiary_id, error_ctrl).to_edi(),
-                    Seg.N3(bene.address.building_number, bene.address.street, bene.address.apartment,
+                    Seg.NM1("IL", "1", sponsor.last_name, sponsor.first_name, sponsor.middle_name,
+                            "MI", sponsor.sponsor_id, error_ctrl).to_edi(),
+                    Seg.N3(sponsor.address.building_number, sponsor.address.street, sponsor.address.apartment,
                            error_ctrl).to_edi(),
-                    Seg.N4(bene.address.city, bene.address.state, bene.address.zipcode, error_ctrl, error_id).to_edi(),
-                    Seg.DMG(bene.dob.strftime("%Y%m%d"), bene.gender).to_edi(),
+                    Seg.N4(sponsor.address.city, sponsor.address.state, sponsor.address.zipcode, error_ctrl,
+                           error_id).to_edi(),
+                    Seg.DMG(sponsor.dob.strftime("%Y%m%d"), sponsor.gender).to_edi(),
                     Seg.NM1("PR", 2, Config.N1_PAYER_QUALIFIER, "", "", "PI",
                             Config.N1_PAYER_ID, error_ctrl, error_id).to_edi(),
+                    Seg.N3("123", "Payer Ave").to_edi(),
+                    Seg.N4("Payer City", "MD", "99999", error_ctrl, error_id).to_edi(),
+                    Seg.HL("3", "2", 23, 0, error_ctrl, error_id).to_edi(),
+                    Seg.PAT(bene_relationship).to_edi(),
+                    Seg.NM1("QC", "1", bene.last_name, bene.first_name, bene.middle_name, "MI",
+                            bene.beneficiary_id, error_ctrl).to_edi(),
+                    Seg.N3(bene.address.building_number, bene.address.street, bene.address.apartment, error_ctrl,
+                           error_id).to_edi(),
+                    Seg.N4(bene.address.city, bene.address.state, bene.address.zipcode, error_ctrl, error_id).to_edi(),
+                    Seg.DMG(bene.dob.strftime("%Y%m%d"), bene.gender).to_edi(),
                     Seg.CLM("CLAIM2003", "827", "22", "B", "1").to_edi(),
                     Seg.HI("BK", "36616").to_edi(),
-                    Seg.NM1("82", "1", last, first, "", "XX", provider["npi"], error_ctrl).to_edi(),
+                    Seg.NM1("82", "1", last, first, "", "XX", claim.provider_npi, error_ctrl).to_edi(),
                     Seg.PRV("PE", "PXC", "207L00000X").to_edi(),
                     Seg.LX("1").to_edi(),
                     Seg.SV1("HC:00142:QK:QS:P1", "827", "MJ", "61", 1).to_edi(),
@@ -147,7 +169,7 @@ class EDI837PGenerator:
         for i in range(1, self.num_messages + 1):
             all_segments.extend(self.create_claim_anesthesia(i, self.error_ctrl))
 
-        all_segments.append(Seg.GE(self.transaction_control_number).to_edi())
+        all_segments.append(Seg.GE(self.num_messages).to_edi())
         all_segments.append(Seg.IEA().to_edi())
 
         return all_segments
@@ -236,4 +258,3 @@ class EDI834Generator:
         logger.info(f"Generated total of {self.transaction_control_number} transactions")
         logger.info(f"There were {self.error_ctrl.error_count} errors")
         return all_segments
-

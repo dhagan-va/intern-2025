@@ -1,12 +1,12 @@
-from datetime import datetime, date
+from datetime import datetime, date, timedelta
 
 from Config import Config
 from Config.Config import logger, number_of_tests_834, number_of_tests_270, get_error_rate
 from Config.Data_Visualizer import log_data, create_md
 from FileCreation.DataGenerator import SponsorDataGenerator, generate_claim_transactions
 from FileCreation.EDIGenerator import EDI834Generator, EDI270Generator, EDI837PGenerator
-from Repository.Transaction_Storage_Functions import TransactionFunctions
 from Repository.DatabaseFactory import get_database_backend
+from Repository.Transaction_Storage_Functions import TransactionFunctions
 
 transaction_funcs = TransactionFunctions()
 
@@ -33,16 +33,14 @@ def Run270Generator(num_messages=None, error_rate=None):
     logger.info(f"It took {end_time} to generate {num_messages} transactions for the 270 file")
 
 
-def Run837PGenerator(beneficiaries, providers, num_messages=None, error_rate=None):
+def Run837PGenerator(error_rate=None):
     now = datetime.now()
-    num_messages = number_of_tests_270(num_messages)
-    log_data["messages"]["count_837"] = num_messages
     error_rate = get_error_rate(error_rate)
     log_data["errors"]["error_rate_837"] = error_rate
 
     logger.info(f"Generating transactions from saved 837 information")
-    edi837 = EDI837PGenerator(beneficiaries=beneficiaries, providers=providers, num_messages=num_messages,
-                              error_rate=error_rate)
+    edi837 = EDI837PGenerator(transaction_funcs=transaction_funcs, error_rate=error_rate)
+    log_data["messages"]["count_837"] = edi837.get_num_messages()
     logger.info(f"Generating transactions into EDI file")
     edi_out = edi837.combine_segments()
 
@@ -51,7 +49,7 @@ def Run837PGenerator(beneficiaries, providers, num_messages=None, error_rate=Non
 
     end_time = datetime.now() - now
     log_data["messages"]["time_837"] = end_time.total_seconds()
-    logger.info(f"It took {end_time} to generate {num_messages} transactions for the 837 file")
+    logger.info(f"It took {end_time} to generate {edi837.get_num_messages()} transactions for the 837 file")
 
 
 def Run834Generator(num_messages=None, error_rate=None):
@@ -110,13 +108,15 @@ def CreateClaimDB(num_gen, input_date=date.today()):
 
 if __name__ == "__main__":
     curr = datetime.now()
-    num = 10000
+    num = 100
+
+    yesterday = date.today() - timedelta(days=1)
 
     sponsors = GenerateSponsors(num)
-    CreateClaimDB(num, date.today())
+    CreateClaimDB(num, yesterday)
 
     Run270Generator(num, 0)
-    # Run837PGenerator(transaction_store, num, 0)
+    Run837PGenerator(0)
     #
     # Run834Generator(sponsors, num, 0)
 

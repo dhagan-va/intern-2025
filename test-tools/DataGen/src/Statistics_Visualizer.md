@@ -18,19 +18,19 @@ The 270 file is used to request information about a member's health insurance el
 ```mermaid
 pie title Message type distribution
     "834" : 0
-    "270" : 10000
-    "837" : 0
+    "270" : 100
+    "837" : 100
 ```
 
 
-Total Number of Messages Generated: **10000**
+Total Number of Messages Generated: **200**
 ## Throughput
 ```mermaid
 xychart-beta
     title "Throughput (Transactions per Second)"
     x-axis ["834", "270", "837"]
-    y-axis "TPS" 0 --> 4218.629692113032
-    bar [0.0, 4217.629692113032, 0.0]
+    y-axis "TPS" 0 --> 4001.0
+    bar [0.0, 4000.0, 3448.275862068965]
 ```
 
 
@@ -59,17 +59,17 @@ xychart-beta
 xychart-beta
     title "Family Size Histogram"
     x-axis ["1", "2", "3", "4"]
-    y-axis "Count" 0 --> 10042
-    bar [9969, 10000, 10041, 9977]
+    y-axis "Count" 0 --> 15
+    bar [14, 13, 8, 9]
 ```
 
 
 ```mermaid
 pie title Family Size Breakdown
-    "1" : 9969
-    "2" : 10000
-    "3" : 10041
-    "4" : 9977
+    "1" : 14
+    "2" : 13
+    "3" : 8
+    "4" : 9
 ```
 
 
@@ -78,17 +78,17 @@ pie title Family Size Breakdown
 xychart-beta
     title "Beneficiary Code Distribution"
     x-axis ["Spouse (01)", "Child (19)", "Caregiver (26)", "Ex-Spouse (25)"]
-    y-axis "Count" 0 --> 25177
-    bar [24999, 25176, 25022, 24803]
+    y-axis "Count" 0 --> 29
+    bar [27, 19, 26, 28]
 ```
 
 
 ```mermaid
 pie title Beneficiary Relationship Types
-    "Spouse (01)" : 24999
-    "Child (19)" : 25176
-    "Caregiver (26)" : 25022
-    "Ex-Spouse (25)" : 24803
+    "Spouse (01)" : 27
+    "Child (19)" : 19
+    "Caregiver (26)" : 26
+    "Ex-Spouse (25)" : 28
 ```
 
 
@@ -113,4 +113,4 @@ xychart-beta
 
 
 ## Average 270s per Beneficiary
-- Average 270s per Beneficiary: **0.10**
+- Average 270s per Beneficiary: **0.00**

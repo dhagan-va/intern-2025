@@ -126,6 +126,8 @@ class SponsorDataGenerator:
         sponsor_address = self.create_address()
         sponsor_amt_data = create_amt_data()
         sponsor_gender = self.fake.passport_gender()
+        if sponsor_gender == "X":
+            sponsor_gender = random.choice(["M", "F"])
         sponsor_first = self.fake.first_name_male() if sponsor_gender == 'M' else self.fake.first_name_female()
 
         sponsor = Sponsor(
@@ -155,6 +157,8 @@ class SponsorDataGenerator:
         beneficiary_id = f'{beneficiary_ssn.replace("-", "")}V11111111'
         beneficiary_amt_data = create_amt_data()
         beneficiary_gender = self.fake.passport_gender()
+        if beneficiary_gender == "X":
+            beneficiary_gender = random.choice(["M", "F"])
         sponsor_first = self.fake.first_name_male() if beneficiary_gender == 'M' else self.fake.first_name_female()
 
         beneficiary = Beneficiary(

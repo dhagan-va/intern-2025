@@ -12,7 +12,7 @@ class EDI270Generator:
     def __init__(self, transaction_funcs, num_messages=None, error_rate=None):
         self.transaction_funcs = transaction_funcs
         self.claims = self.transaction_funcs.get_claim_transactions(
-            status="created",
+            status="Created",
             date=date.today().isoformat()
         )
         self.num_messages = num_messages
@@ -65,6 +65,9 @@ class EDI270Generator:
         all_segments = []
         for i in range(1, self.num_messages + 1):
             all_segments.extend(self.create_transaction(i, self.error_ctrl))
+
+        claim_ids = [claim.claim_id for claim in self.claims]
+        self.transaction_funcs.update_claims_status(claim_ids, "270 Created")
         return all_segments
 
 
@@ -75,7 +78,7 @@ class EDI837PGenerator:
         self.transaction_control_number = 1
         yesterday = date.today() - timedelta(days=1)
         self.claims = self.transaction_funcs.get_claim_transactions(
-            status="created",
+            status="270 Created",
             date=yesterday.isoformat()
         )
         self.num_messages = len(self.claims)
@@ -172,19 +175,31 @@ class EDI837PGenerator:
         all_segments.append(Seg.GE(self.num_messages).to_edi())
         all_segments.append(Seg.IEA().to_edi())
 
+        claim_ids = [claim.claim_id for claim in self.claims]
+        self.transaction_funcs.update_claims_status(claim_ids, "837 Created")
         return all_segments
 
 
 class EDI834Generator:
-    def __init__(self, sender=Config.SENDER_ID, receiver=Config.RECEIVER_ID, relationship_map=Config.RELATIONSHIP_MAP,
-                 num_messages=None, error_rate=None):
+    def __init__(self, transaction_funcs, sender=Config.SENDER_ID, receiver=Config.RECEIVER_ID, relationship_map=Config.RELATIONSHIP_MAP,
+                 error_rate=None):
+        self.transaction_funcs = transaction_funcs
         self.sender = sender
         self.receiver = receiver
         self.relationship_map = relationship_map
+        week_before = date.today() - timedelta(days=7)
+        # Change to 835 Created after EDI835Generator is created
+        self.claims = self.transaction_funcs.get_claim_transactions(
+            status="837 Created",
+            date=week_before.isoformat()
+        )
         self.transaction_control_number = 0
-        self.num_messages = num_messages
-        self.error_ctrl = ErrorInjector(num_messages, error_rate)
+        self.num_messages = len(self.claims)
+        self.error_ctrl = ErrorInjector(self.num_messages, error_rate)
         logger.debug(f"Initialized EDI834Generator")
+
+    def get_num_messages(self):
+        return self.num_messages
 
     def create_member(self, member, error_ctrl):
         self.transaction_control_number += 1

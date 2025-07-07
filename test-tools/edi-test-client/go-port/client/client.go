@@ -15,3 +15,15 @@ func Init(cfg *config.Config) *LoadClient {
 		Endpoint: cfg.Endpoint,
 	}
 }
+
+func Start(client *LoadClient) error {
+	return nil
+}
+
+func Stop(client *LoadClient) error {
+	return nil
+}
+
+func scheduler(client *LoadClient) {
+
+}

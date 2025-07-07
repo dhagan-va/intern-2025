@@ -113,6 +113,7 @@ if __name__ == "__main__":
     yesterday = date.today() - timedelta(days=1)
 
     sponsors = GenerateSponsors(num)
+    CreateClaimDB(num, date.today())
     CreateClaimDB(num, yesterday)
 
     Run270Generator(num, 0)

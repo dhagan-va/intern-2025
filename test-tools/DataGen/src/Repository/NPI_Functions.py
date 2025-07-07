@@ -1,11 +1,12 @@
-import requests
-import zipfile
-import io
 import datetime
+import io
+import zipfile
+from pathlib import Path
+
 import pandas as pd
+import requests
 
 from Config.Log_Config import get_logger
-from pathlib import Path
 
 logger = get_logger(__name__)
 
@@ -104,15 +105,16 @@ class NPIFunctions:
     def get_random_provider(self, state):
         state = state.upper()
         org_col = "Provider Organization Name (Legal Business Name)"
+        addr_col = "Provider First Line Business Practice Location Address"
         last_col = "Provider Last Name (Legal Name)"
         state_col = "Provider Business Practice Location Address State Name"
         if state not in self.providers_by_state:
             df = self.load_csv()
 
             df_filtered = df[
-                (df[org_col].notna() | df[last_col]) &
                 (df[state_col] == state) &
-                (df[org_col].isna() | (df[org_col].str.len() <= 55))
+                (df[addr_col].notna() & df[addr_col].str.len().le(55)) &
+                ((df[org_col].notna() & df[org_col].str.len().le(55)) | (df[org_col].isna() & df[last_col]))
                 ]
 
             if df_filtered.empty:
@@ -142,4 +144,3 @@ class NPIFunctions:
             "zipcode": provider.get("Provider Business Practice Location Address Postal Code", ""),
             "phone": provider.get("Provider Business Practice Location Address Telephone Number", "")
         }
-

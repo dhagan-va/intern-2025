@@ -171,3 +171,4 @@ flowchart TD
 
   G --> H[Claim Adjudication]
   H --> I[835 - Remittance Advice<br/>Sent to Provider]
+

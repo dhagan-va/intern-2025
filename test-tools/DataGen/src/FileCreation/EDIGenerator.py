@@ -129,8 +129,10 @@ class EDI837PGenerator:
                     Seg.HL("1", "", 20, 1, error_ctrl, error_id).to_edi(),
                     Seg.NM1("85", claim.provider_entity_type, last, first, "", "XX", claim.provider_npi, error_ctrl,
                             error_id).to_edi(),
-                    Seg.N3(claim.provider_address_1, claim.provider_address_2, "", error_ctrl, error_id).to_edi(),
-                    Seg.N4(claim.provider_city, claim.provider_state, claim.provider_zip, error_ctrl, error_id).to_edi(),
+                    Seg.N3(claim.provider_address_1, claim.provider_address_2, "", error_ctrl, error_id,
+                           True).to_edi(),
+                    Seg.N4(claim.provider_city, claim.provider_state, claim.provider_zip, error_ctrl,
+                           error_id).to_edi(),
                     Seg.REF("EI", "123456789", error_ctrl).to_edi(),
                     Seg.HL("2", "1", 22, 1, error_ctrl, error_id).to_edi(),
                     # add SBR for bene
@@ -205,6 +207,26 @@ class EDI277CAGenerator:
             return
 
         claim = self.claims[num - 1]
+
+        segments = [Seg.ISA().to_edi(),
+                    Seg.GS("HN", Config.SENDER_ID, Config.RECEIVER_ID).to_edi(),
+                    Seg.ST("277", num).to_edi(),
+
+                    Seg.GE(1).to_edi(),
+                    Seg.IEA().to_edi()
+                    ]
+
+        return segments
+
+    def combine_segments(self):
+        all_segments = []
+        for i in range(1, self.num_messages + 1):
+            all_segments.extend(self.create_transaction(i, self.error_ctrl))
+
+        claim_ids = [claim.claim_id for claim in self.claims]
+        self.transaction_funcs.update_claims_status(claim_ids, "277CA Created")
+        return all_segments
+
 
 class EDI834Generator:
     def __init__(self, transaction_funcs, sender=Config.SENDER_ID, receiver=Config.RECEIVER_ID,

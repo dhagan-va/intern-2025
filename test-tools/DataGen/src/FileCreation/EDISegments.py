@@ -214,12 +214,14 @@ class PER:
 
 # Address Information
 class N3:
-    def __init__(self, building_number, street, apartment: Optional[str] = None, error_ctrl=None, error_id=None):
+    def __init__(self, building_number, street, apartment: Optional[str] = None, error_ctrl=None,
+                 error_id=None, npi=False):
         self.building_number = building_number
         self.street = street
         self.apartment = apartment if apartment else ""
         self.error_ctrl = error_ctrl
         self.error_id = error_id
+        self.npi = npi
 
     def to_edi(self):
         street = self.street
@@ -230,6 +232,8 @@ class N3:
             street = erroneous
         else:
             logger.debug("Generating N3 segment")
+        if self.npi:
+            return f"N3*{self.building_number}*{street}~\n"
         return f"N3*{self.building_number}{" "}{street}*{self.apartment}~\n"
 
 

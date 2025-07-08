@@ -47,8 +47,8 @@ class EDI270Generator:
                     Seg.ST(270, num).to_edi(),
                     Seg.BHT("22", "13").to_edi(),
                     Seg.HL(1, "", 20, 1, error_ctrl, error_id).to_edi(),
-                    Seg.NM1("PR", 2, Config.N1_PAYER_QUALIFIER, "", "", "PI",
-                            Config.N1_PAYER_ID, error_ctrl, error_id).to_edi(),
+                    Seg.NM1("PR", 2, Config.PAYER_QUALIFIER, "", "", "PI",
+                            Config.PAYER_ID, error_ctrl, error_id).to_edi(),
                     Seg.HL(2, 1, 21, 1, error_ctrl, error_id).to_edi(),
                     Seg.NM1("1P", claim.provider_entity_type, last, first, "", "XX", claim.provider_npi, error_ctrl,
                             error_id).to_edi(),
@@ -144,8 +144,8 @@ class EDI837PGenerator:
                     Seg.N4(sponsor.address.city, sponsor.address.state, sponsor.address.zipcode, error_ctrl,
                            error_id).to_edi(),
                     Seg.DMG(sponsor.dob.strftime("%Y%m%d"), sponsor.gender).to_edi(),
-                    Seg.NM1("PR", 2, Config.N1_PAYER_QUALIFIER, "", "", "PI",
-                            Config.N1_PAYER_ID, error_ctrl, error_id).to_edi(),
+                    Seg.NM1("PR", 2, Config.PAYER_QUALIFIER, "", "", "PI",
+                            Config.PAYER_ID, error_ctrl, error_id).to_edi(),
                     Seg.N3("123", "Payer Ave").to_edi(),
                     Seg.N4("Payer City", "MD", "99999", error_ctrl, error_id).to_edi(),
                     Seg.HL("3", "2", 23, 0, error_ctrl, error_id).to_edi(),
@@ -206,12 +206,20 @@ class EDI277CAGenerator:
             logger.error(f"Index out of range for claim {num}")
             return
 
+        self.error_ctrl.reset_error_inserted()
         claim = self.claims[num - 1]
+        error_id = claim.beneficiary_id
+        bene = self.transaction_funcs.family_db.get_beneficiary(claim.sponsor_id, claim.beneficiary_id)
+        payer_claim_id = f"PAYER{claim.claim_id[-4:]}"
 
         segments = [Seg.ISA().to_edi(),
                     Seg.GS("HN", Config.SENDER_ID, Config.RECEIVER_ID).to_edi(),
                     Seg.ST("277", num).to_edi(),
-
+                    Seg.BHT("19", "00").to_edi(),
+                    Seg.HL("1", "", 20, 1).to_edi(),
+                    Seg.NM1("41", "2", "Receiver Org", "", "", "46", Config.SENDER_ID, error_ctrl).to_edi(),
+                    Seg.HL("2", "1", 21, 1).to_edi(),
+                    Seg.
                     Seg.GE(1).to_edi(),
                     Seg.IEA().to_edi()
                     ]
@@ -258,9 +266,9 @@ class EDI834Generator:
 
         segments = [Seg.ST(834, self.transaction_control_number).to_edi(),
                     Seg.BGN(uuid.uuid4().hex.upper()).to_edi(),
-                    Seg.N1("P5", Config.N1_SPONSOR_QUALIFIER, Config.N1_SPONSOR_ID, error_ctrl,
+                    Seg.N1("P5", Config.SPONSOR_QUALIFIER, Config.SPONSOR_ID, error_ctrl,
                            error_id).to_edi(),
-                    Seg.N1("IN", Config.N1_PAYER_QUALIFIER, Config.N1_PAYER_ID, error_ctrl, error_id).to_edi(),
+                    Seg.N1("IN", Config.PAYER_QUALIFIER, Config.PAYER_ID, error_ctrl, error_id).to_edi(),
                     Seg.INS(relationship_code).to_edi(),
                     Seg.REF("0F", sponsor.sponsor_id, error_ctrl).to_edi(),
                     Seg.REF("6O", bene.beneficiary_id, error_ctrl).to_edi(),

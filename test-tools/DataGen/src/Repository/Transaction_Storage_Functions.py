@@ -1,6 +1,6 @@
 import sqlite3
 
-from Config.Config import logger, get_local_db_path,FAMILY_DATABASE_DIRECTORY, FAMILY_DATABASE_SQLITE, NPI_CSV_PATH
+from Config.Config import logger, get_local_db_path, FAMILY_DATABASE_DIRECTORY, FAMILY_DATABASE_SQLITE, NPI_CSV_PATH
 from Repository.DatabaseFactory import get_database_backend
 from DataLayer.Datatypes import ClaimTransaction
 from Repository.NPI_Functions import NPIFunctions
@@ -105,4 +105,3 @@ class TransactionFunctions:
             WHERE claim_id = ?
         """, [(new_status, cid) for cid in claim_ids])
         self.connect.commit()
-

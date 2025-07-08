@@ -84,7 +84,7 @@ class ST:
 
     def to_edi(self):
         logger.debug(f"Generating ST segment for an {self.file_type} file, transaction #{self.num}")
-        return f"ST*{self.file_type}*{self.num:04}~\n"
+        return f"ST*{self.file_type}*{self.num:06}~\n"
 
 
 # Transaction Set Trailer

@@ -29,8 +29,8 @@ Total Number of Messages Generated: **200**
 xychart-beta
     title "Throughput (Transactions per Second)"
     x-axis ["834", "270", "837"]
-    y-axis "TPS" 0 --> 3704.155088135091
-    bar [0.0, 3703.155088135091, 3225.8064516129034]
+    y-axis "TPS" 0 --> 3449.275862068965
+    bar [0.0, 3448.275862068965, 3125.0]
 ```
 
 
@@ -97,8 +97,8 @@ pie title Beneficiary Relationship Types
 xychart-beta
     title "AMT (deductible) Averages"
     x-axis ["D2", "FK", "R"]
-    y-axis "Amount" 0 --> 51052.58346534653
-    bar [48506.10663366336, 50052.58346534653, 46622.208415841575]
+    y-axis "Amount" 0 --> 53713.8785148515
+    bar [48640.78673267327, 52609.03396039604, 52713.8785148515]
 ```
 
 
@@ -107,8 +107,8 @@ xychart-beta
 xychart-beta
     title "AMT (visit) Averages"
     x-axis ["C1", "P3", "B9"]
-    y-axis "Number of Visits" 0 --> 8.504950495049505
-    bar [7.5049504950495045, 6.792079207920792, 7.198019801980198]
+    y-axis "Number of Visits" 0 --> 8.96039603960396
+    bar [7.079207920792079, 7.9405940594059405, 7.96039603960396]
 ```
 
 

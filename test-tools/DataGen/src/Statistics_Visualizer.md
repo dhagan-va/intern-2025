@@ -19,18 +19,18 @@ The 270 file is used to request information about a member's health insurance el
 pie title Message type distribution
     "834" : 0
     "270" : 100
-    "837" : 200
+    "837" : 299
 ```
 
 
-Total Number of Messages Generated: **300**
+Total Number of Messages Generated: **399**
 ## Throughput
 ```mermaid
 xychart-beta
     title "Throughput (Transactions per Second)"
     x-axis ["834", "270", "837"]
-    y-axis "TPS" 0 --> 5406.405405405406
-    bar [0.0, 3225.7023966968804, 5405.405405405406]
+    y-axis "TPS" 0 --> 6796.9179034934195
+    bar [0.0, 2446.722615057131, 6795.9179034934195]
 ```
 
 
@@ -97,8 +97,8 @@ pie title Beneficiary Relationship Types
 xychart-beta
     title "AMT (deductible) Averages"
     x-axis ["D2", "FK", "R"]
-    y-axis "Amount" 0 --> 50913.71696517412
-    bar [45282.026666666694, 46349.341691542286, 49913.71696517412]
+    y-axis "Amount" 0 --> 50350.22080000001
+    bar [46243.449333333345, 49350.22080000001, 49166.688966666676]
 ```
 
 
@@ -107,8 +107,8 @@ xychart-beta
 xychart-beta
     title "AMT (visit) Averages"
     x-axis ["C1", "P3", "B9"]
-    y-axis "Number of Visits" 0 --> 8.606965174129353
-    bar [7.4278606965174125, 7.606965174129353, 7.039800995024875]
+    y-axis "Number of Visits" 0 --> 8.633333333333333
+    bar [7.35, 7.633333333333334, 7.333333333333333]
 ```
 
 

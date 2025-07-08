@@ -133,12 +133,13 @@ if __name__ == "__main__":
 
     yesterday = date.today() - timedelta(days=1)
     week_before = date.today() - timedelta(days=7)
+
     sponsors = GenerateSponsors(num)
     CreateClaimDB(num, date.today(), "Created")
     CreateClaimDB(num, yesterday, "270 Created")
     CreateClaimDB(num, week_before, "837 Created")
 
-    Run270Generator(num, 0, upload_s3=True)
+    Run270Generator(num, 0, upload_s3=Config.UPLOAD_TO_S3)
     Run837PGenerator(0)
     Run834Generator(0)
 

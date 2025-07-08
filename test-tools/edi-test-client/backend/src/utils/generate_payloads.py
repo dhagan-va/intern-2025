@@ -1,5 +1,3 @@
-import os
-import sys
 from pathlib import Path
 from datetime import datetime
 import shutil
@@ -18,19 +16,16 @@ import sys
 sys.path.insert(0, 'src')
 from RunGenerator import Run270Generator, GenerateSponsors, CreateClaimDB
 from Config import Config
-from datetime import date, timedelta
+from datetime import date
 from Repository.DatabaseFactory import get_database_backend
 
 db = get_database_backend()
-current_users = db.total_beneficiaries()
-
-if current_users < {num_messages}:
+if db.total_beneficiaries() < {num_messages}:
     GenerateSponsors({num_messages})
 
-today = date.today()
-CreateClaimDB({num_messages}, today, "Created")
-
+CreateClaimDB({num_messages}, date.today(), "Created")
 Run270Generator(num_messages={num_messages}, error_rate={error_rate}, upload_s3=False)
+
 output_path = Config.get_edi_path(Config.EDI270_PATH, Config.EDI270_FILE_NAME)
 print(f"GENERATED_FILE: {{output_path}}")
 """
@@ -77,6 +72,5 @@ def generate_edi_270_payloads(output_dir: str = "payloads", num_messages: int = 
 
 
 if __name__ == "__main__":
-    print("Generating EDI 270 payloads...")
     files = generate_edi_270_payloads(num_messages=100, error_rate=0.0)
     print(f"Generated: {files}")

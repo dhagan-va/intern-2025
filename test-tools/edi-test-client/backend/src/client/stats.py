@@ -16,6 +16,10 @@ class LiveStats:
         with self.lock:
             return {
                 "count": len(self.latencies),
-                "avg_latency": sum(self.latencies) / len(self.latencies),
-                "codes": dict(self.codes)
+                "avg_latency": (
+                    sum(self.latencies) / len(self.latencies)
+                    if len(self.latencies) != 0
+                    else 0
+                ),
+                "codes": dict(self.codes),
             }

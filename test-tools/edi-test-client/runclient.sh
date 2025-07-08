@@ -1,2 +1,2 @@
-cd src/client
+cd backend/src/client
 python main.py

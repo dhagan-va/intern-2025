@@ -10,13 +10,21 @@ import time
 
 def rps_listener(client: LoadClient):
     while client._running:
-        print("Enter value to update RPS or q to quit.")
+        print("Enter r to update RPS, t for endpoint, or q to quit.")
         line = input()
         line = line.strip()
         if line.lower() == "q":
             client.stop()
-        else:
+        elif line.lower() == "r":
+            line = input()
+            line = line.strip()
             client.update_rps(float(line))
+        elif line.lower() == "t":
+            line = input()
+            line = line.strip()
+            client.update_transaction(int(line))
+        else:
+            print("invalid")
 
 
 def main():

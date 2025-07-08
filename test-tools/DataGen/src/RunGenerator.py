@@ -105,8 +105,8 @@ def GenerateSponsors(num_gen):
     current_users = db.total_beneficiaries()
 
     # want to create at least 100_000 users for db
-    if current_users < 100_000:
-        num_gen = 100_000 - current_users
+    if current_users < 1000:
+        num_gen = 1000 - current_users
 
     sponsors_created = data_creation.store_sponsor_and_beneficiaries(num_gen)
 
@@ -123,7 +123,7 @@ def CreateClaimDB(num_gen, input_date=date.today(), status="Created"):
                                          status=status)
 
     end_time = datetime.now() - now
-    logger.info(f"It took {end_time} to generate {num_gen} claims")
+    logger.info(f"It took {end_time} to generate {num_gen} claims for status {status}")
     return claims
 
 

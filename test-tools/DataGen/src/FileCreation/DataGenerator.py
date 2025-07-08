@@ -1,4 +1,5 @@
 import random
+import uuid
 
 from faker import Faker
 
@@ -24,7 +25,7 @@ def generate_claim_transactions(num_claims, transaction_funcs, input_date=date.t
         claim = ClaimTransaction(
             status=status,
             date=input_date,
-            claim_id=f"CLM{bene.beneficiary_id}",
+            claim_id=f"CLM{uuid.uuid4().hex[:12]}",
             service_line_id=f"SRV{bene.beneficiary_id}",
             sponsor_id=sponsor_id,
             beneficiary_id=bene.beneficiary_id,

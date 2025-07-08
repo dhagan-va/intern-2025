@@ -15,7 +15,7 @@ class EDI270Generator:
             status="Created",
             date=date.today().isoformat()
         )
-        self.num_messages = num_messages
+        self.num_messages = len(self.claims)
         self.error_ctrl = ErrorInjector(num_messages, error_rate)
         logger.info(f"Initializing EDI270Generator with {self.num_messages} claims")
 
@@ -154,7 +154,8 @@ class EDI837PGenerator:
                            error_id).to_edi(),
                     Seg.N4(bene.address.city, bene.address.state, bene.address.zipcode, error_ctrl, error_id).to_edi(),
                     Seg.DMG(bene.dob.strftime("%Y%m%d"), bene.gender).to_edi(),
-                    Seg.CLM("CLAIM2003", "827", "22", "B", "1").to_edi(),
+                    Seg.CLM(claim.claim_id, "827", "22", "B", "1").to_edi(),
+                    Seg.REF("D9", claim.claim_id, error_ctrl).to_edi(),
                     Seg.HI("BK", "36616").to_edi(),
                     Seg.NM1("82", "1", last, first, "", "XX", claim.provider_npi, error_ctrl).to_edi(),
                     Seg.PRV("PE", "PXC", "207L00000X").to_edi(),
@@ -183,6 +184,27 @@ class EDI837PGenerator:
         self.transaction_funcs.update_claims_status(claim_ids, "837 Created")
         return all_segments
 
+
+class EDI277CAGenerator:
+    def __init__(self, transaction_funcs, error_rate=None):
+        self.transaction_funcs = transaction_funcs
+        yesterday = date.today() - timedelta(days=1)
+        self.claims = self.transaction_funcs.get_claim_transactions(
+            status="837 Created",
+            date=yesterday
+        )
+        self.num_messages = len(self.claims)
+        self.error_ctrl = ErrorInjector(self.num_messages, error_rate)
+
+    def get_num_messages(self):
+        return self.num_messages
+
+    def create_transaction(self, num, error_ctrl):
+        if num - 1 >= len(self.claims) or num <= 0:
+            logger.error(f"Index out of range for claim {num}")
+            return
+
+        claim = self.claims[num - 1]
 
 class EDI834Generator:
     def __init__(self, transaction_funcs, sender=Config.SENDER_ID, receiver=Config.RECEIVER_ID,

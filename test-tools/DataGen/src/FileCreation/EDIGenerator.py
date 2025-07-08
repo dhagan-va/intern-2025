@@ -63,6 +63,7 @@ class EDI270Generator:
 
         if self.error_ctrl.error_inserted is True:
             log_data["errors"]["error_ct_270"] += 1
+            logger.warning(f"Error added in Message {num}")
         return segments
 
     def combine_segments(self):

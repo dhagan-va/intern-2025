@@ -123,8 +123,8 @@ def create_md():
             title="Throughput (Transactions per Second)",
             x=[270, 837, 277, 834],
             y="TPS",
-            values=[throughput_834, throughput_270, throughput_837],
-            y_max=max(throughput_834, throughput_270, throughput_837) + 1
+            values=[throughput_270, throughput_837, throughput_277CA, throughput_834],
+            y_max=max(throughput_270, throughput_837, throughput_277CA, throughput_834) + 1
         ))
 
         f.write("## Error Count\n")

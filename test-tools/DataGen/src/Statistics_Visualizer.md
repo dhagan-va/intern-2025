@@ -29,8 +29,8 @@ Total Number of Messages Generated: **200**
 xychart-beta
     title "Throughput (Transactions per Second)"
     x-axis ["834", "270", "837"]
-    y-axis "TPS" 0 --> 3704.429375601807
-    bar [0.0, 3703.429375601807, 952.3900227621216]
+    y-axis "TPS" 0 --> 2778.777777777778
+    bar [0.0, 2777.777777777778, 2631.6482012684546]
 ```
 
 
@@ -97,8 +97,8 @@ pie title Beneficiary Relationship Types
 xychart-beta
     title "AMT (deductible) Averages"
     x-axis ["D2", "FK", "R"]
-    y-axis "Amount" 0 --> 52485.57920792081
-    bar [51343.96504950496, 51485.57920792081, 51347.26158415841]
+    y-axis "Amount" 0 --> 1000.0
+    bar [0.0, 0.0, 0.0]
 ```
 
 
@@ -107,10 +107,10 @@ xychart-beta
 xychart-beta
     title "AMT (visit) Averages"
     x-axis ["C1", "P3", "B9"]
-    y-axis "Number of Visits" 0 --> 9.267326732673267
-    bar [7.564356435643564, 7.267326732673268, 8.267326732673267]
+    y-axis "Number of Visits" 0 --> 1.0
+    bar [0.0, 0.0, 0.0]
 ```
 
 
 ## Average 270s per Beneficiary
-- Average 270s per Beneficiary: **0.08**
+- Average 270s per Beneficiary: **0.09**

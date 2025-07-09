@@ -160,15 +160,29 @@ Accumulator Data (AMT in 834) is also in 837, 277CA, 835
  
 Claim Data (claim amount, diagnosis, procedure) shared in 837 and 277CA
 
+# EDI Transaction Flow Starting from 270
+
+<div style="display: flex; gap: 20px; align-items: flex-start; flex-wrap: wrap;">
+
+<div style="flex: 1;">
+
 ```mermaid
 flowchart TD
-  A[834 - Enrollment<br/>Sent from Sponsor to Payer] --> B[Member Enrollment<br/>Database Updated]
+    A["270 Eligibility Inquiry"]
+    A --> B["837 Claim Submission"]
+    B --> C["277CA Claim Acknowledgment"]
+    C --> D["835 Claim Payment"]
+    D --> E["834 Enrollment Update"]
+```
+</div> <div style="flex: 1;">
 
-  C[270 - Eligibility Inquiry<br/>Sent from Provider to Payer] --> D[271 - Eligibility Response<br/>Returned to Provider]
-
-  E[837 - Claim Submission<br/>Sent from Provider to Payer] --> F[Claim Receipt]
-  F --> G[277CA - Acknowledgment<br/>Sent back to Provider]
-
-  G --> H[Claim Adjudication]
-  H --> I[835 - Remittance Advice<br/>Sent to Provider]
+```mermaid
+flowchart TD
+    A["270: Request for patient eligibility & benefits info"]
+    A --> B["837: Healthcare claim submission"]
+    B --> C["277CA: Acknowledges 837"]
+    C --> D["835: Payment to providers"]
+    D --> E["834: Update enrollment data (e.g., AMT)"]
+```
+</div> </div>
 

@@ -5,8 +5,6 @@ from Repository.DatabaseFactory import get_database_backend
 from DataLayer.Datatypes import ClaimTransaction
 from Repository.NPI_Functions import NPIFunctions
 
-transaction_instance = None
-
 
 class TransactionFunctions:
     def __init__(self, file=get_local_db_path(FAMILY_DATABASE_DIRECTORY, FAMILY_DATABASE_SQLITE)):
@@ -85,7 +83,7 @@ class TransactionFunctions:
             self.connect.commit()
         except Exception as e:
             self.connect.rollback()
-            logger.error(f"No sponsors were saved due to an error: {e}")
+            logger.error(f"No claims were saved due to an error: {e}")
             raise e
 
     def get_claim_transactions(self, status, date):

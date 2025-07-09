@@ -175,7 +175,7 @@ class SQLiteDBFunctions(DataAccess):
             raise e
 
     def get_random_beneficiary(self, count):
-        self.cursor.execute(f"""
+        self.cursor.execute("""
             SELECT *
             FROM beneficiaries
             ORDER BY RANDOM()

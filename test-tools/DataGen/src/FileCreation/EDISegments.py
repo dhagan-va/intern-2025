@@ -306,19 +306,22 @@ class DTP:
 
 
 class BHT:
-    def __init__(self, transaction_id, purpose_code, file_type=None):
+    def __init__(self, transaction_id, purpose_code, unique_id, file_type=None):
         now = datetime.now()
         self.file_type = file_type
         self.transaction_id = transaction_id
         self.purpose_code = purpose_code
+        self.unique_id = unique_id
         self.date = now.strftime("%Y%m%d")
         self.time = now.strftime("%H%M")
 
     def to_edi(self):
         logger.debug(f"Generating BHT segment")
-        segment = f"BHT*00{self.transaction_id}*{self.purpose_code}*123456789*{self.date}*{self.time}"
-        if self.file_type == "837" or self.file_type == "277CA":
+        segment = f"BHT*00{self.transaction_id}*{self.purpose_code}*{self.unique_id}*{self.date}*{self.time}"
+        if self.file_type == "837":
             segment += "*CH"
+        elif self.file_type == "277CA":
+            segment += "*TH"
         return segment + "~\n"
 
 
@@ -340,7 +343,11 @@ class HL:
             )
         else:
             logger.debug(f"Generating HL {hl_code} segment")
-        return f"HL*{self.hl_id}*{self.hl_parent}*{hl_code}*{self.children}~\n"
+        segment = f"HL*{self.hl_id}*{self.hl_parent}*{hl_code}"
+        if self.children is not None:
+            segment += f"*{self.children}"
+
+        return segment + "~\n"
 
 
 class EQ:
@@ -439,10 +446,9 @@ class PAT:
 
 
 class TRN:
-    def __init__(self, trace_code, ref_id, orig_id, error_ctrl, error_id):
+    def __init__(self, trace_code, ref_id, error_ctrl, error_id):
         self.trace_code = trace_code
         self.ref_id = ref_id
-        self.orig_id = orig_id
         self.error_ctrl = error_ctrl
         self.error_id = error_id
 
@@ -455,16 +461,16 @@ class TRN:
         else:
             logger.debug("Generating TRN segment")
 
-        return f"TRN*{self.trace_code}*{ref_id}*{self.orig_id}~\n"
+        return f"TRN*{self.trace_code}*{ref_id}~\n"
 
 
 class STC:
-    def __init__(self, status_info, action_code, ref_num, error_ctrl, error_id):
+    def __init__(self, status_info, action_code, units, error_ctrl, error_id):
         now = datetime.now()
         self.status_info = status_info
         self.action_code = action_code
         self.date = now.strftime("%Y%m%d")
-        self.ref_num = ref_num
+        self.units = units
         self.error_ctrl = error_ctrl
         self.error_id = error_id
 
@@ -477,7 +483,7 @@ class STC:
         else:
             logger.debug("Generating STC segment")
 
-        return f"STC*{status_info}*{self.date}*{self.action_code}*{self.ref_num}~\n"
+        return f"STC*{status_info}*{self.date}*{self.action_code}*{self.units}~\n"
 
 
 class SVC:

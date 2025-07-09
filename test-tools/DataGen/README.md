@@ -135,7 +135,7 @@ Types include:
 ### Claim Status Flow
 
 ```text
-Created → 270 Created → 837 Created → 277CA → 835) → 834
+Created → 270 Created → 837 Created → 277CA → 835 → 834
 ```
 
 Each EDI generator updates claim status accordingly for later reuse.

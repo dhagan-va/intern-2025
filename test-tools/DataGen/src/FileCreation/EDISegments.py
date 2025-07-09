@@ -50,7 +50,8 @@ class IEA:
 
 # Group Header
 class GS:
-    def __init__(self, functional_id, sender=Config.SENDER_ID, receiver=Config.RECEIVER_ID, version="005010X220A1", nl_toggle=True):
+    def __init__(self, functional_id, sender=Config.SENDER_ID, receiver=Config.RECEIVER_ID, version="005010X220A1",
+                 nl_toggle=True):
         now = datetime.now()
         self.functional_id = functional_id
         self.sender = sender
@@ -91,7 +92,7 @@ class ST:
 class SE:
     def __init__(self, segment_count, control_num):
         self.segment_count = segment_count
-        self.control_num = f"{control_num:04}"
+        self.control_num = f"{control_num:06}"
 
     def to_edi(self):
         logger.debug(f"Generating SE segment with count {self.segment_count} and control {self.control_num}")
@@ -125,7 +126,8 @@ class N1:
         if self.error_ctrl and self.error_ctrl.should_insert():
             erroneous = self.error_ctrl.insert(id_code, "missing")
             logger.warning(
-                f"[ERROR INSERTED] N1 segment: ID code '{id_code}' changed to '{erroneous}' for member: {self.error_id}")
+                f"[ERROR INSERTED] N1 segment: ID code '{id_code}' changed to '{erroneous}' for member: {self.error_id}"
+            )
             id_code = erroneous
         else:
             logger.debug(f"Generating N1 segment")
@@ -205,7 +207,8 @@ class PER:
         if self.error_ctrl and self.error_ctrl.should_insert():
             erroneous = self.error_ctrl.insert(phone_number, "missing")
             logger.warning(
-                f"[ERROR INSERTED] PER segment: Phone '{phone_number}' changed to '{erroneous}' for member: {self.error_id}")
+                f"[ERROR INSERTED] PER segment: Phone '{phone_number}' changed to '{erroneous}' for member: "
+                f"{self.error_id}")
             phone_number = erroneous
         else:
             logger.debug("Generating PER segment")
@@ -314,7 +317,7 @@ class BHT:
     def to_edi(self):
         logger.debug(f"Generating BHT segment")
         segment = f"BHT*00{self.transaction_id}*{self.purpose_code}*123456789*{self.date}*{self.time}"
-        if self.file_type == "837":
+        if self.file_type == "837" or self.file_type == "277CA":
             segment += "*CH"
         return segment + "~\n"
 
@@ -433,3 +436,59 @@ class PAT:
     def to_edi(self):
         logger.debug("Generating PAT segment")
         return f"PAT*{self.bene_relationship}~\n"
+
+
+class TRN:
+    def __init__(self, trace_code, ref_id, orig_id, error_ctrl, error_id):
+        self.trace_code = trace_code
+        self.ref_id = ref_id
+        self.orig_id = orig_id
+        self.error_ctrl = error_ctrl
+        self.error_id = error_id
+
+    def to_edi(self):
+        ref_id = self.ref_id
+        if self.error_ctrl and self.error_ctrl.should_insert():
+            ref_id = self.error_ctrl.insert(ref_id, "missing")
+            logger.warning(
+                f"[ERROR INSERTED] TRN segment: reference ID changed to '{ref_id}' for member: {self.error_id}")
+        else:
+            logger.debug("Generating TRN segment")
+
+        return f"TRN*{self.trace_code}*{ref_id}*{self.orig_id}~\n"
+
+
+class STC:
+    def __init__(self, status_info, action_code, ref_num, error_ctrl, error_id):
+        now = datetime.now()
+        self.status_info = status_info
+        self.action_code = action_code
+        self.date = now.strftime("%Y%m%d")
+        self.ref_num = ref_num
+        self.error_ctrl = error_ctrl
+        self.error_id = error_id
+
+    def to_edi(self):
+        status_info = self.status_info
+        if self.error_ctrl and self.error_ctrl.should_insert():
+            status_info = self.error_ctrl.insert(status_info, "format")
+            logger.warning(
+                f"[ERROR INSERTED] STC segment: status info changed to '{status_info}' for member: {self.error_id}")
+        else:
+            logger.debug("Generating STC segment")
+
+        return f"STC*{status_info}*{self.date}*{self.action_code}*{self.ref_num}~\n"
+
+
+class SVC:
+    def __init__(self, proc_code, charge_amt, unit, quantity, diagnosis_ptr):
+        self.proc_code = proc_code
+        self.charge_amt = charge_amt
+        self.unit = unit
+        self.quantity = quantity
+        self.diagnosis_ptr = diagnosis_ptr
+
+    def to_edi(self):
+        logger.debug("Generating SVC segment")
+        return (f"SVC*{self.proc_code}*{self.charge_amt}*{self.charge_amt}*{self.quantity}*{self.unit}*"
+                f"{self.diagnosis_ptr}~\n")

@@ -72,6 +72,9 @@ class LocalDBFunctions(DataAccess):
     def ssn_exists(self, ssn):
         return ssn in self.existing_ssns
 
+    def get_all_ssns(self):
+        pass
+
     def get_sponsor_by_id(self, sponsor_id):
         return next((s for s in self.data if s["sponsor_id"] == sponsor_id), None)
 

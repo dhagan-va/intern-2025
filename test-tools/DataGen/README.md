@@ -65,6 +65,7 @@ graph TD
 To run the full EDI file generation pipeline:
 
 ```bash
+cd src
 python RunGenerator.py
 ```
 

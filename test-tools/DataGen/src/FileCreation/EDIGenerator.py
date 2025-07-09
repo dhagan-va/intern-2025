@@ -16,7 +16,7 @@ class EDI270Generator:
             date=date.today().isoformat()
         )
         self.num_messages = len(self.claims)
-        self.error_ctrl = ErrorInjector(num_messages, error_rate)
+        self.error_ctrl = ErrorInjector(self.num_messages, error_rate)
         logger.info(f"Initializing EDI270Generator with {self.num_messages} claims")
 
     @staticmethod

@@ -20,6 +20,7 @@ log_level = getattr(logging, log_config.get("level", "INFO").upper(), logging.IN
 log_dir = os.path.join(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")),
                        log_config.get("directory", "Output/Logs"))
 log_filename = log_config.get("filename_template", "TestSuite_{date}.log").format(date=FULL_DATE)
+
 os.makedirs(log_dir, exist_ok=True)
 
 logging.basicConfig(
@@ -38,6 +39,9 @@ logger = get_logger(__name__)
 
 ROOT_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 DOWNLOAD_DIRECTORY = os.path.join(ROOT_PATH, config["paths"]["download_directory"])
+
+os.makedirs(DOWNLOAD_DIRECTORY, exist_ok=True)
+
 FAMILY_DATABASE_DIRECTORY = os.path.join(ROOT_PATH, config["paths"]["family_database_directory"])
 EDI834_PATH = os.path.join(ROOT_PATH, config["paths"]["edi834_path"])
 EDI270_PATH = os.path.join(ROOT_PATH, config["paths"]["edi270_path"])

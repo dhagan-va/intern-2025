@@ -1,7 +1,3 @@
-from flask import Flask
-
-app = Flask(__name__)
-
 SAMPLE_271 = (
     f"ISA*00*          *00*          *ZZ*1234567        *ZZ*11111          *170508*1141*>*00501*000000101*1*P*:~\n"
     "GS*HC*XXXXXXX*XXXXX*20170617*1741*101*X*005010X279A1~\n"
@@ -31,6 +27,6 @@ SAMPLE_271 = (
     "IEA*1*000000101~\n"
 )
 
-@app.post("/270/")
-def endpoint():
-    return SAMPLE_271
+SAMPLE_277 = "277"
+
+SAMPLE_278 = "278"

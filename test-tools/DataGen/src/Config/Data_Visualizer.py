@@ -28,20 +28,24 @@ RELATIONSHIP_LABELS = {
 
 log_data = {
     "messages": {
-        "count_834": 0,
         "count_270": 0,
         "count_837": 0,
-        "time_834": 1,
+        "count_277CA": 0,
+        "count_834": 0,
         "time_270": 1,
         "time_837": 1,
+        "time_277CA": 1,
+        "time_834": 1,
     },
     "errors": {
-        "error_ct_834": 0,
         "error_ct_270": 0,
         "error_ct_837": 0,
-        "error_rate_834": 0,
+        "error_ct_277CA": 0,
+        "error_ct_834": 0,
         "error_rate_270": 0,
-        "error_rate_837": 0
+        "error_rate_837": 0,
+        "error_rate_277CA": 0,
+        "error_rate_834": 0,
     },
     "family": {
         "size": 0,
@@ -75,9 +79,9 @@ def create_md():
         os.makedirs(Config.MARKDOWN_DIRECTORY)
     path = Config.MARKDOWN_DIRECTORY
 
-    message_types = [834, 270, 837]
-    message_count = [log_data["messages"]["count_834"], log_data["messages"]["count_270"],
-                     log_data["messages"]["count_837"]]
+    message_types = [270, 837, 277, 834]
+    message_count = [log_data["messages"]["count_270"], log_data["messages"]["count_837"],
+                     log_data["messages"]["count_277CA"], log_data["messages"]["count_834"]]
     total_messages = 0
 
     for key, value in log_data["messages"].items():
@@ -91,6 +95,7 @@ def create_md():
     throughput_834 = log_data["messages"]["count_834"] / log_data["messages"]["time_834"]
     throughput_270 = log_data["messages"]["count_270"] / log_data["messages"]["time_270"]
     throughput_837 = log_data["messages"]["count_837"] / log_data["messages"]["time_837"]
+    throughput_277CA = log_data["messages"]["count_277CA"] / log_data["messages"]["time_277CA"]
 
     avg_d2 = log_data["amt"]["D2"]["sum"] / log_data["amt"]["D2"]["count"]
     avg_fk = log_data["amt"]["FK"]["sum"] / log_data["amt"]["FK"]["count"]
@@ -116,7 +121,7 @@ def create_md():
         f.write("## Throughput\n")
         f.writelines(create_bar_graph(
             title="Throughput (Transactions per Second)",
-            x=[834, 270, 837],
+            x=[270, 837, 277, 834],
             y="TPS",
             values=[throughput_834, throughput_270, throughput_837],
             y_max=max(throughput_834, throughput_270, throughput_837) + 1
@@ -125,21 +130,21 @@ def create_md():
         f.write("## Error Count\n")
         f.writelines(create_bar_graph(
             title="Error Count in Messages",
-            x=[834, 270, 837],
+            x=[270, 837, 277, 834],
             y="Errors",
-            values=[log_data["errors"]["error_ct_834"], log_data["errors"]["error_ct_270"],
-                    log_data["errors"]["error_ct_837"]],
-            y_max=max(log_data["errors"]["error_ct_834"], log_data["errors"]["error_ct_270"],
-                      log_data["errors"]["error_ct_837"]) + 1
+            values=[log_data["errors"]["error_ct_270"], log_data["errors"]["error_ct_837"],
+                    log_data["errors"]["error_ct_277CA"], log_data["errors"]["error_ct_834"]],
+            y_max=max(log_data["errors"]["error_ct_270"], log_data["errors"]["error_ct_837"],
+                      log_data["errors"]["error_ct_277CA"], log_data["errors"]["error_ct_834"]) + 1
         ))
 
         f.write("## Error Rate\n")
         f.writelines(create_bar_graph(
             title="Error Rate (%)",
-            x=[834, 270, 837],
+            x=[270, 837, 277, 834],
             y="Percent",
-            values=[log_data["errors"]["error_rate_834"] * 100, log_data["errors"]["error_rate_270"] * 100,
-                    log_data["errors"]["error_rate_837"] * 100],
+            values=[log_data["errors"]["error_rate_270"] * 100, log_data["errors"]["error_rate_837"] * 100,
+                    log_data["errors"]["error_rate_277CA"] * 100, log_data["errors"]["error_rate_834"] * 100],
             y_max=5
         ))
 

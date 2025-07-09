@@ -76,11 +76,11 @@ def Run837PGenerator(error_rate=None):
 def Run277CAGenerator(error_rate=None):
     now = datetime.now()
     error_rate = get_error_rate(error_rate)
-    # log_data["errors"]["error_rate_837"] = error_rate
+    log_data["errors"]["error_rate_277CA"] = error_rate
 
     logger.info(f"Generating transactions from saved 277CA information")
     edi277CA = EDI277CAGenerator(transaction_funcs=transaction_funcs, error_rate=error_rate)
-    # log_data["messages"]["count_837"] = edi837.get_num_messages()
+    log_data["messages"]["count_277CA"] = edi277CA.get_num_messages()
     logger.info(f"Generating transactions into EDI file")
     edi_out = edi277CA.combine_segments()
 
@@ -88,7 +88,7 @@ def Run277CAGenerator(error_rate=None):
         f.writelines(edi_out)
 
     end_time = datetime.now() - now
-    # log_data["messages"]["time_837"] = end_time.total_seconds()
+    log_data["messages"]["time_277CA"] = end_time.total_seconds()
     logger.info(f"It took {end_time} to generate {edi277CA.get_num_messages()} transactions for the 277CA file")
 
 
@@ -100,7 +100,7 @@ def Run834Generator(error_rate=None):
 
     # Generate EDI File
     edi834 = EDI834Generator(transaction_funcs=transaction_funcs, error_rate=error_rate)
-    log_data["messages"]["count_837"] = edi834.get_num_messages()
+    log_data["messages"]["count_834"] = edi834.get_num_messages()
     logger.info("Generating EDI file from stored data")
     edi_out = edi834.combine_segments()
     logger.info("EDI file generation complete")
@@ -124,8 +124,8 @@ def GenerateSponsors(num_gen):
     current_users = db.total_beneficiaries()
 
     # want to create at least 100_000 users for db
-    if current_users < 1000:
-        num_gen = 1000 - current_users
+    if current_users < 100_000:
+        num_gen = 100_000 - current_users
 
     sponsors_created = data_creation.store_sponsor_and_beneficiaries(num_gen)
 
@@ -148,7 +148,7 @@ def CreateClaimDB(num_gen, input_date=date.today(), status="Created"):
 
 if __name__ == "__main__":
     curr = datetime.now()
-    num = 100
+    num = 1000
 
     yesterday = date.today() - timedelta(days=1)
     week_before = date.today() - timedelta(days=7)
@@ -157,11 +157,12 @@ if __name__ == "__main__":
     CreateClaimDB(num, date.today(), "Created")
     CreateClaimDB(num, yesterday, "270 Created")
     CreateClaimDB(num, week_before, "837 Created")
+    CreateClaimDB(num, week_before, "277CA Created")
 
     Run270Generator(num, 0.05, upload_s3=Config.UPLOAD_TO_S3)
     Run837PGenerator(0)
     Run277CAGenerator(0)
-    # Run834Generator(0)
+    Run834Generator(0)
 
     end = datetime.now() - curr
     logger.info(f"It took {end} to generate the output")

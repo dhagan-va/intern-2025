@@ -1,7 +1,7 @@
 import os
 
 from Config import Config
-from Repository.Local_Database_Functions import LocalDBFunctions
+from Repository.DatabaseFactory import get_database_backend
 
 INTRO = [
     "## What Are 834 and 270 EDI Files?\n\n",
@@ -30,18 +30,22 @@ log_data = {
     "messages": {
         "count_834": 0,
         "count_270": 0,
-        "time_834": 0,
-        "time_270": 0,
+        "count_837": 0,
+        "time_834": 1,
+        "time_270": 1,
+        "time_837": 1,
     },
     "errors": {
         "error_ct_834": 0,
         "error_ct_270": 0,
+        "error_ct_837": 0,
         "error_rate_834": 0,
-        "error_rate_270": 0
+        "error_rate_270": 0,
+        "error_rate_837": 0
     },
     "family": {
         "size": 0,
-        "count": 0,
+        "count": 1,
         "size_distribution": {
             1: 0,
             2: 0,
@@ -56,12 +60,12 @@ log_data = {
         }
     },
     "amt": {
-        "D2": {"sum": 0, "count": 0},
-        "FK": {"sum": 0, "count": 0},
-        "R": {"sum": 0, "count": 0},
-        "C1": {"sum": 0, "count": 0},
-        "P3": {"sum": 0, "count": 0},
-        "B9": {"sum": 0, "count": 0}
+        "D2": {"sum": 0, "count": 1},
+        "FK": {"sum": 0, "count": 1},
+        "R": {"sum": 0, "count": 1},
+        "C1": {"sum": 0, "count": 1},
+        "P3": {"sum": 0, "count": 1},
+        "B9": {"sum": 0, "count": 1}
     }
 }
 
@@ -69,22 +73,24 @@ log_data = {
 def create_md():
     if not os.path.exists(Config.MARKDOWN_DIRECTORY):
         os.makedirs(Config.MARKDOWN_DIRECTORY)
-    path = os.path.join(Config.MARKDOWN_DIRECTORY, Config.STATISTICS_MD)
+    path = Config.MARKDOWN_DIRECTORY
 
-    message_types = [834, 270]
-    message_count = [log_data["messages"]["count_834"], log_data["messages"]["count_270"]]
+    message_types = [834, 270, 837]
+    message_count = [log_data["messages"]["count_834"], log_data["messages"]["count_270"],
+                     log_data["messages"]["count_837"]]
     total_messages = 0
-    
+
     for key, value in log_data["messages"].items():
         if key.startswith("count_"):
             total_messages += value
-    
-    localdb = LocalDBFunctions()
+
+    db = get_database_backend()
 
     avg_family_size = log_data["family"]["size"] / log_data["family"]["count"]
 
     throughput_834 = log_data["messages"]["count_834"] / log_data["messages"]["time_834"]
     throughput_270 = log_data["messages"]["count_270"] / log_data["messages"]["time_270"]
+    throughput_837 = log_data["messages"]["count_837"] / log_data["messages"]["time_837"]
 
     avg_d2 = log_data["amt"]["D2"]["sum"] / log_data["amt"]["D2"]["count"]
     avg_fk = log_data["amt"]["FK"]["sum"] / log_data["amt"]["FK"]["count"]
@@ -110,27 +116,30 @@ def create_md():
         f.write("## Throughput\n")
         f.writelines(create_bar_graph(
             title="Throughput (Transactions per Second)",
-            x=[834, 270],
+            x=[834, 270, 837],
             y="TPS",
-            values=[throughput_834, throughput_270],
-            y_max=max(throughput_834, throughput_270) + 1
+            values=[throughput_834, throughput_270, throughput_837],
+            y_max=max(throughput_834, throughput_270, throughput_837) + 1
         ))
 
         f.write("## Error Count\n")
         f.writelines(create_bar_graph(
             title="Error Count in Messages",
-            x=[834, 270],
+            x=[834, 270, 837],
             y="Errors",
-            values=[log_data["errors"]["error_ct_834"], log_data["errors"]["error_ct_270"]],
-            y_max=max(log_data["errors"]["error_ct_834"], log_data["errors"]["error_ct_270"]) + 1
+            values=[log_data["errors"]["error_ct_834"], log_data["errors"]["error_ct_270"],
+                    log_data["errors"]["error_ct_837"]],
+            y_max=max(log_data["errors"]["error_ct_834"], log_data["errors"]["error_ct_270"],
+                      log_data["errors"]["error_ct_837"]) + 1
         ))
 
         f.write("## Error Rate\n")
         f.writelines(create_bar_graph(
             title="Error Rate (%)",
-            x=[834, 270],
+            x=[834, 270, 837],
             y="Percent",
-            values=[log_data["errors"]["error_rate_834"] * 100, log_data["errors"]["error_rate_270"] * 100],
+            values=[log_data["errors"]["error_rate_834"] * 100, log_data["errors"]["error_rate_270"] * 100,
+                    log_data["errors"]["error_rate_837"] * 100],
             y_max=5
         ))
 
@@ -191,7 +200,7 @@ def create_md():
         ))
 
         f.write("## Average 270s per Beneficiary\n")
-        bene_count = len(localdb.all_bene)
+        bene_count = db.total_beneficiaries()
         avg_270s_per_bene = log_data["messages"]["count_270"] / bene_count if bene_count else 0
         f.write(f"- Average 270s per Beneficiary: **{avg_270s_per_bene:.2f}**\n")
 

@@ -1,11 +1,12 @@
-import requests
-import zipfile
-import io
 import datetime
+import io
+import zipfile
+from pathlib import Path
+
 import pandas as pd
+import requests
 
 from Config.Log_Config import get_logger
-from pathlib import Path
 
 logger = get_logger(__name__)
 
@@ -69,6 +70,7 @@ class NPIFunctions:
     def __init__(self, csv_path):
         self.csv_path = Path(csv_path)
         self.df = None
+        self.providers_by_state = {}
 
     def load_csv(self):
         if self.df is not None:
@@ -80,10 +82,16 @@ class NPIFunctions:
                 self.csv_path,
                 usecols=[
                     "NPI",
+                    "Entity Type Code",
                     "Provider Organization Name (Legal Business Name)",
                     "Provider Last Name (Legal Name)",
                     "Provider First Name",
-                    "Provider Business Mailing Address State Name"
+                    "Provider Business Practice Location Address City Name",
+                    "Provider Business Practice Location Address State Name",
+                    "Provider Business Practice Location Address Postal Code",
+                    "Provider First Line Business Practice Location Address",
+                    "Provider Second Line Business Practice Location Address",
+                    "Provider Business Practice Location Address Telephone Number"
                 ],
                 dtype=str,
                 low_memory=False
@@ -95,28 +103,28 @@ class NPIFunctions:
         return self.df
 
     def get_random_provider(self, state):
+        state = state.upper()
         org_col = "Provider Organization Name (Legal Business Name)"
+        addr_col = "Provider First Line Business Practice Location Address"
         last_col = "Provider Last Name (Legal Name)"
-        state_col = "Provider Business Mailing Address State Name"
-        if not state:
-            msg = "State must be provided to select provider"
-            logger.error(msg)
-            raise ValueError(msg)
+        state_col = "Provider Business Practice Location Address State Name"
+        if state not in self.providers_by_state:
+            df = self.load_csv()
 
-        df = self.load_csv()
+            df_filtered = df[
+                (df[state_col] == state) &
+                (df[addr_col].notna() & df[addr_col].str.len().le(55)) &
+                ((df[org_col].notna() & df[org_col].str.len().le(55)) | (df[org_col].isna() & df[last_col]))
+                ]
 
-        df_filtered = df[
-            (df[org_col].notna() | df[last_col]) &
-            (df[state_col] == state.upper()) &
-            (df[org_col].isna() | (df[org_col].str.len() <= 60))
-            ]
+            if df_filtered.empty:
+                msg = f"Ermtosis, that's not supposed to happen, no provider is found in {state}"
+                logger.error(msg)
+                raise LookupError(msg)
 
-        if df_filtered.empty:
-            msg = f"Ermtosis, that's not supposed to happen, no provider is found in {state}"
-            logger.error(msg)
-            raise LookupError(msg)
+            self.providers_by_state[state] = df_filtered
 
-        provider = df_filtered.sample(n=1).iloc[0]
+        provider = self.providers_by_state[state].sample(n=1).iloc[0]
 
         if pd.notna(provider[org_col]):
             name = provider[org_col]
@@ -129,6 +137,10 @@ class NPIFunctions:
             "npi": provider["NPI"],
             "name": name,
             "entity_type": entity_type,
-            "state": provider[state_col]
+            "address_line_1": provider.get("Provider First Line Business Practice Location Address", ""),
+            "address_line_2": provider.get("Provider Second Line Business Practice Location Address", ""),
+            "city": provider.get("Provider Business Practice Location Address City Name", ""),
+            "state": provider.get("Provider Business Practice Location Address State Name", ""),
+            "zipcode": provider.get("Provider Business Practice Location Address Postal Code", ""),
+            "phone": provider.get("Provider Business Practice Location Address Telephone Number", "")
         }
-

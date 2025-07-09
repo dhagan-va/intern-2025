@@ -6,8 +6,8 @@ import unittest
 
 from Config import Config, Log_Config
 from FileCreation.ErrorInjector import ErrorInjector
-from Repository.Local_Database_Functions import LocalDBFunctions
-from Repository.NPI_Functions import NPIFunctions, download_weekly_npi_data
+from Repository.JSON_Database_Functions import LocalDBFunctions
+from Repository.NPI_Functions import NPIFunctions
 from RunGenerator import Run834Generator, Run270Generator
 
 
@@ -21,7 +21,7 @@ class Test834Message(unittest.TestCase):
 
         os.makedirs(Log_Config.LOG_DIRECTORY, exist_ok=True)
         Config.get_edi_path(Config.EDI834_PATH, Config.EDI834_FILE_NAME)
-        Config.get_local_db_path()
+        Config.get_local_db_path(Config.FAMILY_DATABASE_DIRECTORY, Config.FAMILY_DATABASE_JSONL)
         self.logger = Config.get_logger(__name__)
         self.messages = 7
         self.error_rate = 0
@@ -95,8 +95,7 @@ class Test270Message(unittest.TestCase):
         os.makedirs(Log_Config.LOG_DIRECTORY, exist_ok=True)
         os.makedirs(Config.DOWNLOAD_DIRECTORY, exist_ok=True)
 
-        npi_csv_path = download_weekly_npi_data(Config.DOWNLOAD_DIRECTORY)
-        self.npi_funcs = NPIFunctions(npi_csv_path)
+        self.npi_funcs = NPIFunctions(Config.NPI_CSV_PATH)
 
         self.messages_834 = 5
         self.error_rate_834 = 0

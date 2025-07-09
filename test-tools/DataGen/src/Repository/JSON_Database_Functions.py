@@ -6,24 +6,20 @@ import random
 from Config import Config
 from DataLayer.Datatypes import Sponsor
 from DataLayer.Interfaces import DataAccess
-from Config.Config import get_local_db_path, logger
+from Config.Config import get_local_db_path, logger, FAMILY_DATABASE_DIRECTORY, FAMILY_DATABASE_JSONL
 
 
 class LocalDBFunctions(DataAccess):
-    def __init__(self, file=None):
-        if file is None:
-            file = get_local_db_path()
+    def __init__(self, file=get_local_db_path(FAMILY_DATABASE_DIRECTORY, FAMILY_DATABASE_JSONL)):
         self.data = []
         self.all_bene = []
-        self.bene_270 = []
         self.file = file
         self.existing_ssns = set()
-        self.loadfile()
+        self.load_localdb()
 
-    def loadfile(self):
+    def load_localdb(self):
         if not os.path.exists(self.file):
-            open(self.file, "w").close()
-            logger.debug(f"{self.file} created")
+            return
         with open(self.file, "r") as f:
             for line in f:
                 sponsor_dict = json.loads(line)
@@ -33,17 +29,16 @@ class LocalDBFunctions(DataAccess):
                 self.add_ssns_to_set(sponsor)
         logging.debug(f"There are {len(self.existing_ssns)} users in the database")
 
-    def get_random_beneficiary(self, file=None):
+    def get_random_beneficiary(self, count=1):
         if not self.all_bene:
             logging.error("There are no beneficiaries to choose")
             raise ValueError("There are no beneficiaries to choose")
 
-        selected = random.choice(self.all_bene)
+        if count > len(self.all_bene):
+            logging.warning("Requested more than available. Returning all available")
+            count = len(self.all_bene)
 
-        if file == 270:
-            self.bene_270.append(selected)
-
-        return selected
+        return random.sample(self.all_bene, count)
 
     def save_sponsor(self, sponsor):
         total_users = len(self.existing_ssns)
@@ -60,6 +55,13 @@ class LocalDBFunctions(DataAccess):
         self.add_ssns_to_set(sponsor)
         logger.debug(f"Saved sponsor: {sponsor_dict}")
 
+    def save_many_sponsors(self, sponsors):
+        for sponsor in sponsors:
+            self.save_sponsor(sponsor)
+
+    def total_beneficiaries(self):
+        return len(self.all_bene)
+
     def add_ssns_to_set(self, sponsor):
         self.existing_ssns.add(sponsor.ssn)
         logger.debug(f"Added sponsor SSN to set: {sponsor.ssn}")
@@ -69,6 +71,9 @@ class LocalDBFunctions(DataAccess):
 
     def ssn_exists(self, ssn):
         return ssn in self.existing_ssns
+
+    def get_all_ssns(self):
+        pass
 
     def get_sponsor_by_id(self, sponsor_id):
         return next((s for s in self.data if s["sponsor_id"] == sponsor_id), None)

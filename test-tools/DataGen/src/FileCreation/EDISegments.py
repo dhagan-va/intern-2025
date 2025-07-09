@@ -50,19 +50,21 @@ class IEA:
 
 # Group Header
 class GS:
-    def __init__(self, functional_id, sender=Config.SENDER_ID, receiver=Config.RECEIVER_ID, nl_toggle=True):
+    def __init__(self, functional_id, sender=Config.SENDER_ID, receiver=Config.RECEIVER_ID, version="005010X220A1",
+                 nl_toggle=True):
         now = datetime.now()
         self.functional_id = functional_id
         self.sender = sender
         self.receiver = receiver
         self.date = now.strftime("%Y%m%d")
         self.time = now.strftime("%H%M%S")
+        self.version = version
         self.nl_toggle = nl_toggle
 
     def to_edi(self):
         nl = "~\n" if self.nl_toggle else "~"
         logger.debug("Generating GS segment")
-        return f"GS*{self.functional_id}*{self.sender}*{self.receiver}*{self.date}*{self.time}*61*X*005010X220A1{nl}"
+        return f"GS*{self.functional_id}*{self.sender}*{self.receiver}*{self.date}*{self.time}*61*X*{self.version}{nl}"
 
 
 # Group Trailer
@@ -83,14 +85,14 @@ class ST:
 
     def to_edi(self):
         logger.debug(f"Generating ST segment for an {self.file_type} file, transaction #{self.num}")
-        return f"ST*{self.file_type}*{self.num:04}~\n"
+        return f"ST*{self.file_type}*{self.num:06}~\n"
 
 
 # Transaction Set Trailer
 class SE:
     def __init__(self, segment_count, control_num):
         self.segment_count = segment_count
-        self.control_num = f"{control_num:04}"
+        self.control_num = f"{control_num:06}"
 
     def to_edi(self):
         logger.debug(f"Generating SE segment with count {self.segment_count} and control {self.control_num}")
@@ -124,7 +126,8 @@ class N1:
         if self.error_ctrl and self.error_ctrl.should_insert():
             erroneous = self.error_ctrl.insert(id_code, "missing")
             logger.warning(
-                f"[ERROR INSERTED] N1 segment: ID code '{id_code}' changed to '{erroneous}' for member: {self.error_id}")
+                f"[ERROR INSERTED] N1 segment: ID code '{id_code}' changed to '{erroneous}' for member: {self.error_id}"
+            )
             id_code = erroneous
         else:
             logger.debug(f"Generating N1 segment")
@@ -173,7 +176,8 @@ class NM1:
             "34": "SSN",
             "XX": "NPI",
             "MI": "Member ID",
-            "PI": "Payer ID"
+            "PI": "Payer ID",
+            "41": "Submitter"
         }.get(self.id_qualifier, "ID code")
 
         if self.error_ctrl and self.error_ctrl.should_insert():
@@ -192,7 +196,8 @@ class NM1:
 
 # Administrative Communications Contact
 class PER:
-    def __init__(self, phone_number, error_ctrl, error_id):
+    def __init__(self, contact_func, phone_number, error_ctrl, error_id):
+        self.contact_func = contact_func
         self.phone_number = phone_number
         self.error_ctrl = error_ctrl
         self.error_id = error_id
@@ -202,21 +207,24 @@ class PER:
         if self.error_ctrl and self.error_ctrl.should_insert():
             erroneous = self.error_ctrl.insert(phone_number, "missing")
             logger.warning(
-                f"[ERROR INSERTED] PER segment: Phone '{phone_number}' changed to '{erroneous}' for member: {self.error_id}")
+                f"[ERROR INSERTED] PER segment: Phone '{phone_number}' changed to '{erroneous}' for member: "
+                f"{self.error_id}")
             phone_number = erroneous
         else:
             logger.debug("Generating PER segment")
-        return f"PER*IP**TE*{phone_number}~\n"
+        return f"PER*{self.contact_func}**TE*{phone_number}~\n"
 
 
 # Address Information
 class N3:
-    def __init__(self, building_number, street, apartment: Optional[str] = None, error_ctrl=None, error_id=None):
+    def __init__(self, building_number, street, apartment: Optional[str] = None, error_ctrl=None,
+                 error_id=None, npi=False):
         self.building_number = building_number
         self.street = street
         self.apartment = apartment if apartment else ""
         self.error_ctrl = error_ctrl
         self.error_id = error_id
+        self.npi = npi
 
     def to_edi(self):
         street = self.street
@@ -227,6 +235,8 @@ class N3:
             street = erroneous
         else:
             logger.debug("Generating N3 segment")
+        if self.npi:
+            return f"N3*{self.building_number}*{street}~\n"
         return f"N3*{self.building_number}{" "}{street}*{self.apartment}~\n"
 
 
@@ -284,25 +294,32 @@ class HD:
 
 # Date/Time Period
 class DTP:
-    def __init__(self):
+    def __init__(self, date_type, date_format):
         now = datetime.now()
+        self.date_type = date_type
+        self.date_format = date_format
         self.date = now.strftime("%Y%m%d")
 
     def to_edi(self):
         logger.debug(f"Generating DTP segment for date {self.date}")
-        return f"DTP*348*D8*{self.date}~\n"
+        return f"DTP*{self.date_type}*{self.date_format}*{self.date}~\n"
 
 
 class BHT:
-    def __init__(self):
+    def __init__(self, transaction_id, purpose_code, file_type=None):
         now = datetime.now()
+        self.file_type = file_type
+        self.transaction_id = transaction_id
+        self.purpose_code = purpose_code
         self.date = now.strftime("%Y%m%d")
         self.time = now.strftime("%H%M")
 
     def to_edi(self):
         logger.debug(f"Generating BHT segment")
-        # unsure of the value of BHT03
-        return f"BHT*0022*13*123456789*{self.date}*{self.time}~\n"
+        segment = f"BHT*00{self.transaction_id}*{self.purpose_code}*123456789*{self.date}*{self.time}"
+        if self.file_type == "837" or self.file_type == "277CA":
+            segment += "*CH"
+        return segment + "~\n"
 
 
 class HL:
@@ -333,3 +350,145 @@ class EQ:
     def to_edi(self):
         logger.debug(f"Generating EQ segment")
         return f"EQ*{self.service_code}~\n"
+
+
+class SBR:
+    def __init__(self, relationship_code, group_id):
+        self.relationship_code = relationship_code
+        self.group_id = group_id
+
+    def to_edi(self):
+        logger.debug(f"Generating SBR with relationship {self.relationship_code} segment")
+        return f"SBR*P*{self.relationship_code}*{self.group_id}******HM~\n"
+
+
+class DMG:
+    def __init__(self, dob, gender):
+        self.dob = dob
+        self.gender = gender
+
+    def to_edi(self):
+        logger.debug("Generating DMG segment")
+        return f"DMG*D8*{self.dob}*{self.gender}~\n"
+
+
+class CLM:
+    def __init__(self, claim_id, charge_amt, place_of_service, fac_code_qual, claim_freq):
+        self.claim_id = claim_id
+        self.charge_amt = charge_amt
+        self.place_of_service = place_of_service
+        self.fac_code_qual = fac_code_qual
+        self.claim_freq = claim_freq
+
+    def to_edi(self):
+        logger.debug("Generating CLM segment")
+        return (f"CLM*{self.claim_id}*{self.charge_amt}***{self.place_of_service}:"
+                f"{self.fac_code_qual}:{self.claim_freq}*Y*A*Y*Y~\n")
+
+
+class HI:
+    def __init__(self, qualifier, code):
+        self.qualifier = qualifier
+        self.code = code
+
+    def to_edi(self):
+        logger.debug("Generating HI segment")
+        return f"HI*{self.qualifier}:{self.code}~\n"
+
+
+class PRV:
+    def __init__(self, provider_code, ref_type, taxonomy):
+        self.provider_code = provider_code
+        self.ref_type = ref_type
+        self.taxonomy = taxonomy
+
+    def to_edi(self):
+        logger.debug("Generating PRV segment")
+        return f"PRV*{self.provider_code}*{self.ref_type}*{self.taxonomy}~\n"
+
+
+class LX:
+    def __init__(self, number):
+        self.number = number
+
+    def to_edi(self):
+        logger.debug(f"Generating LX segment line {self.number}")
+        return f"LX*{self.number}~\n"
+
+
+class SV1:
+    def __init__(self, proc_code, charge_amt, unit, quantity, diagnosis_ptr):
+        self.proc_code = proc_code
+        self.charge_amt = charge_amt
+        self.unit = unit
+        self.quantity = quantity
+        self.diagnosis_ptr = diagnosis_ptr
+
+    def to_edi(self):
+        logger.debug("Generating SV1 segment")
+        return f"SV1*{self.proc_code}*{self.charge_amt}*{self.unit}*{self.quantity}***{self.diagnosis_ptr}~\n"
+
+
+class PAT:
+    def __init__(self, bene_relationship):
+        self.bene_relationship = bene_relationship
+
+    def to_edi(self):
+        logger.debug("Generating PAT segment")
+        return f"PAT*{self.bene_relationship}~\n"
+
+
+class TRN:
+    def __init__(self, trace_code, ref_id, orig_id, error_ctrl, error_id):
+        self.trace_code = trace_code
+        self.ref_id = ref_id
+        self.orig_id = orig_id
+        self.error_ctrl = error_ctrl
+        self.error_id = error_id
+
+    def to_edi(self):
+        ref_id = self.ref_id
+        if self.error_ctrl and self.error_ctrl.should_insert():
+            ref_id = self.error_ctrl.insert(ref_id, "missing")
+            logger.warning(
+                f"[ERROR INSERTED] TRN segment: reference ID changed to '{ref_id}' for member: {self.error_id}")
+        else:
+            logger.debug("Generating TRN segment")
+
+        return f"TRN*{self.trace_code}*{ref_id}*{self.orig_id}~\n"
+
+
+class STC:
+    def __init__(self, status_info, action_code, ref_num, error_ctrl, error_id):
+        now = datetime.now()
+        self.status_info = status_info
+        self.action_code = action_code
+        self.date = now.strftime("%Y%m%d")
+        self.ref_num = ref_num
+        self.error_ctrl = error_ctrl
+        self.error_id = error_id
+
+    def to_edi(self):
+        status_info = self.status_info
+        if self.error_ctrl and self.error_ctrl.should_insert():
+            status_info = self.error_ctrl.insert(status_info, "format")
+            logger.warning(
+                f"[ERROR INSERTED] STC segment: status info changed to '{status_info}' for member: {self.error_id}")
+        else:
+            logger.debug("Generating STC segment")
+
+        return f"STC*{status_info}*{self.date}*{self.action_code}*{self.ref_num}~\n"
+
+
+class SVC:
+    def __init__(self, proc_code, charge_amt, unit, quantity, diagnosis_ptr):
+        self.proc_code = proc_code
+        self.charge_amt = charge_amt
+        self.unit = unit
+        self.quantity = quantity
+        self.diagnosis_ptr = diagnosis_ptr
+
+    def to_edi(self):
+        logger.debug("Generating SVC segment")
+        return (f"SVC*{self.proc_code}*{self.charge_amt}*{self.charge_amt}*{self.quantity}*{self.unit}*"
+                f"{self.diagnosis_ptr}~\n")

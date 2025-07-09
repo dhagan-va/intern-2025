@@ -1,85 +1,115 @@
-from Config.Log_Config import get_logger
 import os
+import tomli
+import logging
 from datetime import datetime
+from Config.BellShapes import BellShapes, fit_range_to_half_bel
 from Repository.NPI_Functions import download_weekly_npi_data
 
-from Config.BellShapes import BellShapes, fit_range_to_half_bel
+CONFIG_PATH = os.path.join(os.path.dirname(__file__), "config.toml")
+with open(CONFIG_PATH, "rb") as f:
+    config = tomli.load(f)
 
-# Time and File Info
 DATE = datetime.now()
+YEAR = DATE.year
+YMD = DATE.strftime("%y%m%d")
+HM = DATE.strftime("%H%M")
+FULL_DATE = DATE.strftime("%Y%m%d")
 
-EDI834_FILE_NAME = f'834.VFMP.{DATE.year}.{DATE.strftime("%y%m%d")}.{DATE.strftime("%H%M")}.{DATE.strftime("%Y%m%d1")}.edi'
-EDI270_FILE_NAME = f'270.VFMP.{DATE.year}.{DATE.strftime("%y%m%d")}.{DATE.strftime("%H%M")}.{DATE.strftime("%Y%m%d1")}.edi'
-LOCAL_DATABASE = f"localdb.jsonl"
-STATISTICS_MD = f"Statistics_Visualizer.md"
+log_config = config.get("logging", {})
+log_level = getattr(logging, log_config.get("level", "INFO").upper(), logging.INFO)
+log_dir = os.path.join(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")),
+                       log_config.get("directory", "Output/Logs"))
+log_filename = log_config.get("filename_template", "TestSuite_{date}.log").format(date=FULL_DATE)
 
-# Paths
-ROOT_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
-DOWNLOAD_DIRECTORY = os.path.join(ROOT_PATH, "Downloads")
-LOCAL_DATABASE_DIRECTORY = os.path.join(ROOT_PATH, "Output", "Local_DB")
-MARKDOWN_DIRECTORY = os.path.join(ROOT_PATH)
-EDI834_PATH = os.path.join(ROOT_PATH, "Output", "EDI834_Output")
-EDI270_PATH = os.path.join(ROOT_PATH, "Output", "EDI270_Output")
+os.makedirs(log_dir, exist_ok=True)
 
-os.makedirs(DOWNLOAD_DIRECTORY, exist_ok=True)
-NPI_CSV_PATH = download_weekly_npi_data(DOWNLOAD_DIRECTORY)
+logging.basicConfig(
+    level=log_level,
+    filename=os.path.join(log_dir, log_filename),
+    filemode="a",
+    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+)
+
+
+def get_logger(name):
+    return logging.getLogger(name)
+
 
 logger = get_logger(__name__)
 
+ROOT_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+DOWNLOAD_DIRECTORY = os.path.join(ROOT_PATH, config["paths"]["download_directory"])
 
-# Creates directory if nonexistent
+os.makedirs(DOWNLOAD_DIRECTORY, exist_ok=True)
+
+FAMILY_DATABASE_DIRECTORY = os.path.join(ROOT_PATH, config["paths"]["family_database_directory"])
+EDI834_PATH = os.path.join(ROOT_PATH, config["paths"]["edi834_path"])
+EDI270_PATH = os.path.join(ROOT_PATH, config["paths"]["edi270_path"])
+EDI837_PATH = os.path.join(ROOT_PATH, config["paths"]["edi837_path"])
+EDI277CA_PATH = os.path.join(ROOT_PATH, config["paths"]["edi277ca_path"])
+MARKDOWN_DIRECTORY = os.path.join(ROOT_PATH, config["paths"]["markdown_directory"])
+NPI_CSV_PATH = download_weekly_npi_data(DOWNLOAD_DIRECTORY)
+
+EDI834_FILE_NAME = config["filenames"]["edi834_file_template"].format(year=YEAR, ymd=YMD, hm=HM, full_date=FULL_DATE)
+EDI270_FILE_NAME = config["filenames"]["edi270_file_template"].format(year=YEAR, ymd=YMD, hm=HM, full_date=FULL_DATE)
+EDI277CA_FILE_NAME = config["filenames"]["edi277ca_file_template"].format(year=YEAR, ymd=YMD, hm=HM,
+                                                                          full_date=FULL_DATE)
+EDI837_FILE_NAME = config["filenames"]["edi837_file_template"].format(year=YEAR, ymd=YMD, hm=HM, full_date=FULL_DATE)
+STATISTICS_MD = os.path.join(MARKDOWN_DIRECTORY, config["filenames"]["statistics_md"])
+
+
 def get_edi_path(edi_path, edi_file):
     os.makedirs(edi_path, exist_ok=True)
-    logger.info(f"Directory exists: {edi_path}")
+    logger.debug(f"Directory ensured: {edi_path}")
     return os.path.join(edi_path, edi_file)
 
 
-def get_local_db_path():
-    os.makedirs(LOCAL_DATABASE_DIRECTORY, exist_ok=True)
-    logger.info(f"Directory exists: {LOCAL_DATABASE_DIRECTORY}")
-    return os.path.join(LOCAL_DATABASE_DIRECTORY, LOCAL_DATABASE)
+def get_local_db_path(db_path, db_file):
+    os.makedirs(db_path, exist_ok=True)
+    logger.debug(f"Directory ensured: {db_path}")
+    return os.path.join(db_path, db_file)
 
 
-# Constants and config
-FAKER_SEED = 49245
-RANDOM_SEED = 3
-logger.info(f"Using RANDOM_SEED={RANDOM_SEED}, FAKER_SEED={FAKER_SEED}")
+UPLOAD_TO_S3 = config["aws"]["upload_to_s3"]
+BUCKET_NAME = config["aws"]["bucket_name"]
+DATABASE_BACKEND = config["database"]["backend"]
+USER_LIMIT = config["database"]["user_limit"]
+FAMILY_DATABASE_JSONL = config["database"]["jsonl_path"]
+FAMILY_DATABASE_SQLITE = config["database"]["sqlite_path"]
 
-# 834 Constants
-SENDER_ID = "83-1002022"
-RECEIVER_ID = "841439824"
+FAKER_SEED = config["seed"]["faker_seed"]
+RANDOM_SEED = config["seed"]["random_seed"]
+SENDER_ID = config["constants"]["sender_id"]
+RECEIVER_ID = config["constants"]["receiver_id"]
+SPONSOR_QUALIFIER = config["constants"]["sponsor_qualifier"]
+SPONSOR_ID = config["constants"]["sponsor_id"]
+PAYER_QUALIFIER = config["constants"]["payer_qualifier"]
+PAYER_ID = config["constants"]["payer_id"]
+TOGGLE_NEW_LINE = config["constants"]["toggle_new_line"]
+TOTAL_ERROR_RATE = config["constants"]["total_error_rate"]
 
-# Database user limit
-USER_LIMIT = 500_000
+MAX_BENEFICIARIES = config["constants"]["max_beneficiaries"]
+MIN_BENEFICIARIES = config["constants"]["min_beneficiaries"]
+MAX_DEDUCTIBLES = config["constants"]["max_deductibles"]
+MIN_DEDUCTIBLES = config["constants"]["min_deductibles"]
+MAX_VISITS = config["constants"]["max_visits"]
+MIN_VISITS = config["constants"]["min_visits"]
 
-RELATIONSHIP_MAP = {
-    'Spouse': '01',
-    'Child': '19',
-    'Caregiver': '26',
-    'Ex-Spouse': '25'
-}
+RELATIONSHIP_MAP = config["relationship_map"]
 
-MAX_BENEFICIARIES = 4
-MIN_BENEFICIARIES = 1
-MAX_DEDUCTIBLES = 100_000
-MIN_DEDUCTIBLES = 0
-MAX_VISITS = 15
-MIN_VISITS = 0
 
-N1_SPONSOR_QUALIFIER = "OCC PAYER EDI"
-N1_SPONSOR_ID = "841469824"
-N1_PAYER_QUALIFIER = "CLAIMS XM"
-N1_PAYER_ID = "831002042"
+def get_number_of_tests(section):
+    return fit_range_to_half_bel(
+        avg=section["avg"],
+        std=section["std"],
+        min_val=section["min"],
+        max_val=section["max"],
+        shape=BellShapes[section["shape"]]
+    )
 
-# Test size generator
-NUMBER_OF_TESTS_834 = fit_range_to_half_bel(avg=10627, std=13948, min_val=1, max_val=246778, shape=BellShapes.NORMAL)
-NUMBER_OF_TESTS_270 = fit_range_to_half_bel(avg=15000, std=5000, min_val=1, max_val=75000, shape=BellShapes.NORMAL)
 
-# Message Error Rate
-TOTAL_ERROR_RATE = 0.005  # 0.5%
-
-# Toggle New Line (for edi segments)
-TOGGLE_NEW_LINE = True
+NUMBER_OF_TESTS_834 = get_number_of_tests(config["test_size"]["834"])
+NUMBER_OF_TESTS_270 = get_number_of_tests(config["test_size"]["270"])
 
 
 def number_of_tests_834(n=None):

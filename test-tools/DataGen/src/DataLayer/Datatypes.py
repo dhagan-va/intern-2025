@@ -1,7 +1,7 @@
 """
 Defines data classes for database
 """
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, asdict
 from datetime import date
 from typing import List, Dict, Optional
 
@@ -36,6 +36,7 @@ class Base:
     dob: date
     first_name: str
     last_name: str
+    gender: str
     address: Address
     phone: str
     insurance_company: str
@@ -48,7 +49,7 @@ class Beneficiary(Base):
     beneficiary_id: str
     relationship: str
     middle_name: Optional[str] = None
-    deductibles: Dict[str, int] = field(default_factory=dict)
+    deductibles: Dict[str, float] = field(default_factory=dict)
     visit_counts: Dict[str, int] = field(default_factory=dict)
 
     def to_dict(self):
@@ -57,6 +58,7 @@ class Beneficiary(Base):
             "dob": self.dob.isoformat(),
             "first_name": self.first_name,
             "last_name": self.last_name,
+            "gender": self.gender,
             "address": self.address.to_dict(),
             "phone": self.phone,
             "insurance_company": self.insurance_company,
@@ -76,6 +78,7 @@ class Beneficiary(Base):
             dob=date.fromisoformat(data["dob"]),
             first_name=data["first_name"],
             last_name=data["last_name"],
+            gender=data["gender"],
             address=Address.from_dict(data["address"]),
             phone=data["phone"],
             insurance_company=data["insurance_company"],
@@ -103,6 +106,7 @@ class Sponsor(Base):
             "dob": self.dob.isoformat(),
             "first_name": self.first_name,
             "last_name": self.last_name,
+            "gender": self.gender,
             "address": self.address.to_dict(),
             "phone": self.phone,
             "insurance_company": self.insurance_company,
@@ -121,6 +125,7 @@ class Sponsor(Base):
             dob=date.fromisoformat(data["dob"]),
             first_name=data["first_name"],
             last_name=data["last_name"],
+            gender=data["gender"],
             address=Address.from_dict(data["address"]),
             phone=data["phone"],
             insurance_company=data["insurance_company"],
@@ -132,4 +137,68 @@ class Sponsor(Base):
             beneficiaries=[
                 Beneficiary.from_dict(b) for b in data.get("beneficiaries", [])
             ]
+        )
+
+
+@dataclass
+class ClaimTransaction:
+    status: str
+    date: date
+    claim_id: str
+    service_line_id: str
+    sponsor_id: str
+    beneficiary_id: str
+    provider_npi: str
+    provider_name: str
+    provider_entity_type: str
+    provider_address_1: str
+    provider_city: str
+    provider_state: str
+    provider_zip: str
+    provider_phone: str
+    amount: float
+    provider_address_2: Optional[str] = None
+    payer_claim_id: Optional[str] = None
+
+    def to_dict(self):
+        return {
+            "status": self.status,
+            "date": self.date.isoformat(),
+            "claim_id": self.claim_id,
+            "service_line_id": self.service_line_id,
+            "sponsor_id": self.sponsor_id,
+            "beneficiary_id": self.beneficiary_id,
+            "provider_npi": self.provider_npi,
+            "provider_name": self.provider_name,
+            "provider_entity_type": self.provider_entity_type,
+            "provider_address_1": self.provider_address_1,
+            "provider_city": self.provider_city,
+            "provider_state": self.provider_state,
+            "provider_zip": self.provider_zip,
+            "provider_phone": self.provider_phone,
+            "amount": self.amount,
+            "provider_address_2": self.provider_address_2,
+            "payer_claim_id": self.payer_claim_id
+        }
+
+    @staticmethod
+    def from_dict(data):
+        return ClaimTransaction(
+            status=data["status"],
+            date=date.fromisoformat(data["date"]),
+            claim_id=data["claim_id"],
+            service_line_id=data["service_line_id"],
+            sponsor_id=data["sponsor_id"],
+            beneficiary_id=data["beneficiary_id"],
+            provider_npi=data["provider_npi"],
+            provider_name=data["provider_name"],
+            provider_entity_type=data["provider_entity_type"],
+            provider_address_1=data["provider_address_1"],
+            provider_city=data["provider_city"],
+            provider_state=data["provider_state"],
+            provider_zip=data["provider_zip"],
+            provider_phone=data["provider_phone"],
+            amount=data["amount"],
+            provider_address_2=data["provider_address_2"],
+            payer_claim_id=data["payer_claim_id"]
         )

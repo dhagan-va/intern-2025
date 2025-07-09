@@ -3,6 +3,20 @@ from abc import ABC, abstractmethod
 
 class DataAccess(ABC):
     @abstractmethod
+    def get_random_beneficiary(self, count): pass
+
+    @abstractmethod
+    def total_beneficiaries(self): pass
+    @abstractmethod
+    def save_sponsor(self, sponsor): pass
+
+    @abstractmethod
+    def save_many_sponsors(self, sponsors): pass
+
+    @abstractmethod
+    def get_all_ssns(self): pass
+
+    @abstractmethod
     def ssn_exists(self, ssn): pass
 
     @abstractmethod

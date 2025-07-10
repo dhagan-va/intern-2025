@@ -225,7 +225,6 @@ class EDI277CAGenerator:
         error_id = claim.beneficiary_id
         bene = self.transaction_funcs.family_db.get_beneficiary(claim.sponsor_id, claim.beneficiary_id)
         payer_trace_id = f"PTRN{claim.claim_id[-5:]}"
-        payer_claim_id = f"PAYER{claim.claim_id[-4:]}"
 
         last, first = self.split_provider_name(claim.provider_name, claim.provider_entity_type)
 

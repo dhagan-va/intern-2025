@@ -200,6 +200,11 @@ def generate_edi_270_payloads_with_metadata(
 
     shutil.copy2(datagen_results["file_path"], payload_file_path)
 
+    with open(datagen_results["file_path"], "r") as f:
+        edi_content = f.read()
+
+    edi_lines = edi_content.splitlines()
+
     metadata = {
         "file_info": {
             "original_path": datagen_results["file_path"],
@@ -207,6 +212,14 @@ def generate_edi_270_payloads_with_metadata(
             "filename": payload_filename,
             "generated_at": timestamp,
             "num_transactions": datagen_results["num_transactions"],
+            "file_size_bytes": len(edi_content),
+            "total_lines": len(edi_lines),
+        },
+        "edi_payload": {
+            "content": edi_content,
+            "lines": edi_lines,
+            "encoding": "utf-8",
+            "format": "X12_EDI_270",
         },
         "error_summary": {
             "total_errors": datagen_results["error_count"],

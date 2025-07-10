@@ -52,6 +52,10 @@ def main():
         sys.exit(1)
 
     try:
+        print(f"Generating EDI 270 payload...")
+        print(f"Messages: {args.messages}")
+        print(f"Error rate: {args.error_rate}")
+        print(f"Output directory: {args.output_dir}")
 
         result = generate_edi_270_payloads_with_metadata(
             output_dir=args.output_dir,
@@ -59,14 +63,12 @@ def main():
             error_rate=args.error_rate,
         )
 
-        if args.metadata_file:
-            metadata_path = Path(args.metadata_file)
-            with open(metadata_path, "w") as f:
-                json.dump(result["metadata"], f, indent=2)
-            print(f"\nMetadata saved to: {metadata_path}")
-            print(
-                "This file contains detailed transaction tracking data for load testing"
-            )
+        print(f"\nGenerated: {result['metadata']['file_info']['filename']}")
+        print(f"File path: {result['file_path']}")
+        print(
+            f"EDI content size: {result['metadata']['edi_payload']['format']} - {result['metadata']['file_info']['file_size_bytes']} bytes"
+        )
+        print(f"Total lines: {result['metadata']['file_info']['total_lines']}")
 
     except Exception as e:
         print(f"Error: {str(e)}")

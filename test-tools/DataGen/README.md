@@ -81,8 +81,8 @@ This performs the following:
 - Produces EDI files:
   - ✅ 270 (Eligibility Inquiry)
   - ✅ 837P (Professional Claim)
-  - 🔜 277CA (Claim Acknowledgment)
-  - 🔜 835 (Payment Remittance)
+  - ✅ 277CA (Claim Acknowledgment)
+  - ✅ 835 (Payment Remittance)
   - ✅ 834 (Enrollment Update)
   - 🔜 999 (Implementation Acknowledgment)
 - Optionally uploads files to AWS S3

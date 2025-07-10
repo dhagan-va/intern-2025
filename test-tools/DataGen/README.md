@@ -143,7 +143,7 @@ Each EDI generator updates claim status accordingly for later reuse.
 
 ### Database Support
 
-- SQLite
+- SQLite [SQLite Browser](https://sqlitebrowser.org/)
 - JSONL
 
 ---

@@ -45,7 +45,7 @@ class EDI270Generator:
         segments = [Seg.ST(270, num).to_edi(),
                     Seg.BHT("22", "13", claim.claim_id).to_edi(),
                     Seg.HL(1, "", 20, 1, error_ctrl, error_id).to_edi(),
-                    Seg.NM1("PR", 2, Config.PAYER_QUALIFIER, "", "", "PI",
+                    Seg.NM1("PR", 2, Config.PAYER_NAME, "", "", "PI",
                             Config.PAYER_ID, error_ctrl, error_id).to_edi(),
                     Seg.HL(2, 1, 21, 1, error_ctrl, error_id).to_edi(),
                     Seg.NM1("1P", claim.provider_entity_type, last, first, "", "XX", claim.provider_npi, error_ctrl,
@@ -149,7 +149,7 @@ class EDI837PGenerator:
                     Seg.N4(sponsor.address.city, sponsor.address.state, sponsor.address.zipcode, error_ctrl,
                            error_id).to_edi(),
                     Seg.DMG(sponsor.dob.strftime("%Y%m%d"), sponsor.gender).to_edi(),
-                    Seg.NM1("PR", 2, Config.PAYER_QUALIFIER, "", "", "PI",
+                    Seg.NM1("PR", 2, Config.PAYER_NAME, "", "", "PI",
                             Config.PAYER_ID, error_ctrl, error_id).to_edi(),
                     Seg.N3("123", "Payer Ave").to_edi(),
                     Seg.N4("Payer City", "MD", "99999", error_ctrl, error_id).to_edi(),
@@ -206,6 +206,7 @@ class EDI277CAGenerator:
         )
         self.num_messages = len(self.claims)
         self.error_ctrl = ErrorInjector(self.num_messages, error_rate)
+        self.optional_L2220D = True
 
     def get_num_messages(self):
         return self.num_messages
@@ -231,40 +232,43 @@ class EDI277CAGenerator:
         claim = self.claims[num - 1]
         error_id = claim.beneficiary_id
         bene = self.transaction_funcs.family_db.get_beneficiary(claim.sponsor_id, claim.beneficiary_id)
-        payer_claim_id = f"PCID{claim.claim_id[-5:]}"
         last, first = self.split_provider_name(claim.provider_name, claim.provider_entity_type)
 
         segments = [Seg.ST("277", num).to_edi(),
                     Seg.BHT("85", "08", claim.claim_id, "277CA").to_edi(),
                     Seg.HL("1", "", 20, 1).to_edi(),
-                    Seg.NM1("PR", 2, Config.PAYER_QUALIFIER, "", "", "PI",
+                    Seg.NM1("PR", 2, Config.PAYER_NAME, "", "", "PI",
                             Config.PAYER_ID, error_ctrl, error_id).to_edi(),
-                    Seg.TRN("1", payer_claim_id, self.error_ctrl, error_id).to_edi(),
+                    Seg.TRN("1", claim.payer_claim_id, error_ctrl=error_ctrl, error_id=error_id).to_edi(),
                     Seg.DTP("050", "D8").to_edi(),
                     Seg.DTP("009", "D8").to_edi(),
                     Seg.HL("2", "1", 21, 1).to_edi(),
                     Seg.NM1("41", "2", "Submitter Group",
                             "", "", "46", "133052274", error_ctrl).to_edi(),
-                    Seg.TRN("2", claim.claim_id, error_ctrl, error_id).to_edi(),
+                    Seg.TRN("2", claim.claim_id, error_ctrl=error_ctrl, error_id=error_id).to_edi(),
                     Seg.STC("A1:19:PR", "WQ", "1", error_ctrl, error_id).to_edi(),
                     Seg.AMT("YU", claim.amount, error_ctrl, error_id).to_edi(),
                     Seg.HL("3", "2", 19, 1).to_edi(),
                     Seg.NM1("85", claim.provider_entity_type, last, first, "", "XX", claim.provider_npi, error_ctrl,
                             error_id).to_edi(),
-                    Seg.TRN("1", payer_claim_id, self.error_ctrl, error_id).to_edi(),
+                    Seg.TRN("1", claim.payer_claim_id, error_ctrl=error_ctrl, error_id=error_id).to_edi(),
                     Seg.HL("4", "3", "PT").to_edi(),
                     Seg.NM1("QC", "1", bene.last_name, bene.first_name, bene.middle_name, "MI",
                             bene.beneficiary_id, error_ctrl).to_edi(),
                     Seg.TRN("2", claim.claim_id, error_ctrl, error_id).to_edi(),
                     Seg.STC("A1:19:PR", "WQ", claim.amount, error_ctrl, error_id).to_edi(),
-                    Seg.REF("1K", payer_claim_id, error_ctrl).to_edi(),
-                    Seg.DTP("472", "D8").to_edi(),
-                    # L2220D
-                    Seg.SVC("HC:00142:QK:QS:P1", claim.amount, "1", "MJ", 1).to_edi(),
-                    Seg.STC("A1:19:PR", "U", claim.amount, error_ctrl, error_id).to_edi(),
-                    Seg.REF("FJ", claim.claim_id, error_ctrl).to_edi(),
+                    Seg.REF("1K", claim.payer_claim_id, error_ctrl).to_edi(),
                     Seg.DTP("472", "D8").to_edi(),
                     ]
+
+        if self.optional_L2220D:
+            optional_segments = [Seg.SVC("HC:00142:QK:QS:P1", claim.amount, "1", "MJ", 1).to_edi(),
+                                 Seg.STC("A1:19:PR", "U", claim.amount, error_ctrl, error_id).to_edi(),
+                                 Seg.REF("FJ", claim.claim_id, error_ctrl).to_edi(),
+                                 Seg.DTP("472", "D8").to_edi(),
+                                 ]
+            segments.extend(optional_segments)
+            logger.warning("L2220D conditional in 277CA -- Claim is rejected")
 
         segments.append(Seg.SE(len(segments) + 1, num).to_edi())
 
@@ -328,11 +332,24 @@ class EDI835Generator:
         claim = self.claims[num - 1]
         error_id = claim.beneficiary_id
         bene = self.transaction_funcs.family_db.get_beneficiary(claim.sponsor_id, claim.beneficiary_id)
-        last, first = self.split_provider_name(claim.provider_name, claim.provider_entity_type)
 
         segments = [Seg.ST("835", num).to_edi(),
+                    Seg.BPR("I", claim.amount, "C", "ACH?").to_edi(),
+                    Seg.TRN("1", "71700666555", "935665544").to_edi(),
+                    Seg.N1("PR", Config.PAYER_NAME, "XV", Config.PAYER_ID, error_ctrl, error_id).to_edi(),
+                    Seg.N3("123", "Payer Ave").to_edi(),
+                    Seg.N4("Payer City", "MD", "99999", error_ctrl, error_id).to_edi(),
+                    Seg.PER("BL", "2403018701", error_ctrl, error_id).to_edi(),
+                    Seg.N1("PE", claim.provider_name, "XX", claim.provider_npi, error_ctrl, error_id).to_edi(),
+                    Seg.LX("1").to_edi(),
+                    Seg.CLP(claim.claim_id, "1", claim.amount, claim.amount, "VA", claim.payer_claim_id).to_edi(),
+                    Seg.NM1("QC", "1", bene.last_name, bene.first_name, bene.middle_name, "MI",
+                            bene.beneficiary_id, error_ctrl).to_edi(),
+                    Seg.SVC("HC:00142:QK:QS:P1", claim.amount, "1", "MJ", 1).to_edi(),
+                    Seg.REF("6R", claim.claim_id, error_ctrl).to_edi()
+                    ]
 
-                   ]
+        segments.append(Seg.SE(len(segments) + 1, num).to_edi())
 
         if self.error_ctrl.error_inserted is True:
             log_data["errors"]["error_ct_835"] += 1
@@ -384,9 +401,9 @@ class EDI834Generator:
 
         segments = [Seg.ST(834, self.transaction_control_number).to_edi(),
                     Seg.BGN(uuid.uuid4().hex.upper()).to_edi(),
-                    Seg.N1("P5", Config.SPONSOR_QUALIFIER, Config.SPONSOR_ID, error_ctrl,
+                    Seg.N1("P5", Config.SPONSOR_NAME, "FI", Config.SPONSOR_ID, error_ctrl,
                            error_id).to_edi(),
-                    Seg.N1("IN", Config.PAYER_QUALIFIER, Config.PAYER_ID, error_ctrl, error_id).to_edi(),
+                    Seg.N1("IN", Config.PAYER_NAME, "FI", Config.PAYER_ID, error_ctrl, error_id).to_edi(),
                     Seg.INS(relationship_code).to_edi(),
                     Seg.REF("0F", sponsor.sponsor_id, error_ctrl).to_edi(),
                     Seg.REF("6O", bene.beneficiary_id, error_ctrl).to_edi(),

@@ -114,9 +114,10 @@ class BGN:
 
 # Sponsor Name
 class N1:
-    def __init__(self, entity_id_code, name, id_code, error_ctrl, error_id):
+    def __init__(self, entity_id_code, name, id_code_qualifier, id_code, error_ctrl, error_id):
         self.entity_id_code = entity_id_code
         self.name = name
+        self.id_code_qualifier = id_code_qualifier
         self.id_code = id_code
         self.error_ctrl = error_ctrl
         self.error_id = error_id
@@ -131,7 +132,7 @@ class N1:
             id_code = erroneous
         else:
             logger.debug(f"Generating N1 segment")
-        return f"N1*{self.entity_id_code}*{self.name}*FI*{id_code}~\n"
+        return f"N1*{self.entity_id_code}*{self.name}*{self.id_code_qualifier}*{id_code}~\n"
 
 
 # Insured Benefit
@@ -420,7 +421,7 @@ class LX:
 
     def to_edi(self):
         logger.debug(f"Generating LX segment line {self.number}")
-        return f"LX*{self.number}~\n"
+        return f"LX*{self.number:04}~\n"
 
 
 class SV1:
@@ -446,9 +447,10 @@ class PAT:
 
 
 class TRN:
-    def __init__(self, trace_code, ref_id, error_ctrl, error_id):
+    def __init__(self, trace_code, ref_id, payer_id=None, error_ctrl=None, error_id=None):
         self.trace_code = trace_code
         self.ref_id = ref_id
+        self.payer_id = payer_id
         self.error_ctrl = error_ctrl
         self.error_id = error_id
 
@@ -460,8 +462,11 @@ class TRN:
                 f"[ERROR INSERTED] TRN segment: reference ID changed to '{ref_id}' for member: {self.error_id}")
         else:
             logger.debug("Generating TRN segment")
+        segment = f"TRN*{self.trace_code}*{ref_id}"
+        if self.payer_id is not None:
+            segment += f"*1{self.payer_id}"
 
-        return f"TRN*{self.trace_code}*{ref_id}~\n"
+        return segment + "~\n"
 
 
 class STC:
@@ -488,12 +493,44 @@ class STC:
 
 class SVC:
     def __init__(self, proc_code, charge_amt, quantity, unit, diagnosis_ptr):
+        now = datetime.now()
         self.proc_code = proc_code
         self.charge_amt = charge_amt
         self.unit = unit
         self.quantity = quantity
         self.diagnosis_ptr = diagnosis_ptr
+        self.date = now.strftime("%Y%m%d")
 
     def to_edi(self):
         logger.debug("Generating SVC segment")
         return f"SVC*{self.proc_code}*{self.charge_amt}*{self.quantity}*{self.unit}*{self.diagnosis_ptr}~\n"
+
+
+class BPR:
+    def __init__(self, transaction_handling_code, amt, credit_debit_code, payment_method):
+        now = datetime.now()
+        self.transaction_handling_code = transaction_handling_code
+        self.amt = amt
+        self.credit_debit_code = credit_debit_code
+        self.payment_method = payment_method
+        self.date = now.strftime("%Y%m%d")
+
+    def to_edi(self):
+        logger.debug("Generating BPR segment")
+        return (f"BPR*{self.transaction_handling_code}*{self.amt}*{self.credit_debit_code}*{self.payment_method}*"
+                f"{self.date}~\n")
+
+
+class CLP:
+    def __init__(self, claim_id, claim_status, total_amt, paid_amt, filing_code, ctrl_num):
+        self.claim_id = claim_id
+        self.claim_status = claim_status
+        self.total_amt = total_amt
+        self.paid_amt = paid_amt
+        self.filing_code = filing_code
+        self.ctrl_num = ctrl_num
+
+    def to_edi(self):
+        logger.debug("Generating CLP segment")
+        return (f"CLP*{self.claim_id}*{self.claim_status}*{self.total_amt}*{self.paid_amt}**{self.filing_code}*"
+                f"{self.ctrl_num}~\n")

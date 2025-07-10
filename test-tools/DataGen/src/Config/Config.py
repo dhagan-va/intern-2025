@@ -43,10 +43,11 @@ DOWNLOAD_DIRECTORY = os.path.join(ROOT_PATH, config["paths"]["download_directory
 os.makedirs(DOWNLOAD_DIRECTORY, exist_ok=True)
 
 FAMILY_DATABASE_DIRECTORY = os.path.join(ROOT_PATH, config["paths"]["family_database_directory"])
-EDI834_PATH = os.path.join(ROOT_PATH, config["paths"]["edi834_path"])
 EDI270_PATH = os.path.join(ROOT_PATH, config["paths"]["edi270_path"])
 EDI837_PATH = os.path.join(ROOT_PATH, config["paths"]["edi837_path"])
 EDI277CA_PATH = os.path.join(ROOT_PATH, config["paths"]["edi277ca_path"])
+EDI835_PATH = os.path.join(ROOT_PATH, config["paths"]["edi835_path"])
+EDI834_PATH = os.path.join(ROOT_PATH, config["paths"]["edi834_path"])
 MARKDOWN_DIRECTORY = os.path.join(ROOT_PATH, config["paths"]["markdown_directory"])
 NPI_CSV_PATH = download_weekly_npi_data(DOWNLOAD_DIRECTORY)
 
@@ -55,6 +56,7 @@ EDI270_FILE_NAME = config["filenames"]["edi270_file_template"].format(year=YEAR,
 EDI277CA_FILE_NAME = config["filenames"]["edi277ca_file_template"].format(year=YEAR, ymd=YMD, hm=HM,
                                                                           full_date=FULL_DATE)
 EDI837_FILE_NAME = config["filenames"]["edi837_file_template"].format(year=YEAR, ymd=YMD, hm=HM, full_date=FULL_DATE)
+EDI835_FILE_NAME = config["filenames"]["edi835_file_template"].format(year=YEAR, ymd=YMD, hm=HM, full_date=FULL_DATE)
 STATISTICS_MD = os.path.join(MARKDOWN_DIRECTORY, config["filenames"]["statistics_md"])
 
 
@@ -81,9 +83,9 @@ FAKER_SEED = config["seed"]["faker_seed"]
 RANDOM_SEED = config["seed"]["random_seed"]
 SENDER_ID = config["constants"]["sender_id"]
 RECEIVER_ID = config["constants"]["receiver_id"]
-SPONSOR_QUALIFIER = config["constants"]["sponsor_qualifier"]
+SPONSOR_NAME = config["constants"]["sponsor_name"]
 SPONSOR_ID = config["constants"]["sponsor_id"]
-PAYER_QUALIFIER = config["constants"]["payer_qualifier"]
+PAYER_NAME = config["constants"]["payer_name"]
 PAYER_ID = config["constants"]["payer_id"]
 TOGGLE_NEW_LINE = config["constants"]["toggle_new_line"]
 TOTAL_ERROR_RATE = config["constants"]["total_error_rate"]

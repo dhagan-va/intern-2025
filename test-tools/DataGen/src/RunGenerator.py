@@ -7,7 +7,8 @@ from Config import Config
 from Config.Config import logger, number_of_tests_834, number_of_tests_270, get_error_rate
 from Config.Data_Visualizer import log_data, create_md
 from FileCreation.DataGenerator import SponsorDataGenerator, generate_claim_transactions
-from FileCreation.EDIGenerator import EDI834Generator, EDI270Generator, EDI837PGenerator, EDI277CAGenerator
+from FileCreation.EDIGenerator import EDI834Generator, EDI270Generator, EDI837PGenerator, EDI277CAGenerator, \
+    EDI835Generator
 from Repository.DatabaseFactory import get_database_backend
 from Repository.Transaction_Storage_Functions import TransactionFunctions
 
@@ -92,6 +93,25 @@ def Run277CAGenerator(error_rate=None):
     logger.info(f"It took {end_time} to generate {edi277CA.get_num_messages()} transactions for the 277CA file")
 
 
+def Run835Generator(error_rate=None):
+    now = datetime.now()
+    error_rate = get_error_rate(error_rate)
+    log_data["errors"]["error_rate_835"] = error_rate
+
+    logger.info(f"Generating transactions from saved 835 information")
+    edi385 = EDI835Generator(transaction_funcs=transaction_funcs, error_rate=error_rate)
+    log_data["messages"]["count_835"] = edi385.get_num_messages()
+    logger.info(f"Generating transactions into EDI file")
+    edi_out = edi385.combine_segments()
+
+    with open(Config.get_edi_path(Config.EDI835_PATH, Config.EDI835_FILE_NAME), 'w') as f:
+        f.writelines(edi_out)
+
+    end_time = datetime.now() - now
+    log_data["messages"]["time_835"] = end_time.total_seconds()
+    logger.info(f"It took {end_time} to generate {edi385.get_num_messages()} transactions for the 835 file")
+
+
 def Run834Generator(error_rate=None):
     # Setup/Initialization
     now = datetime.now()
@@ -163,6 +183,7 @@ if __name__ == "__main__":
     Run270Generator(num, 0, upload_s3=Config.UPLOAD_TO_S3)
     Run837PGenerator(0)
     Run277CAGenerator(0)
+    Run835Generator(0)
     Run834Generator(0)
 
     end = datetime.now() - curr

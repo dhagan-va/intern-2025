@@ -20,19 +20,19 @@ pie title Message type distribution
     "270" : 5
     "837" : 5
     "277" : 10
-    "835" : 0
-    "834" : 15
+    "835" : 5
+    "834" : 50
 ```
 
 
-Total Number of Messages Generated: **35**
+Total Number of Messages Generated: **75**
 ## Throughput
 ```mermaid
 xychart-beta
     title "Throughput (Transactions per Second)"
     x-axis ["270", "837", "277", "835", "834"]
-    y-axis "TPS" 0 --> 1501.0
-    bar [555.5555555555555, 454.5041359876375, 1000.0, 0.0, 1500.0]
+    y-axis "TPS" 0 --> 2778.777777777778
+    bar [555.61729081009, 555.4938340184424, 909.008271975275, 555.61729081009, 2777.777777777778]
 ```
 
 
@@ -99,8 +99,8 @@ pie title Beneficiary Relationship Types
 xychart-beta
     title "AMT (deductible) Averages"
     x-axis ["D2", "FK", "R"]
-    y-axis "Amount" 0 --> 55042.253749999996
-    bar [36729.746875000004, 47307.99312499999, 54042.253749999996]
+    y-axis "Amount" 0 --> 59451.39078431372
+    bar [58451.39078431372, 51026.59313725491, 49330.14862745098]
 ```
 
 
@@ -109,8 +109,8 @@ xychart-beta
 xychart-beta
     title "AMT (visit) Averages"
     x-axis ["C1", "P3", "B9"]
-    y-axis "Number of Visits" 0 --> 7.8125
-    bar [6.8125, 4.5, 6.3125]
+    y-axis "Number of Visits" 0 --> 8.823529411764707
+    bar [6.1568627450980395, 6.607843137254902, 7.823529411764706]
 ```
 
 

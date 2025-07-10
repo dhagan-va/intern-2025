@@ -517,8 +517,8 @@ class BPR:
 
     def to_edi(self):
         logger.debug("Generating BPR segment")
-        return (f"BPR*{self.transaction_handling_code}*{self.amt}*{self.credit_debit_code}*{self.payment_method}*"
-                f"{self.date}~\n")
+        return (f"BPR*{self.transaction_handling_code}*{self.amt}*{self.credit_debit_code}*{self.payment_method}******"
+                f"******{self.date}~\n")
 
 
 class CLP:

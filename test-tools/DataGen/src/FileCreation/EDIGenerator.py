@@ -255,7 +255,7 @@ class EDI277CAGenerator:
                     Seg.HL("4", "3", "PT").to_edi(),
                     Seg.NM1("QC", "1", bene.last_name, bene.first_name, bene.middle_name, "MI",
                             bene.beneficiary_id, error_ctrl).to_edi(),
-                    Seg.TRN("2", claim.claim_id, error_ctrl, error_id).to_edi(),
+                    Seg.TRN("2", claim.claim_id, error_ctrl=error_ctrl, error_id=error_id).to_edi(),
                     Seg.STC("A1:19:PR", "WQ", claim.amount, error_ctrl, error_id).to_edi(),
                     Seg.REF("1K", claim.payer_claim_id, error_ctrl).to_edi(),
                     Seg.DTP("472", "D8").to_edi(),
@@ -334,7 +334,7 @@ class EDI835Generator:
         bene = self.transaction_funcs.family_db.get_beneficiary(claim.sponsor_id, claim.beneficiary_id)
 
         segments = [Seg.ST("835", num).to_edi(),
-                    Seg.BPR("I", claim.amount, "C", "ACH?").to_edi(),
+                    Seg.BPR("I", claim.amount, "C", "ACH").to_edi(),
                     Seg.TRN("1", "71700666555", "935665544").to_edi(),
                     Seg.N1("PR", Config.PAYER_NAME, "XV", Config.PAYER_ID, error_ctrl, error_id).to_edi(),
                     Seg.N3("123", "Payer Ave").to_edi(),

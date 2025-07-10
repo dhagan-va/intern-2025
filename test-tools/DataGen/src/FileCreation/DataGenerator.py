@@ -22,10 +22,13 @@ def generate_claim_transactions(num_claims, transaction_funcs, input_date=date.t
         sponsor_id = bene.sponsor_id
         provider = npi_funcs.get_random_provider(bene.address.state)
 
+        claim_id = f"CLM{uuid.uuid4().hex[:12]}"
+        payer_claim_id = f"PCID{claim_id[-5:]}"
+
         claim = ClaimTransaction(
             status=status,
             date=input_date,
-            claim_id=f"CLM{uuid.uuid4().hex[:12]}",
+            claim_id=claim_id,
             service_line_id=f"SRV{bene.beneficiary_id}",
             sponsor_id=sponsor_id,
             beneficiary_id=bene.beneficiary_id,
@@ -39,7 +42,7 @@ def generate_claim_transactions(num_claims, transaction_funcs, input_date=date.t
             provider_zip=provider["zipcode"],
             provider_phone=provider["phone"],
             amount=round(random.uniform(50, 1500), 2),
-            payer_claim_id=None
+            payer_claim_id=payer_claim_id
         )
         transactions.append(claim)
     transaction_funcs.save_many_claims(transactions)

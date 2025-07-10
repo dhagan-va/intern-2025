@@ -257,7 +257,11 @@ class EDI277CAGenerator:
                     Seg.TRN("2", claim.claim_id, error_ctrl, error_id).to_edi(),
                     Seg.STC("A1:19:PR", "WQ", claim.amount, error_ctrl, error_id).to_edi(),
                     Seg.DTP("472", "D8").to_edi(),
-                    Seg.SE(21, num).to_edi(),
+                    Seg.SVC("HC:00142:QK:QS:P1", claim.amount, "1", "MJ", 1).to_edi(),
+                    Seg.STC("A1:19:PR", "U", claim.amount, error_ctrl, error_id).to_edi(),
+                    Seg.REF("FJ", claim.claim_id, error_ctrl).to_edi(),
+                    Seg.DTP("472", "D8").to_edi(),
+                    Seg.SE(25, num).to_edi(),
                     Seg.GE(1).to_edi(),
                     Seg.IEA().to_edi()
                     ]

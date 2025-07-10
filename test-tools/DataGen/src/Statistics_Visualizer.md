@@ -17,21 +17,21 @@ The 270 file is used to request information about a member's health insurance el
 ## Transaction Counts
 ```mermaid
 pie title Message type distribution
-    "270" : 1000
-    "837" : 1000
-    "277" : 1000
-    "834" : 1000
+    "270" : 5
+    "837" : 5
+    "277" : 5
+    "834" : 35
 ```
 
 
-Total Number of Messages Generated: **4000**
+Total Number of Messages Generated: **50**
 ## Throughput
 ```mermaid
 xychart-beta
     title "Throughput (Transactions per Second)"
     x-axis ["270", "837", "277", "834"]
-    y-axis "TPS" 0 --> 4099.343859246478
-    bar [4098.343859246478, 3194.8779716358736, 3787.907484147607, 3676.4841047209734]
+    y-axis "TPS" 0 --> 2693.5148088314486
+    bar [555.4938340184424, 499.90001999600076, 625.1562890722681, 2692.5148088314486]
 ```
 
 
@@ -40,8 +40,8 @@ xychart-beta
 xychart-beta
     title "Error Count in Messages"
     x-axis ["270", "837", "277", "834"]
-    y-axis "Errors" 0 --> 51
-    bar [50, 0, 0, 0]
+    y-axis "Errors" 0 --> 2
+    bar [1, 0, 0, 0]
 ```
 
 
@@ -60,17 +60,17 @@ xychart-beta
 xychart-beta
     title "Family Size Histogram"
     x-axis ["1", "2", "3", "4"]
-    y-axis "Count" 0 --> 10046
-    bar [10006, 9979, 9952, 10045]
+    y-axis "Count" 0 --> 2
+    bar [0, 1, 1, 0]
 ```
 
 
 ```mermaid
 pie title Family Size Breakdown
-    "1" : 10006
-    "2" : 9979
-    "3" : 9952
-    "4" : 10045
+    "1" : 0
+    "2" : 1
+    "3" : 1
+    "4" : 0
 ```
 
 
@@ -79,17 +79,17 @@ pie title Family Size Breakdown
 xychart-beta
     title "Beneficiary Code Distribution"
     x-axis ["Spouse (01)", "Child (19)", "Caregiver (26)", "Ex-Spouse (25)"]
-    y-axis "Count" 0 --> 25099
-    bar [25029, 24999, 25098, 24874]
+    y-axis "Count" 0 --> 4
+    bar [1, 1, 0, 3]
 ```
 
 
 ```mermaid
 pie title Beneficiary Relationship Types
-    "Spouse (01)" : 25029
-    "Child (19)" : 24999
-    "Caregiver (26)" : 25098
-    "Ex-Spouse (25)" : 24874
+    "Spouse (01)" : 1
+    "Child (19)" : 1
+    "Caregiver (26)" : 0
+    "Ex-Spouse (25)" : 3
 ```
 
 
@@ -98,8 +98,8 @@ pie title Beneficiary Relationship Types
 xychart-beta
     title "AMT (deductible) Averages"
     x-axis ["D2", "FK", "R"]
-    y-axis "Amount" 0 --> 51139.12116883119
-    bar [50127.27085914086, 49487.92207792212, 50139.12116883119]
+    y-axis "Amount" 0 --> 54975.928611111114
+    bar [48691.38861111111, 45329.902500000004, 53975.928611111114]
 ```
 
 
@@ -108,10 +108,10 @@ xychart-beta
 xychart-beta
     title "AMT (visit) Averages"
     x-axis ["C1", "P3", "B9"]
-    y-axis "Number of Visits" 0 --> 8.719280719280718
-    bar [7.719280719280719, 7.481518481518481, 7.316683316683316]
+    y-axis "Number of Visits" 0 --> 10.0
+    bar [6.944444444444445, 9.0, 6.666666666666667]
 ```
 
 
 ## Average 270s per Beneficiary
-- Average 270s per Beneficiary: **0.01**
+- Average 270s per Beneficiary: **0.00**

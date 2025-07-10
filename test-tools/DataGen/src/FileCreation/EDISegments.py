@@ -487,7 +487,7 @@ class STC:
 
 
 class SVC:
-    def __init__(self, proc_code, charge_amt, unit, quantity, diagnosis_ptr):
+    def __init__(self, proc_code, charge_amt, quantity, unit, diagnosis_ptr):
         self.proc_code = proc_code
         self.charge_amt = charge_amt
         self.unit = unit
@@ -496,5 +496,4 @@ class SVC:
 
     def to_edi(self):
         logger.debug("Generating SVC segment")
-        return (f"SVC*{self.proc_code}*{self.charge_amt}*{self.charge_amt}*{self.quantity}*{self.unit}*"
-                f"{self.diagnosis_ptr}~\n")
+        return f"SVC*{self.proc_code}*{self.charge_amt}*{self.quantity}*{self.unit}*{self.diagnosis_ptr}~\n"

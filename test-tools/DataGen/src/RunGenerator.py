@@ -176,9 +176,7 @@ if __name__ == "__main__":
     sponsors = GenerateSponsors(num)
     CreateClaimDB(num, date.today(), "Created")
     CreateClaimDB(num, yesterday, "270 Created")
-    CreateClaimDB(num, yesterday, "837 Created")
     CreateClaimDB(num, week_and_day_before, "277CA Created")
-    CreateClaimDB(num, week_and_day_before, "835 Created")
 
     Run270Generator(num, 0, upload_s3=Config.UPLOAD_TO_S3)
     Run837PGenerator(0)

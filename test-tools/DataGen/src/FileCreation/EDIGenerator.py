@@ -268,7 +268,7 @@ class EDI277CAGenerator:
                                  Seg.DTP("472", "D8").to_edi(),
                                  ]
             segments.extend(optional_segments)
-            logger.warning("L2220D conditional in 277CA -- Claim is rejected")
+            logger.debug("L2220D conditional in 277CA -- Claim is rejected")
 
         segments.append(Seg.SE(len(segments) + 1, num).to_edi())
 

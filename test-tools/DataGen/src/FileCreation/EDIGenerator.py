@@ -42,7 +42,7 @@ class EDI270Generator:
         error_id = claim.beneficiary_id
         bene = self.transaction_funcs.family_db.get_beneficiary(claim.sponsor_id, claim.beneficiary_id)
 
-        segments = [Seg.ST(270, num).to_edi(),
+        segments = [Seg.ST("270", num).to_edi(),
                     Seg.BHT("22", "13", claim.claim_id).to_edi(),
                     Seg.HL(1, "", 20, 1, error_ctrl, error_id).to_edi(),
                     Seg.NM1("PR", 2, Config.PAYER_NAME, "", "", "PI",

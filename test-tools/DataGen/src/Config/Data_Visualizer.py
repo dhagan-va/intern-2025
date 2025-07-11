@@ -147,7 +147,7 @@ def create_md():
         f.write("## Error Rate\n")
         f.writelines(create_bar_graph(
             title="Error Rate (%)",
-            x=[270, 837, 277, 834],
+            x=[270, 837, 277, 835, 834],
             y="Percent",
             values=[log_data["errors"]["error_rate_270"] * 100, log_data["errors"]["error_rate_837"] * 100,
                     log_data["errors"]["error_rate_277CA"] * 100, log_data["errors"]["error_rate_835"] * 100,

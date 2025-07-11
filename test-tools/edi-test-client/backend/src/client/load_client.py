@@ -79,14 +79,12 @@ class LoadClient:
         self._running = False
         self._log.info("Stopping client")
 
-        # Wait for threads to complete
         if self._sched_thread:
             self._sched_thread.join()
 
         if self._pool:
             self._pool.shutdown(wait=True)
 
-        # Log final statistics
         curr_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         self._log.info("Client stopped at %s", curr_time)
         result = self._stats.snapshot()
@@ -95,16 +93,14 @@ class LoadClient:
             "%d requests sent, %.2f ms avg latency, %d 200 OK",
             result["count"],
             result["avg_latency"],
-            result["codes"][200],
+            result["codes"].get(200, 0),
         )
 
     def _scheduler(self):
-        """Background scheduler that maintains target RPS."""
         next_run = time.perf_counter()
         while not self._stop_event.is_set():
             interval = 1.0 / self.rps
             
-            # Submit request to thread pool
             fut = self._pool.submit(
                 reqs.send_edi_request,
                 self.transaction,
@@ -112,7 +108,6 @@ class LoadClient:
             )
             fut.add_done_callback(self._handle_response)
             
-            # Maintain timing
             next_run += interval
             time.sleep(max(0, next_run - time.perf_counter()))
         return
@@ -121,10 +116,10 @@ class LoadClient:
         """Process completed HTTP requests and update statistics."""
         curr_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         try:
-            status, elapsed, body = future.result()
+            status, elapsed, body, sent_payload = future.result()  # Now includes sent payload
             
             self._stats.update(elapsed, status)
-            self._sink.append(curr_time, elapsed, status, self.rps, body)
+            self._sink.append(curr_time, elapsed, status, self.rps, sent_payload)  # Log sent payload
             
             if status == 200:
                 self._log.info("200 OK in %.3f ms", elapsed)

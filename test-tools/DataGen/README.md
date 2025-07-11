@@ -12,7 +12,7 @@ graph TD
     Markdown["Markdown Report<br/>Stats & Charts"]
 
     Generator --> SponsorGen
-    Generator --> ClaimGen
+    SponsorGen --> ClaimGen
     ClaimGen --> EDIGen
     EDIGen --> S3Upload
     EDIGen --> Markdown

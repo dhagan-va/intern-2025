@@ -8,12 +8,10 @@ bucket_name = "edi-file-storage"
 
 [database]
 backend = "sqlite"
-user_limit = 500000
 jsonl_path = "localdb.jsonl"
 sqlite_path = "localdb.sqlite"
 
 [paths]
-markdown_directory = "Statistics_Visualizer.md"
 download_directory = "Downloads"
 family_database_directory = "Output/Local_DB"
 edi270_path = "Output/EDI270_Output"

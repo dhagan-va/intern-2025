@@ -48,7 +48,6 @@ EDI837_PATH = os.path.join(ROOT_PATH, config["paths"]["edi837_path"])
 EDI277CA_PATH = os.path.join(ROOT_PATH, config["paths"]["edi277ca_path"])
 EDI835_PATH = os.path.join(ROOT_PATH, config["paths"]["edi835_path"])
 EDI834_PATH = os.path.join(ROOT_PATH, config["paths"]["edi834_path"])
-MARKDOWN_DIRECTORY = os.path.join(ROOT_PATH, config["paths"]["markdown_directory"])
 NPI_CSV_PATH = download_weekly_npi_data(DOWNLOAD_DIRECTORY)
 
 EDI834_FILE_NAME = config["filenames"]["edi834_file_template"].format(year=YEAR, ymd=YMD, hm=HM, full_date=FULL_DATE)
@@ -57,7 +56,7 @@ EDI277CA_FILE_NAME = config["filenames"]["edi277ca_file_template"].format(year=Y
                                                                           full_date=FULL_DATE)
 EDI837_FILE_NAME = config["filenames"]["edi837_file_template"].format(year=YEAR, ymd=YMD, hm=HM, full_date=FULL_DATE)
 EDI835_FILE_NAME = config["filenames"]["edi835_file_template"].format(year=YEAR, ymd=YMD, hm=HM, full_date=FULL_DATE)
-STATISTICS_MD = os.path.join(MARKDOWN_DIRECTORY, config["filenames"]["statistics_md"])
+STATISTICS_MD = os.path.join(ROOT_PATH, config["filenames"]["statistics_md"])
 
 
 def get_edi_path(edi_path, edi_file):
@@ -75,7 +74,6 @@ def get_local_db_path(db_path, db_file):
 UPLOAD_TO_S3 = config["aws"]["upload_to_s3"]
 BUCKET_NAME = config["aws"]["bucket_name"]
 DATABASE_BACKEND = config["database"]["backend"]
-USER_LIMIT = config["database"]["user_limit"]
 FAMILY_DATABASE_JSONL = config["database"]["jsonl_path"]
 FAMILY_DATABASE_SQLITE = config["database"]["sqlite_path"]
 

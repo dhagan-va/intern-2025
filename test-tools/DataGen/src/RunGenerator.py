@@ -168,7 +168,7 @@ def CreateClaimDB(num_gen, input_date=date.today(), status="Created"):
 
 if __name__ == "__main__":
     curr = datetime.now()
-    num = 5
+    num = 500
 
     yesterday = date.today() - timedelta(days=1)
     week_and_day_before = date.today() - timedelta(days=8)

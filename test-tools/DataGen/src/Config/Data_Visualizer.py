@@ -79,9 +79,7 @@ log_data = {
 
 
 def create_md():
-    if not os.path.exists(Config.MARKDOWN_DIRECTORY):
-        os.makedirs(Config.MARKDOWN_DIRECTORY)
-    path = Config.MARKDOWN_DIRECTORY
+    path = Config.STATISTICS_MD
 
     message_types = [270, 837, 277, 835, 834]
     message_count = [log_data["messages"]["count_270"], log_data["messages"]["count_837"],
@@ -110,7 +108,7 @@ def create_md():
     avg_p3 = log_data["amt"]["P3"]["sum"] / log_data["amt"]["P3"]["count"]
     avg_b9 = log_data["amt"]["B9"]["sum"] / log_data["amt"]["B9"]["count"]
 
-    with open(path, "w") as f:
+    with open(path, "w+") as f:
         f.write("# Data Visualizer \n\n")
 
         f.writelines(INTRO)

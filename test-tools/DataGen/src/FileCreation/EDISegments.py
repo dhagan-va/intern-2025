@@ -50,21 +50,33 @@ class IEA:
 
 # Group Header
 class GS:
-    def __init__(self, functional_id, sender=Config.SENDER_ID, receiver=Config.RECEIVER_ID, version="005010X220A1",
-                 nl_toggle=True):
+    def __init__(self, functional_id, sender=Config.SENDER_ID, receiver=Config.RECEIVER_ID, nl_toggle=True):
         now = datetime.now()
         self.functional_id = functional_id
         self.sender = sender
         self.receiver = receiver
         self.date = now.strftime("%Y%m%d")
         self.time = now.strftime("%H%M%S")
-        self.version = version
         self.nl_toggle = nl_toggle
 
     def to_edi(self):
-        nl = "~\n" if self.nl_toggle else "~"
         logger.debug("Generating GS segment")
-        return f"GS*{self.functional_id}*{self.sender}*{self.receiver}*{self.date}*{self.time}*61*X*{self.version}{nl}"
+        nl = "~\n" if self.nl_toggle else "~"
+        segment = f"GS*{self.functional_id}*{self.sender}*{self.receiver}*{self.date}*{self.time}*61*X"
+        match self.functional_id:
+            case "HS":
+                segment += "*005010X279A1"
+            case "HC":
+                segment += "*005010X222A2"
+            case "HN":
+                segment += "*005010X214"
+            case "HP":
+                segment += "*005010X221A1"
+            case "BE":
+                segment += "*005010X220A1"
+            case _:
+                logger.warning(f"Unknown functional ID: {self.functional_id} in GS segment")
+        return segment + nl
 
 
 # Group Trailer
@@ -85,7 +97,21 @@ class ST:
 
     def to_edi(self):
         logger.debug(f"Generating ST segment for an {self.file_type} file, transaction #{self.num}")
-        return f"ST*{self.file_type}*{self.num:06}~\n"
+        segment = f"ST*{self.file_type}*{self.num:06}"
+        match self.file_type:
+            case "270":
+                segment += "*005010X279A1"
+            case "837":
+                segment += "*005010X222A2"
+            case "277":
+                segment += "*005010X214"
+            case "835":
+                pass
+            case "834":
+                segment += "*005010X220A1"
+            case _:
+                logger.warning(f"Unknown file type: {self.file_type} in ST segment")
+        return segment + "~\n"
 
 
 # Transaction Set Trailer

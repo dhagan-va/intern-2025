@@ -399,7 +399,7 @@ class EDI834Generator:
         relationship_code = self.relationship_map.get(bene.relationship)
         error_id = bene.beneficiary_id
 
-        segments = [Seg.ST(834, self.transaction_control_number).to_edi(),
+        segments = [Seg.ST("834", self.transaction_control_number).to_edi(),
                     Seg.BGN(uuid.uuid4().hex.upper()).to_edi(),
                     Seg.N1("P5", Config.SPONSOR_NAME, "FI", Config.SPONSOR_ID, error_ctrl,
                            error_id).to_edi(),

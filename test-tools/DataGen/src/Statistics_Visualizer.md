@@ -17,22 +17,22 @@ The 270 file is used to request information about a member's health insurance el
 ## Transaction Counts
 ```mermaid
 pie title Message type distribution
-    "270" : 500
-    "837" : 500
-    "277" : 500
-    "835" : 500
-    "834" : 500
+    "270" : 100
+    "837" : 100
+    "277" : 100
+    "835" : 100
+    "834" : 100
 ```
 
 
-Total Number of Messages Generated: **2500**
+Total Number of Messages Generated: **500**
 ## Throughput
 ```mermaid
 xychart-beta
     title "Throughput (Transactions per Second)"
     x-axis ["270", "837", "277", "835", "834"]
-    y-axis "TPS" 0 --> 3969.3169574120225
-    bar [3968.3169574120225, 3246.753246753247, 3424.657534246576, 3906.2805178165454, 3571.428571428571]
+    y-axis "TPS" 0 --> 3226.910513242363
+    bar [2630.8173949646152, 2564.234063285297, 2702.629658657874, 3030.2112057210384, 3225.910513242363]
 ```
 
 
@@ -99,8 +99,8 @@ pie title Beneficiary Relationship Types
 xychart-beta
     title "AMT (deductible) Averages"
     x-axis ["D2", "FK", "R"]
-    y-axis "Amount" 0 --> 51690.38481037922
-    bar [50690.38481037922, 49329.194091816375, 50026.423712574804]
+    y-axis "Amount" 0 --> 52573.358118811906
+    bar [44980.4706930693, 51573.358118811906, 51291.260297029694]
 ```
 
 
@@ -109,10 +109,10 @@ xychart-beta
 xychart-beta
     title "AMT (visit) Averages"
     x-axis ["C1", "P3", "B9"]
-    y-axis "Number of Visits" 0 --> 8.43313373253493
-    bar [7.43313373253493, 7.417165668662674, 7.30938123752495]
+    y-axis "Number of Visits" 0 --> 8.752475247524753
+    bar [7.752475247524752, 7.653465346534653, 7.0]
 ```
 
 
 ## Average 270s per Beneficiary
-- Average 270s per Beneficiary: **0.01**
+- Average 270s per Beneficiary: **0.00**

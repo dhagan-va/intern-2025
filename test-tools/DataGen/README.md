@@ -6,8 +6,8 @@
 graph TD
     Generator["RunGenerator.py<br/>Main Script Execution"]
     SponsorGen["Sponsor & Beneficiary<br/>Data Generation"]
-    ClaimGen["Claim Transaction<br/>Creation (270, 837, 834)"]
-    EDIGen["EDI Generators<br/>270, 837P, 834, 277CA, 835, 999"]
+    ClaimGen["Claim Transaction<br/>Creation (270, 837, 277CA, 835, 834)"]
+    EDIGen["EDI Generators<br/>270, 837, 277CA, 835, 834, 999"]
     S3Upload["Optional S3 Upload<br/>via boto3"]
     Markdown["Markdown Report<br/>Stats & Charts"]
 

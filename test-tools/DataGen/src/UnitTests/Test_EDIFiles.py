@@ -25,7 +25,7 @@ class Test834Message(unittest.TestCase):
         self.logger = Config.get_logger(__name__)
         self.messages = 7
         self.error_rate = 0
-        Run834Generator(num_messages=self.messages, error_rate=self.error_rate)
+        Run834Generator(error_rate=self.error_rate)
         self.path = Config.get_edi_path(Config.EDI834_PATH, Config.EDI834_FILE_NAME)
         with open(self.path) as f:
             self.lines = [line.strip() for line in f if line.strip()]

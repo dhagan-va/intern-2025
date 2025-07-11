@@ -111,12 +111,12 @@ Edit `Config/config.toml` to adjust:
 |-----------|--------------------------|-----------------------------------------|
 | 270       | `Output/EDI270_Output/`  | Eligibility Inquiry                     |
 | 837P      | `Output/EDI837_Output/`  | Professional Claims                     |
-| 277CA     | `Output/EDI277CA_Output/`| Claim Acknowledgment (coming)           |
-| 835       | `Output/EDI835_Output/`  | Remittance Advice (coming)              |
+| 277CA     | `Output/EDI277CA_Output/`| Claim Acknowledgment                    |
+| 835       | `Output/EDI835_Output/`  | Remittance Advice                       |
 | 834       | `Output/EDI834_Output/`  | Enrollment Updates                      |
 | 999       | `Output/EDI999_Output/`  | Syntax Acknowledgment (coming)          |
 | Logs      | `Output/Logs/`           | Execution logging                       |
-| Markdown  | `Statistics_Visualizer.md`| Throughput, errors, relationships, etc.|
+| Markdown  | `Statistics_Visualizer.md`| Throughput, errors, relationships, etc. |
 
 ---
 
@@ -151,12 +151,13 @@ Each EDI generator updates claim status accordingly for later reuse.
 ## Example Output
 
 ```bash
-INFO:Config.Config:Saving 100 claim transactions in bulk
-INFO:Config.Config:It took 0:00:00.531589 to generate 100 claims for status Created
-INFO:Config.Config:Initializing EDI837PGenerator with 100 claims
-INFO:Config.Config:Generating transactions into EDI file
-INFO:Config.Config:Generated total of 100 transactions
+INFO:Config.Config:Fetching claim transactions with status=835 Created and date=2025-07-03
+INFO:Config.Config:Generating EDI file from stored data
+INFO:Config.Config:Generated total of 500 transactions
 INFO:Config.Config:There were 0 errors
 INFO:Config.Config:EDI file generation complete
+INFO:Config.Config:File generation took: 0:00:00.135001
+INFO:Config.Config:It took 0:00:00.140000 to generate 500 transactions for the 834 file
+INFO:Config.Config:It took 0:00:23.599000 to generate the output
 ```
 

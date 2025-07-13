@@ -116,10 +116,10 @@ class LoadClient:
         """Process completed HTTP requests and update statistics."""
         curr_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         try:
-            status, elapsed, body, sent_payload = future.result()  # Now includes sent payload
+            status, elapsed, body = future.result() 
             
             self._stats.update(elapsed, status)
-            self._sink.append(curr_time, elapsed, status, self.rps, sent_payload)  # Log sent payload
+            self._sink.append(curr_time, elapsed, status, self.rps, body)  # Use body instead of sent_payload
             
             if status == 200:
                 self._log.info("200 OK in %.3f ms", elapsed)

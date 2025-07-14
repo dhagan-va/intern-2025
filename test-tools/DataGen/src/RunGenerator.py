@@ -44,7 +44,7 @@ def create_claims(num_gen=number_of_tests_270(), input_date=date.today(), status
 def ensure_sponsors():
     db = get_database_backend()
     if db.total_beneficiaries() == 0:
-        logger.info(f"No sponsors found -- generating {Config.INITIAL_USERS} sponsors first (initialization)...")
+        logger.info(f"No sponsors found -- generating {Config.INITIAL_USERS} sponsors first...")
         SponsorDataGenerator().store_sponsor_and_beneficiaries(Config.INITIAL_USERS)
 
 
@@ -204,18 +204,47 @@ def Run834Generator(error_rate=None):
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Run EDI file generator")
-    subparsers = parser.add_subparsers(dest="mode")
-    parser.set_defaults(mode="auto")
+    parser = argparse.ArgumentParser(
+        description="""
+            EDI Transaction Generator
+            --------------------------
+            This tool supports both automated and manual generation of EDI files including:
+            270 (Eligibility), 837P (Claim), 277CA (Acknowledgment), 835 (Remittance), 834 (Enrollment Update).
 
-    cli_parser = subparsers.add_parser("cli", help="Run single EDI file generation manually")
-    cli_parser.add_argument("file_type", type=str, choices=["270", "837", "277", "835", "834"],
-                            help="Type of EDI file to generate")
-    cli_parser.add_argument("-n", "--num", type=int, required=True, help="Number of transactions to generate")
-    cli_parser.add_argument("-e", "--error_rate", type=float, required=True, help="Error rate to inject")
-    cli_parser.add_argument("--upload_s3", action="store_true", help="Upload to S3 (only for 270)")
+            Modes:
+            - auto: Generate and run all files for the current day, including initialization if empty.
+            - cli: Manually generate a specific file with custom settings.
 
-    subparsers.add_parser("auto", help="Run full daily automated generation")
+            Example Usage:
+            python RunGenerator.py auto
+            python RunGenerator.py cli 270 -n 500 -e 0.05 --upload_s3
+            python RunGenerator.py cli 835 -n 500 -e 0.01
+            """,
+        formatter_class=argparse.RawTextHelpFormatter
+    )
+
+    subparsers = parser.add_subparsers(dest="mode", help="Choose between automated or manual mode.")
+
+    # Manual CLI Mode
+    cli_parser = subparsers.add_parser("cli", help="Manually generate a specific EDI file.")
+    cli_parser.add_argument(
+        "file_type", type=str, choices=["270", "837", "277", "835", "834"],
+        help="EDI file type to generate. Choices: 270, 837, 277, 835, 834"
+    )
+    cli_parser.add_argument(
+        "-n", "--num", type=int, required=True,
+        help="Number of transactions to generate (e.g., 500)"
+    )
+    cli_parser.add_argument(
+        "-e", "--error_rate", type=float, required=True,
+        help="Error rate for injected errors (e.g., 0.05 for 5%)"
+    )
+    cli_parser.add_argument(
+        "--upload_s3", action="store_true",
+        help="Upload to AWS S3 bucket after generation (only applies to 270)"
+    )
+
+    subparsers.add_parser("auto", help="Automatically generate all EDI files for the current day.")
 
     args = parser.parse_args()
 
@@ -223,6 +252,8 @@ def main():
         cli_mode(args.file_type, args.num, args.error_rate, args.upload_s3)
     elif args.mode == "auto":
         auto_mode()
+    else:
+        parser.print_help()
 
     transaction_funcs.connect.close()
     create_md()

@@ -2,10 +2,10 @@ import argparse
 from datetime import datetime, date, timedelta
 
 import boto3
-
 from dotenv import load_dotenv
+
 from Config import Config
-from Config.Config import logger, number_of_tests_834, number_of_tests_270, get_error_rate
+from Config.Config import logger, number_of_tests_270, get_error_rate
 from Config.Data_Visualizer import log_data, create_md
 from FileCreation.DataGenerator import SponsorDataGenerator, generate_claim_transactions
 from FileCreation.EDIGenerator import EDI834Generator, EDI270Generator, EDI837PGenerator, EDI277CAGenerator, \
@@ -84,7 +84,8 @@ def auto_mode():
             transaction_date = date.today() - timedelta(days=delta)
             num_messages = number_of_tests_270()
 
-            logger.info(f"Creating {num_messages} claims for {transaction_date.isoformat()} with error rate {error_rate:.2%}")
+            logger.info(
+                f"Creating {num_messages} claims for {transaction_date.isoformat()} with error rate {error_rate:.2%}")
             create_claims(num_messages, transaction_date, "Created")
             create_claims(num_messages, transaction_date - timedelta(days=1), "270 Created")
             create_claims(num_messages, transaction_date - timedelta(days=8), "277CA Created")

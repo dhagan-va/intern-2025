@@ -27,8 +27,7 @@ SAMPLE_271 = (
     "IEA*1*000000101~\n"
 )
 
-# EDI 271 Error Response Templates
-SAMPLE_271_NM1_ERROR = (
+SAMPLE_271_INPUT_ERROR = (
     f"ISA*00*          *00*          *ZZ*1234567        *ZZ*11111          *170508*1141*>*00501*000000101*1*P*:~\n"
     "GS*HC*XXXXXXX*XXXXX*20170617*1741*101*X*005010X279A1~\n"
     "ST*271*4321*005010X279A1~\n"
@@ -40,13 +39,13 @@ SAMPLE_271_NM1_ERROR = (
     "HL*3*2*22*0~\n"
     "TRN*2*93175-012547*9877281234~\n"
     "NM1*IL*1*SMITH*JOHN****MI*123456789~\n"
-    "AAA*N**79*Invalid NM1 segment format~\n"
+    "AAA*N**33*Input Errors~\n"
     "SE*12*4321~\n"
     "GE*1*101~\n"
     "IEA*1*000000101~\n"
 )
 
-SAMPLE_271_AMT_ERROR = (
+SAMPLE_271_MISSING_ID = (
     f"ISA*00*          *00*          *ZZ*1234567        *ZZ*11111          *170508*1141*>*00501*000000101*1*P*:~\n"
     "GS*HC*XXXXXXX*XXXXX*20170617*1741*101*X*005010X279A1~\n"
     "ST*271*4321*005010X279A1~\n"
@@ -58,13 +57,13 @@ SAMPLE_271_AMT_ERROR = (
     "HL*3*2*22*0~\n"
     "TRN*2*93175-012547*9877281234~\n"
     "NM1*IL*1*SMITH*JOHN****MI*123456789~\n"
-    "AAA*N**83*Invalid AMT segment data~\n"
+    "AAA*N**72*Invalid/Missing Subscriber/Insured ID~\n"
     "SE*12*4321~\n"
     "GE*1*101~\n"
     "IEA*1*000000101~\n"
 )
 
-SAMPLE_271_MEMBER_ERROR = (
+SAMPLE_271_INVALID_NPI = (
     f"ISA*00*          *00*          *ZZ*1234567        *ZZ*11111          *170508*1141*>*00501*000000101*1*P*:~\n"
     "GS*HC*XXXXXXX*XXXXX*20170617*1741*101*X*005010X279A1~\n"
     "ST*271*4321*005010X279A1~\n"
@@ -76,25 +75,7 @@ SAMPLE_271_MEMBER_ERROR = (
     "HL*3*2*22*0~\n"
     "TRN*2*93175-012547*9877281234~\n"
     "NM1*IL*1*SMITH*JOHN****MI*123456789~\n"
-    "AAA*N**72*Invalid member identification~\n"
-    "SE*12*4321~\n"
-    "GE*1*101~\n"
-    "IEA*1*000000101~\n"
-)
-
-SAMPLE_271_VALIDATION_ERROR = (
-    f"ISA*00*          *00*          *ZZ*1234567        *ZZ*11111          *170508*1141*>*00501*000000101*1*P*:~\n"
-    "GS*HC*XXXXXXX*XXXXX*20170617*1741*101*X*005010X279A1~\n"
-    "ST*271*4321*005010X279A1~\n"
-    "BHT*0022*11*10001234*20060501*1319~\n"
-    "HL*1**20*1~\n"
-    "NM1*PR*2*ABC COMPANY*****PI*842610001~\n"
-    "HL*2*1*21*1~\n"
-    "NM1*1P*2*BONE AND JOINT CLINIC*****SV*2000035~\n"
-    "HL*3*2*22*0~\n"
-    "TRN*2*93175-012547*9877281234~\n"
-    "NM1*IL*1*SMITH*JOHN****MI*123456789~\n"
-    "AAA*N**85*Transaction validation error detected~\n"
+    "AAA*N**79*Invalid Participant Identification~\n"
     "SE*12*4321~\n"
     "GE*1*101~\n"
     "IEA*1*000000101~\n"

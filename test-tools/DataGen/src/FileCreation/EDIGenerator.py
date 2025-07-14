@@ -115,6 +115,7 @@ class EDI837PGenerator:
             logger.error(f"Index out of range for claim {num}")
             return
 
+        self.error_ctrl.reset_error_inserted()
         claim = self.claims[num - 1]
         bene = self.transaction_funcs.family_db.get_beneficiary(claim.sponsor_id, claim.beneficiary_id)
         sponsor = self.transaction_funcs.family_db.get_sponsor_by_id(claim.sponsor_id)

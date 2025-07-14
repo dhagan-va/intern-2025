@@ -5,9 +5,9 @@ from pathlib import Path
 import random
 import re
 
-sys.path.insert(0, str(Path(__file__).parent.parent))
+sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
-from client.samples import payloads
+from client.data.samples import payloads
 
 
 def extract_st_control_number(edi_content):

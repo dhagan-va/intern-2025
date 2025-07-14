@@ -56,11 +56,9 @@ class MetadataManager:
             if error_types:
                 headers["X-Error-Types"] = ",".join(error_types)
             
-            # Add line number if available for debugging
             if transaction.get('line_number_in_file'):
                 headers["X-Error-Line"] = str(transaction['line_number_in_file'])
         
-        # Add provider info if available
         if transaction.get('provider_npi'):
             headers["X-Provider-NPI"] = transaction['provider_npi']
             

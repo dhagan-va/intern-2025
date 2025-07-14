@@ -17,22 +17,22 @@ The 270 file is used to request information about a member's health insurance el
 ## Transaction Counts
 ```mermaid
 pie title Message type distribution
-    "270" : 0.005
-    "837" : 1332
-    "277" : 1332
+    "270" : 0
+    "837" : 500
+    "277" : 0
     "835" : 0
     "834" : 0
 ```
 
 
-Total Number of Messages Generated: **2664.005**
+Total Number of Messages Generated: **500**
 ## Throughput
 ```mermaid
 xychart-beta
     title "Throughput (Transactions per Second)"
     x-axis ["270", "837", "277", "835", "834"]
-    y-axis "TPS" 0 --> 2890.383468041076
-    bar [0.0012403159233494681, 1223.1270178841003, 2889.383468041076, 0.0, 0.0]
+    y-axis "TPS" 0 --> 3185.672806715838
+    bar [0.0, 3184.672806715838, 0.0, 0.0, 0.0]
 ```
 
 
@@ -41,8 +41,8 @@ xychart-beta
 xychart-beta
     title "Error Count in Messages"
     x-axis ["270", "837", "277", "835", "834"]
-    y-axis "Errors" 0 --> 1323
-    bar [0, 1322, 7, 0, 0]
+    y-axis "Errors" 0 --> 501
+    bar [0, 500, 0, 0, 0]
 ```
 
 
@@ -52,7 +52,7 @@ xychart-beta
     title "Error Rate (%)"
     x-axis ["270", "837", "277", "835", "834"]
     y-axis "Percent" 0 --> 5
-    bar [0, 0.5, 0.5, 0.5, 0.5]
+    bar [0, 5.0, 0, 0, 0]
 ```
 
 
@@ -61,17 +61,17 @@ xychart-beta
 xychart-beta
     title "Family Size Histogram"
     x-axis ["1", "2", "3", "4"]
-    y-axis "Count" 0 --> 1
-    bar [0, 0, 0, 0]
+    y-axis "Count" 0 --> 10046
+    bar [10006, 9979, 9952, 10045]
 ```
 
 
 ```mermaid
 pie title Family Size Breakdown
-    "1" : 0
-    "2" : 0
-    "3" : 0
-    "4" : 0
+    "1" : 10006
+    "2" : 9979
+    "3" : 9952
+    "4" : 10045
 ```
 
 
@@ -80,17 +80,17 @@ pie title Family Size Breakdown
 xychart-beta
     title "Beneficiary Code Distribution"
     x-axis ["Spouse (01)", "Child (19)", "Caregiver (26)", "Ex-Spouse (25)"]
-    y-axis "Count" 0 --> 1
-    bar [0, 0, 0, 0]
+    y-axis "Count" 0 --> 25099
+    bar [25029, 24999, 25098, 24874]
 ```
 
 
 ```mermaid
 pie title Beneficiary Relationship Types
-    "Spouse (01)" : 0
-    "Child (19)" : 0
-    "Caregiver (26)" : 0
-    "Ex-Spouse (25)" : 0
+    "Spouse (01)" : 25029
+    "Child (19)" : 24999
+    "Caregiver (26)" : 25098
+    "Ex-Spouse (25)" : 24874
 ```
 
 

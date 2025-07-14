@@ -95,7 +95,7 @@ def auto_mode():
         logger.info(f"Creating today's 270 claims...")
         create_claims(num_messages, today, "Created")
 
-    Run270Generator(error_rate, Config.UPLOAD_TO_S3)
+    Run270Generator(num_messages, error_rate, Config.UPLOAD_TO_S3)
     Run837PGenerator(error_rate)
     Run277CAGenerator(error_rate)
     Run835Generator(error_rate)
@@ -104,7 +104,6 @@ def auto_mode():
 
 def Run270Generator(num_messages=None, error_rate=None, upload_s3=False):
     now = datetime.now()
-    num_messages = number_of_tests_270(num_messages)
     log_data["messages"]["count_270"] = num_messages
     error_rate = get_error_rate(error_rate)
     log_data["errors"]["error_rate_270"] = error_rate

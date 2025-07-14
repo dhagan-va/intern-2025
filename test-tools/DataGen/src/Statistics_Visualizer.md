@@ -17,22 +17,22 @@ The 270 file is used to request information about a member's health insurance el
 ## Transaction Counts
 ```mermaid
 pie title Message type distribution
-    "270" : 0
-    "837" : 500
-    "277" : 0
-    "835" : 0
-    "834" : 0
+    "270" : 3522
+    "837" : 3522
+    "277" : 3522
+    "835" : 3522
+    "834" : 3522
 ```
 
 
-Total Number of Messages Generated: **500**
+Total Number of Messages Generated: **17610**
 ## Throughput
 ```mermaid
 xychart-beta
     title "Throughput (Transactions per Second)"
     x-axis ["270", "837", "277", "835", "834"]
-    y-axis "TPS" 0 --> 3185.672806715838
-    bar [0.0, 3184.672806715838, 0.0, 0.0, 0.0]
+    y-axis "TPS" 0 --> 3962.429488917108
+    bar [3891.4633095337535, 3294.4614322582215, 3473.1535682166013, 3961.429488917108, 3551.7960167848078]
 ```
 
 
@@ -41,8 +41,8 @@ xychart-beta
 xychart-beta
     title "Error Count in Messages"
     x-axis ["270", "837", "277", "835", "834"]
-    y-axis "Errors" 0 --> 501
-    bar [0, 500, 0, 0, 0]
+    y-axis "Errors" 0 --> 3513
+    bar [18, 3512, 18, 18, 18]
 ```
 
 
@@ -52,7 +52,7 @@ xychart-beta
     title "Error Rate (%)"
     x-axis ["270", "837", "277", "835", "834"]
     y-axis "Percent" 0 --> 5
-    bar [0, 5.0, 0, 0, 0]
+    bar [0.5, 0.5, 0.5, 0.5, 0.5]
 ```
 
 
@@ -99,8 +99,8 @@ pie title Beneficiary Relationship Types
 xychart-beta
     title "AMT (deductible) Averages"
     x-axis ["D2", "FK", "R"]
-    y-axis "Amount" 0 --> 1000.0
-    bar [0.0, 0.0, 0.0]
+    y-axis "Amount" 0 --> 50959.90747942101
+    bar [48956.36153846157, 49959.90747942101, 49374.882500709704]
 ```
 
 
@@ -109,10 +109,10 @@ xychart-beta
 xychart-beta
     title "AMT (visit) Averages"
     x-axis ["C1", "P3", "B9"]
-    y-axis "Number of Visits" 0 --> 1.0
-    bar [0.0, 0.0, 0.0]
+    y-axis "Number of Visits" 0 --> 8.543570820323588
+    bar [7.461254612546125, 7.543570820323588, 7.467215441385183]
 ```
 
 
 ## Average 270s per Beneficiary
-- Average 270s per Beneficiary: **0.00**
+- Average 270s per Beneficiary: **0.04**

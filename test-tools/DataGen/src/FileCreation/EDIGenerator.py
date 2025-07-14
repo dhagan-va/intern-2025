@@ -115,7 +115,6 @@ class EDI837PGenerator:
             logger.error(f"Index out of range for claim {num}")
             return
 
-        self.error_ctrl.reset_error_inserted()
         claim = self.claims[num - 1]
         bene = self.transaction_funcs.family_db.get_beneficiary(claim.sponsor_id, claim.beneficiary_id)
         sponsor = self.transaction_funcs.family_db.get_sponsor_by_id(claim.sponsor_id)
@@ -203,7 +202,7 @@ class EDI277CAGenerator:
         yesterday = date.today() - timedelta(days=1)
         self.claims = self.transaction_funcs.get_claim_transactions(
             status="837 Created",
-            date=yesterday
+            date=yesterday.isoformat()
         )
         self.num_messages = len(self.claims)
         self.error_ctrl = ErrorInjector(self.num_messages, error_rate)

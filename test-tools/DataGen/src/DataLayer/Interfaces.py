@@ -7,6 +7,7 @@ class DataAccess(ABC):
 
     @abstractmethod
     def total_beneficiaries(self): pass
+
     @abstractmethod
     def save_sponsor(self, sponsor): pass
 
@@ -49,6 +50,7 @@ class DataAccess(ABC):
 
     @abstractmethod
     def update_bene_visit(self, sponsor_id, beneficiary_id, code, value): pass
+
 
 class ClaimTransactionAccess(ABC):
     @abstractmethod

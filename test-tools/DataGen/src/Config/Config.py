@@ -94,6 +94,7 @@ MAX_DEDUCTIBLES = config["constants"]["max_deductibles"]
 MIN_DEDUCTIBLES = config["constants"]["min_deductibles"]
 MAX_VISITS = config["constants"]["max_visits"]
 MIN_VISITS = config["constants"]["min_visits"]
+INITIAL_USERS = config["constants"]["initial_beneficiaries"]
 
 RELATIONSHIP_MAP = config["relationship_map"]
 

@@ -93,8 +93,6 @@ def create_md():
 
     db = get_database_backend()
 
-    avg_family_size = log_data["family"]["size"] / log_data["family"]["count"]
-
     throughput_270 = log_data["messages"]["count_270"] / log_data["messages"]["time_270"]
     throughput_837 = log_data["messages"]["count_837"] / log_data["messages"]["time_837"]
     throughput_277CA = log_data["messages"]["count_277CA"] / log_data["messages"]["time_277CA"]

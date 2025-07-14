@@ -103,3 +103,8 @@ class TransactionFunctions:
             WHERE claim_id = ?
         """, [(new_status, cid) for cid in claim_ids])
         self.connect.commit()
+
+    def total_claim_transactions(self):
+        self.cursor.execute("SELECT COUNT(*) FROM claim_transactions")
+        result = self.cursor.fetchone()
+        return result[0] if result else 0

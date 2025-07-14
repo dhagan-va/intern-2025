@@ -43,6 +43,7 @@ max_deductibles = 100000.0
 min_deductibles = 0.0
 max_visits = 15
 min_visits = 0
+initial_beneficiaries = 100000
 
 [relationship_map]
 Spouse = "01"

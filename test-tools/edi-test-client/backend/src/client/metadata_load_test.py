@@ -5,24 +5,26 @@ Generates payloads, passes them via dictionary, and runs with preset RPS.
 
 import sys
 import time
+import json
+import tempfile
 from pathlib import Path
 import argparse
 
-# Add paths for imports
 sys.path.insert(0, str(Path(__file__).parent.parent / "utils"))
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 
-from generate_payloads import generate_edi_270_payloads_with_metadata
+from utils.generate_payloads import generate_edi_270_payloads_with_metadata
 from config import load_settings
-from load_client import LoadClient
+from client.load_client import LoadClient
+from client.metadata_manager import MetadataManager
 
 
 def run_metadata_load_test(num_transactions, rps=10.0, error_rate=0.0):
     calculated_duration = (num_transactions / rps) + 5.0  
     max_duration = calculated_duration * 2.0  
     
-    print(f"=== EDI 270 Load Test ===")
+    print(f"=== EDI 270 Load Test with Header-Based Error Categorization ===")
     print(f"Generating {num_transactions} EDI 270 transactions...")
     print(f"Target: {num_transactions} transactions at {rps} RPS")
     print(f"Calculated duration: {calculated_duration:.1f}s (max: {max_duration:.1f}s)")
@@ -33,7 +35,7 @@ def run_metadata_load_test(num_transactions, rps=10.0, error_rate=0.0):
         )
 
         print(
-            f"  Generated {payload_result['summary']['total_transactions']} transactions"
+            f"✓ Generated {payload_result['summary']['total_transactions']} transactions"
         )
         print(
             f"  - Clean transactions: {payload_result['summary']['clean_transactions']}"
@@ -44,6 +46,9 @@ def run_metadata_load_test(num_transactions, rps=10.0, error_rate=0.0):
         print(
             f"  - EDI payload size: {payload_result['metadata']['file_info']['file_size_bytes']} bytes"
         )
+        
+        if payload_result['metadata']['error_breakdown']:
+            print(f"  - Error breakdown: {payload_result['metadata']['error_breakdown']}")
 
     except Exception as e:
         return {"error": f"Failed to generate payloads: {str(e)}"}
@@ -54,16 +59,29 @@ def run_metadata_load_test(num_transactions, rps=10.0, error_rate=0.0):
         cfg.transaction = 270
 
         client = LoadClient(cfg)
+        
+        with tempfile.NamedTemporaryFile(mode='w', suffix='.json', delete=False) as temp_file:
+            json.dump(payload_result, temp_file, indent=2)
+            temp_metadata_path = temp_file.name
+        
+        metadata_manager = MetadataManager(temp_metadata_path)
+        client.set_metadata_manager(metadata_manager)
 
-        print(f"✓ Load client configured")
+        print(f"✓ Load client configured with header-based error categorization")
         print(f"  - RPS: {rps}")
         print(f"  - Target transactions: {num_transactions}")
         print(f"  - Transaction type: EDI 270")
+        
+        metadata_summary = metadata_manager.get_error_summary()
+        print(f"  - Metadata loaded: {metadata_summary.get('total_transactions', 0)} transactions")
+        print(f"  - Error transactions: {metadata_summary.get('error_transactions', 0)}")
+        if metadata_summary.get('error_breakdown'):
+            print(f"  - Error types: {list(metadata_summary['error_breakdown'].keys())}")
 
     except Exception as e:
         return {"error": f"Failed to configure load client: {str(e)}"}
 
-    print(f"\nStarting load test...")
+    print(f"\nStarting load test with header-based error simulation...")
     try:
         client.start()
         start_time = time.time()
@@ -103,6 +121,11 @@ def run_metadata_load_test(num_transactions, rps=10.0, error_rate=0.0):
         if client._running:
             client.stop()
         return {"error": f"Load test failed: {str(e)}"}
+    finally:
+        try:
+            Path(temp_metadata_path).unlink()
+        except:
+            pass
 
     time.sleep(0.5)
 
@@ -110,23 +133,32 @@ def run_metadata_load_test(num_transactions, rps=10.0, error_rate=0.0):
         final_stats = client._stats.snapshot()
 
         total_requests = final_stats.get("count", 0)
-        success_responses = final_stats.get("codes", {}).get(200, 0)
-        error_responses = sum(
-            v for k, v in final_stats.get("codes", {}).items() if k != 200
-        )
+        
+        edi_success_responses = final_stats.get("edi_success_count", 0)
+        edi_error_responses = final_stats.get("edi_error_count", 0)
+        http_error_responses = final_stats.get("http_error_count", 0)
+        edi_errors_breakdown = final_stats.get("edi_errors", {})
+        
+        total_error_responses = edi_error_responses + http_error_responses
         avg_latency = final_stats.get("avg_latency", 0)
         actual_rps = total_requests / actual_duration if actual_duration > 0 else 0
-        success_rate = (success_responses / max(1, total_requests)) * 100
+        edi_success_rate = (edi_success_responses / max(1, total_requests)) * 100
         
         completion_accuracy = (total_requests / num_transactions) * 100 if num_transactions > 0 else 0
 
-        print(f"\nTest Results:")
+        print(f"\nTest Results with EDI Error Categorization:")
         print(f"  - Target transactions: {num_transactions}")
         print(f"  - Total requests sent: {total_requests}")
         print(f"  - Completion accuracy: {completion_accuracy:.1f}% ({total_requests}/{num_transactions})")
-        print(f"  - Success responses (200): {success_responses}")
-        print(f"  - Error responses: {error_responses}")
-        print(f"  - Success rate: {success_rate:.1f}%")
+        print(f"  - EDI successful responses: {edi_success_responses}")
+        print(f"  - Error Response Breakdown:")
+        print(f"    - EDI Format errors: {edi_errors_breakdown.get('edi_format_error', 0)}")
+        print(f"    - EDI Member errors: {edi_errors_breakdown.get('edi_member_error', 0)}")
+        print(f"    - EDI Amount errors: {edi_errors_breakdown.get('edi_amt_error', 0)}")
+        print(f"    - EDI Validation errors: {edi_errors_breakdown.get('edi_validation_error', 0)}")
+        print(f"    - EDI Other errors: {edi_errors_breakdown.get('edi_other_error', 0)}")
+        print(f"    - HTTP/Network errors: {http_error_responses}")
+        print(f"  - EDI success rate: {edi_success_rate:.1f}%")
         print(f"  - Average latency: {avg_latency:.2f}ms")
         print(f"  - Target RPS: {rps}, Actual RPS: {actual_rps:.1f}")
         print(f"  - Actual duration: {actual_duration:.1f}s")
@@ -143,9 +175,11 @@ def run_metadata_load_test(num_transactions, rps=10.0, error_rate=0.0):
                 "target_transactions": num_transactions,
                 "total_requests": total_requests,
                 "completion_accuracy": completion_accuracy,
-                "success_responses": success_responses,
-                "error_responses": error_responses,
-                "success_rate": success_rate,
+                "edi_success_responses": edi_success_responses,
+                "edi_error_responses": edi_error_responses,
+                "http_error_responses": http_error_responses,
+                "edi_error_breakdown": edi_errors_breakdown,
+                "edi_success_rate": edi_success_rate,
                 "avg_latency_ms": avg_latency,
                 "target_rps": rps,
                 "actual_rps": actual_rps,
@@ -157,7 +191,7 @@ def run_metadata_load_test(num_transactions, rps=10.0, error_rate=0.0):
                 "generated_count": payload_result["summary"]["total_transactions"],
                 "generated_errors": payload_result["summary"]["error_transactions"],
                 "sent_count": total_requests,
-                "response_errors": error_responses,
+                "response_errors": total_error_responses,
                 "tracking_data": payload_result["metadata"]["transactions"],
             },
             "summary": {
@@ -166,9 +200,10 @@ def run_metadata_load_test(num_transactions, rps=10.0, error_rate=0.0):
                 "requests_sent": total_requests,
                 "target_requests": num_transactions,
                 "completion_accuracy": f"{completion_accuracy:.1f}%",
-                "success_rate": success_rate,
+                "edi_success_rate": edi_success_rate,
                 "performance": f"{actual_rps:.1f} RPS avg",
                 "completion": f"{total_requests}/{num_transactions} transactions sent",
+                "error_categorization": "edi-aware-header-based",
             },
         }
 
@@ -277,7 +312,7 @@ if __name__ == "__main__":
         print(f"   Test completed successfully!")
         print(f"   Generated: {result['summary']['generated_payloads']} payloads")
         print(f"   Sent: {result['summary']['requests_sent']} requests")
-        print(f"   Success rate: {result['summary']['success_rate']:.1f}%")
+        print(f"   EDI Success rate: {result['summary']['edi_success_rate']:.1f}%")
         print(f"   Performance: {result['summary']['performance']}")
         print(f"   Completion: {result['summary']['completion']}")
 

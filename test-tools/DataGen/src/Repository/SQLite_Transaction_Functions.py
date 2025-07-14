@@ -2,11 +2,12 @@ import sqlite3
 
 from Config.Config import logger, get_local_db_path, FAMILY_DATABASE_DIRECTORY, FAMILY_DATABASE_SQLITE, NPI_CSV_PATH
 from Repository.DatabaseFactory import get_database_backend
+from DataLayer.Interfaces import ClaimTransactionAccess
 from DataLayer.Datatypes import ClaimTransaction
 from Repository.NPI_Functions import NPIFunctions
 
 
-class TransactionFunctions:
+class SQLite_Transaction_Functions(ClaimTransactionAccess):
     def __init__(self, file=get_local_db_path(FAMILY_DATABASE_DIRECTORY, FAMILY_DATABASE_SQLITE)):
         self.file = file
         self.connect = sqlite3.connect(self.file)

@@ -10,12 +10,12 @@ from Config.Data_Visualizer import log_data, create_md
 from FileCreation.DataGenerator import SponsorDataGenerator, generate_claim_transactions
 from FileCreation.EDIGenerator import EDI834Generator, EDI270Generator, EDI837PGenerator, EDI277CAGenerator, \
     EDI835Generator
+from Repository.DatabaseFactory import get_claim_transaction_backend
 from Repository.DatabaseFactory import get_database_backend
-from Repository.Transaction_Storage_Functions import TransactionFunctions
 
 load_dotenv()
 
-transaction_funcs = TransactionFunctions()
+transaction_funcs = get_claim_transaction_backend()
 
 status_map = {
     "270": ("Created", date.today()),
@@ -226,7 +226,6 @@ def main():
 
     subparsers = parser.add_subparsers(dest="mode", help="Choose between automated or manual mode.")
 
-    # Manual CLI Mode
     cli_parser = subparsers.add_parser("cli", help="Manually generate a specific EDI file.")
     cli_parser.add_argument(
         "file_type", type=str, choices=["270", "837", "277", "835", "834"],

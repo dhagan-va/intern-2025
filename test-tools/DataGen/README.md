@@ -66,8 +66,8 @@ To run the full EDI file generation pipeline:
 
 ```bash
 cd src
-python RunGenerator.py auto # for a random number of messages
-python RunGenerator.py cli <file_type> -n <count> -e <error_rate> [--upload_s3]
+python RunGenerator.py auto # for a random number of messages and error rate which you can alter in config.toml
+python RunGenerator.py cli <file_type> -n <count> -e <error_rate> [--upload_s3] # upload_s3 only for 270
 
 # Example Usage
 python RunGenerator.py cli 270 -n 500 -e 0.01 --upload_s3

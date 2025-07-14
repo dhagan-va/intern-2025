@@ -40,7 +40,7 @@ class EDI270Generator:
         claim = self.claims[num - 1]
         last, first = self.split_provider_name(claim.provider_name, claim.provider_entity_type)
         error_id = claim.beneficiary_id
-        bene = self.transaction_funcs.family_db.get_beneficiary(claim.sponsor_id, claim.beneficiary_id)
+        bene = self.transaction_funcs.get_beneficiary(claim.sponsor_id, claim.beneficiary_id)
 
         segments = [Seg.ST("270", num).to_edi(),
                     Seg.BHT("22", "13", claim.claim_id).to_edi(),
@@ -116,8 +116,8 @@ class EDI837PGenerator:
             return
 
         claim = self.claims[num - 1]
-        bene = self.transaction_funcs.family_db.get_beneficiary(claim.sponsor_id, claim.beneficiary_id)
-        sponsor = self.transaction_funcs.family_db.get_sponsor_by_id(claim.sponsor_id)
+        bene = self.transaction_funcs.get_beneficiary(claim.sponsor_id, claim.beneficiary_id)
+        sponsor = self.transaction_funcs.get_sponsor_by_id(claim.sponsor_id)
         last, first = self.split_provider_name(claim.provider_name, claim.provider_entity_type)
         bene_relationship = self.relationship_map.get(bene.relationship)
         error_id = bene.beneficiary_id
@@ -231,7 +231,7 @@ class EDI277CAGenerator:
         self.error_ctrl.reset_error_inserted()
         claim = self.claims[num - 1]
         error_id = claim.beneficiary_id
-        bene = self.transaction_funcs.family_db.get_beneficiary(claim.sponsor_id, claim.beneficiary_id)
+        bene = self.transaction_funcs.get_beneficiary(claim.sponsor_id, claim.beneficiary_id)
         last, first = self.split_provider_name(claim.provider_name, claim.provider_entity_type)
 
         segments = [Seg.ST("277", num).to_edi(),
@@ -331,7 +331,7 @@ class EDI835Generator:
         self.error_ctrl.reset_error_inserted()
         claim = self.claims[num - 1]
         error_id = claim.beneficiary_id
-        bene = self.transaction_funcs.family_db.get_beneficiary(claim.sponsor_id, claim.beneficiary_id)
+        bene = self.transaction_funcs.get_beneficiary(claim.sponsor_id, claim.beneficiary_id)
 
         segments = [Seg.ST("835", num).to_edi(),
                     Seg.BPR("I", claim.amount, "C", "ACH").to_edi(),
@@ -395,7 +395,7 @@ class EDI834Generator:
     def create_member(self, bene, error_ctrl):
         self.transaction_control_number += 1
         self.error_ctrl.reset_error_inserted()
-        sponsor = self.transaction_funcs.family_db.get_sponsor_by_id(bene.sponsor_id)
+        sponsor = self.transaction_funcs.get_sponsor_by_id(bene.sponsor_id)
         relationship_code = self.relationship_map.get(bene.relationship)
         error_id = bene.beneficiary_id
 
@@ -442,7 +442,7 @@ class EDI834Generator:
                         ]
 
         for claim in self.claims:
-            bene = self.transaction_funcs.family_db.get_beneficiary(claim.sponsor_id, claim.beneficiary_id)
+            bene = self.transaction_funcs.get_beneficiary(claim.sponsor_id, claim.beneficiary_id)
             log_data["family"]["size"] += 1
             all_segments.extend(self.create_member(bene, self.error_ctrl))
 

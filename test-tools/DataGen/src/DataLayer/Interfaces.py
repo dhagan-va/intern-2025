@@ -51,8 +51,6 @@ class DataAccess(ABC):
     @abstractmethod
     def update_bene_visit(self, sponsor_id, beneficiary_id, code, value): pass
 
-
-class ClaimTransactionAccess(ABC):
     @abstractmethod
     def save_claim_transaction(self, claim, commit):
         pass
@@ -66,7 +64,7 @@ class ClaimTransactionAccess(ABC):
         pass
 
     @abstractmethod
-    def update_claims_status(self, claim_ids):
+    def update_claims_status(self, claim_ids, new_status):
         pass
 
     @abstractmethod

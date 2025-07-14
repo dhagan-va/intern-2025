@@ -6,9 +6,68 @@ import unittest
 
 from Config import Config, Log_Config
 from FileCreation.ErrorInjector import ErrorInjector
-from Repository.JSON_Database_Functions import LocalDBFunctions
+from Repository.DatabaseFactory import get_database_backend
 from Repository.NPI_Functions import NPIFunctions
 from RunGenerator import Run834Generator, Run270Generator
+
+
+class Test270Message(unittest.TestCase):
+    def setUp(self):
+        logging.shutdown()
+
+        output_dir = os.path.join(Config.ROOT_PATH, "Output")
+        download_dir = os.path.join(Config.ROOT_PATH, "Downloads")
+        shutil.rmtree(output_dir, ignore_errors=True)
+        shutil.rmtree(download_dir, ignore_errors=True)
+
+        os.makedirs(Log_Config.LOG_DIRECTORY, exist_ok=True)
+        os.makedirs(Config.DOWNLOAD_DIRECTORY, exist_ok=True)
+
+        self.npi_funcs = NPIFunctions(Config.NPI_CSV_PATH)
+        self.transaction_funcs = get_database_backend()
+
+        self.messages_270 = 100
+        self.error_rate_270 = 1
+        Run270Generator(num_messages=self.messages_270, error_rate=self.error_rate_270)
+        self.path = Config.get_edi_path(Config.EDI270_PATH, Config.EDI270_FILE_NAME)
+
+        with open(self.path) as f:
+            self.lines = [line.strip() for line in f if line.strip()]
+
+    def test_valid_NPI(self):
+        provider_npis = [
+            line.split("*")[9]
+            for line in self.lines
+            if line.startswith("NM1*1P")
+        ]
+
+        df = self.npi_funcs.load_csv()
+        valid_npis = set(df["NPI"])
+
+        for npi in provider_npis:
+            self.assertTrue(npi.isdigit() and len(npi) == 10, f"Invalid NPI format: {npi}")
+            self.assertIn(npi, valid_npis, f"NPI {npi} not found in CSV")
+
+    def test_270_message_validity(self):
+        for line in self.lines:
+            parts = line.rstrip("~").strip().split("*")
+            if line.startswith("HL"):
+                self.assertTrue(parts[3].strip(), f"HL code is empty: {line}")
+            elif line.startswith("NM1"):
+                self.assertFalse(any(c in parts[9] for c in ("~", ":")), f"Invalid char in NM1: {parts[9]}")
+
+
+def test_270_error_rates(self):
+    injector = ErrorInjector(num_messages=self.messages_270, error_rate=self.error_rate_270)
+    expected = self.messages_270 * self.error_rate_270
+
+    actual_inserts = sum(1 for _ in range(self.messages_270)
+                         if injector.reset_error_inserted() or injector.should_insert() and injector.insert("test",
+                                                                                                            "missing"))
+
+    self.assertTrue(math.isclose(actual_inserts, expected, abs_tol=1),
+                    f"Actual errors {actual_inserts}, expected {expected}"
+                    f"Actual errors {actual_inserts}, expected {expected}")
 
 
 class Test834Message(unittest.TestCase):
@@ -77,73 +136,5 @@ class Test834Message(unittest.TestCase):
                 actual_inserts += 1
 
         # check if error_count and inserts are same, do we need a margin of failures?
-        self.assertTrue(math.isclose(actual_inserts, expected, abs_tol=1),
-                        f"Actual errors {actual_inserts}, expected {expected}")
-
-
-class Test270Message(unittest.TestCase):
-    def setUp(self):
-        logging.shutdown()
-
-        output_dir = os.path.join(Config.ROOT_PATH, "Output")
-        download_dir = os.path.join(Config.ROOT_PATH, "Downloads")
-        if os.path.exists(output_dir):
-            shutil.rmtree(output_dir)
-        if os.path.exists(download_dir):
-            shutil.rmtree(download_dir)
-
-        os.makedirs(Log_Config.LOG_DIRECTORY, exist_ok=True)
-        os.makedirs(Config.DOWNLOAD_DIRECTORY, exist_ok=True)
-
-        self.npi_funcs = NPIFunctions(Config.NPI_CSV_PATH)
-
-        self.messages_834 = 5
-        self.error_rate_834 = 0
-        Run834Generator(num_messages=self.messages_834, error_rate=self.error_rate_834)
-
-        self.messages_270 = 100
-        self.error_rate_270 = 1
-        Run270Generator(num_messages=self.messages_270, error_rate=self.error_rate_270)
-        self.path = Config.get_edi_path(Config.EDI270_PATH, Config.EDI270_FILE_NAME)
-        self.logger = Config.get_logger(__name__)
-
-        with open(self.path) as f:
-            self.lines = [line.strip() for line in f if line.strip()]
-
-    def test_valid_NPI(self):
-        provider_npis = []
-        for line in self.lines:
-            line = line.rstrip("~").strip()
-            parts = line.split("*")
-            if parts[0] == "NM1" and parts[1] == "1P":
-                provider_npis.append(parts[9])
-
-        df = self.npi_funcs.load_csv()
-        valid_npis = set(df["NPI"])
-        
-        for npi in provider_npis:
-            self.assertTrue(npi.isdigit() and len(npi) == 10, f"Invalid NPI format: {npi}")
-            self.assertIn(npi, valid_npis, f"NPI {npi} not found in CSV")
-        
-    def test_270_message_validity(self):
-        for line in self.lines:
-            line = line.rstrip("~").strip()
-            parts = line.split("*")
-            if line.startswith("HL"):
-                self.assertTrue(parts[3].strip(), f"HL code is empty: {line}")
-            elif line.startswith("NM1"):
-                self.assertFalse(any(c in parts[9] for c in ("~", ":")), f"Invalid char in SSN: {parts[9]}")
-
-    def test_270_error_rates(self):
-        injector = ErrorInjector(num_messages=self.messages_270, error_rate=self.error_rate_270)
-        expected = self.messages_270 * self.error_rate_270
-
-        actual_inserts = 0
-        for _ in range(self.messages_270):
-            injector.reset_error_inserted()
-            if injector.should_insert():
-                injector.insert("test", "missing")
-                actual_inserts += 1
-
         self.assertTrue(math.isclose(actual_inserts, expected, abs_tol=1),
                         f"Actual errors {actual_inserts}, expected {expected}")

@@ -13,8 +13,8 @@ from Config.Data_Visualizer import log_data
 
 def generate_claim_transactions(num_claims, transaction_funcs, input_date=date.today(), status="Created"):
     npi_funcs = transaction_funcs.npi_funcs
-
     beneficiaries = transaction_funcs.get_random_beneficiary(num_claims)
+
     transactions = []
 
     for bene in beneficiaries:

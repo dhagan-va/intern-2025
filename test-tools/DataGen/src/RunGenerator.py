@@ -14,7 +14,7 @@ from Repository.DatabaseFactory import get_database_backend
 
 load_dotenv()
 
-transaction_funcs = get_database_backend()
+db = get_database_backend()
 
 status_map = {
     "270": ("Created", date.today()),
@@ -36,14 +36,13 @@ def upload_to_s3(file_path, bucket_name, s3_key):
 
 
 def create_claims(num_gen=number_of_tests_270(), input_date=date.today(), status="Created"):
-    return generate_claim_transactions(num_gen, transaction_funcs=transaction_funcs, input_date=input_date,
+    return generate_claim_transactions(num_gen, transaction_funcs=db, input_date=input_date,
                                        status=status)
 
 
 def ensure_sponsors():
-    db = get_database_backend()
     if db.total_beneficiaries() == 0:
-        logger.info(f"No sponsors found -- generating {Config.INITIAL_USERS} sponsors first...")
+        logger.info(f"No sponsors found -- generating {Config.INITIAL_USERS} sponsors...")
         SponsorDataGenerator().store_sponsor_and_beneficiaries(Config.INITIAL_USERS)
 
 
@@ -74,10 +73,10 @@ def auto_mode():
     ensure_sponsors()
 
     today = date.today()
-    error_rate = get_error_rate()
+    error_rate = get_error_rate(0)
     num_messages = number_of_tests_270()
 
-    if transaction_funcs.total_claim_transactions() == 0:
+    if db.total_claim_transactions() == 0:
         logger.info("No transactions found for today -- running initialization...")
         for delta in range(8, -1, -1):
             transaction_date = date.today() - timedelta(days=delta)
@@ -90,7 +89,7 @@ def auto_mode():
             create_claims(num_messages, transaction_date - timedelta(days=8), "277CA Created")
 
     # Daily run — only create 270 if not yet created today
-    existing = transaction_funcs.get_claim_transactions(status="Created", date=today.isoformat())
+    existing = db.get_claim_transactions(status="Created", date=today.isoformat())
     if not existing:
         logger.info(f"Creating today's 270 claims...")
         create_claims(num_messages, today, "Created")
@@ -109,7 +108,7 @@ def Run270Generator(num_messages=None, error_rate=None, upload_s3=False):
     log_data["errors"]["error_rate_270"] = error_rate
 
     logger.info(f"Generating transactions from NPI data and local database")
-    edi = EDI270Generator(transaction_funcs=transaction_funcs, error_rate=error_rate)
+    edi = EDI270Generator(transaction_funcs=db, error_rate=error_rate)
     logger.info(f"Generating transactions into EDI file")
     edi_out = edi.combine_segments()
 
@@ -133,7 +132,7 @@ def Run837PGenerator(error_rate=None):
     log_data["errors"]["error_rate_837"] = error_rate
 
     logger.info(f"Generating transactions from saved 837 information")
-    edi837 = EDI837PGenerator(transaction_funcs=transaction_funcs, error_rate=error_rate)
+    edi837 = EDI837PGenerator(transaction_funcs=db, error_rate=error_rate)
     log_data["messages"]["count_837"] = edi837.get_num_messages()
     logger.info(f"Generating transactions into EDI file")
     edi_out = edi837.combine_segments()
@@ -152,7 +151,7 @@ def Run277CAGenerator(error_rate=None):
     log_data["errors"]["error_rate_277CA"] = error_rate
 
     logger.info(f"Generating transactions from saved 277CA information")
-    edi277CA = EDI277CAGenerator(transaction_funcs=transaction_funcs, error_rate=error_rate)
+    edi277CA = EDI277CAGenerator(transaction_funcs=db, error_rate=error_rate)
     log_data["messages"]["count_277CA"] = edi277CA.get_num_messages()
     logger.info(f"Generating transactions into EDI file")
     edi_out = edi277CA.combine_segments()
@@ -171,7 +170,7 @@ def Run835Generator(error_rate=None):
     log_data["errors"]["error_rate_835"] = error_rate
 
     logger.info(f"Generating transactions from saved 835 information")
-    edi835 = EDI835Generator(transaction_funcs=transaction_funcs, error_rate=error_rate)
+    edi835 = EDI835Generator(transaction_funcs=db, error_rate=error_rate)
     log_data["messages"]["count_835"] = edi835.get_num_messages()
     logger.info(f"Generating transactions into EDI file")
     edi_out = edi835.combine_segments()
@@ -189,7 +188,7 @@ def Run834Generator(error_rate=None):
     error_rate = get_error_rate(error_rate)
     log_data["errors"]["error_rate_834"] = error_rate
 
-    edi834 = EDI834Generator(transaction_funcs=transaction_funcs, error_rate=error_rate)
+    edi834 = EDI834Generator(transaction_funcs=db, error_rate=error_rate)
     log_data["messages"]["count_834"] = edi834.get_num_messages()
     logger.info("Generating EDI file from stored data")
     edi_out = edi834.combine_segments()
@@ -204,6 +203,7 @@ def Run834Generator(error_rate=None):
 
 
 def main():
+    start = datetime.now()
     parser = argparse.ArgumentParser(
         description="""
             EDI Transaction Generator
@@ -254,7 +254,9 @@ def main():
     else:
         parser.print_help()
 
-    transaction_funcs.connect.close()
+    db.connect.close()
+    elapsed = datetime.now() - start
+    logger.info(f"It took {elapsed} to generate all transactions")
     create_md()
 
 

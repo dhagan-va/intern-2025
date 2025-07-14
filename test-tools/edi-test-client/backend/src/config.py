@@ -15,11 +15,6 @@ class Setting:
     threads: int
     transaction: int
 
-    def __init__(self, rps: float, threads: int, transaction: int):
-        self.rps = rps
-        self.threads = threads
-        self.transaction = transaction
-
 
 def load_settings():
     with open(DEFAULT_CONF, "rb") as f:

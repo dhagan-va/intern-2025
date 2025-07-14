@@ -11,6 +11,7 @@ from config import Setting
 from client import reqs
 from client.stats import LiveStats
 from client import results
+from client.metadata_manager import MetadataManager
 
 
 class LoadClient:
@@ -47,6 +48,17 @@ class LoadClient:
         self._stats = LiveStats()
         self._log = logging.getLogger("edi_load_client")
         logging.basicConfig(filename="test.log", level=logging.INFO)
+        
+        # Metadata manager for header-based error information
+        self._metadata_manager = None
+
+    def set_metadata_manager(self, metadata_manager: MetadataManager):
+        """Set metadata manager for header-based error information."""
+        self._metadata_manager = metadata_manager
+        if metadata_manager:
+            summary = metadata_manager.get_error_summary()
+            self._log.info(f"Metadata loaded: {summary.get('total_transactions', 0)} transactions, "
+                          f"{summary.get('total_errors', 0)} errors ({summary.get('error_rate', 0):.1%} rate)")
 
     def start(self):
         """Start the load testing client."""
@@ -97,17 +109,21 @@ class LoadClient:
         )
 
     def _scheduler(self):
+        """Background scheduler that maintains target RPS."""
         next_run = time.perf_counter()
         while not self._stop_event.is_set():
             interval = 1.0 / self.rps
             
+            # Submit request to thread pool with metadata manager
             fut = self._pool.submit(
                 reqs.send_edi_request,
                 self.transaction,
                 self.endpoints[self.transaction],
+                self._metadata_manager,  # Pass metadata manager for header extraction
             )
             fut.add_done_callback(self._handle_response)
             
+            # Maintain timing
             next_run += interval
             time.sleep(max(0, next_run - time.perf_counter()))
         return
@@ -118,15 +134,42 @@ class LoadClient:
         try:
             status, elapsed, body = future.result() 
             
-            self._stats.update(elapsed, status)
-            self._sink.append(curr_time, elapsed, status, self.rps, body)  # Use body instead of sent_payload
-            
-            if status == 200:
+            # Analyze response to determine if it's an EDI error vs success
+            edi_error_type = None
+            if status == 200 and body:
+                # Check if 200 OK response contains EDI error (AAA segment)
+                body_str = body.decode('utf-8') if isinstance(body, bytes) else str(body)
+                if 'AAA*N*' in body_str:
+                    edi_error_type = self._categorize_edi_error(body_str)
+                    self._log.info("200 OK with EDI error (%s) in %.3f ms", edi_error_type, elapsed)
+                else:
+                    self._log.info("200 OK (EDI success) in %.3f ms", elapsed)
+            elif status == 200:
                 self._log.info("200 OK in %.3f ms", elapsed)
             else:
-                self._log.error("ERR %d in %.3f ms", status, elapsed)
+                self._log.error("HTTP ERR %d in %.3f ms", status, elapsed)
+            
+            # Update statistics with original status code for HTTP errors,
+            # or custom tracking for EDI errors within 200 responses
+            self._stats.update(elapsed, status, edi_error_type)
+            self._sink.append(curr_time, elapsed, status, self.rps, body)
+            
         except Exception as e:
             self._log.error("Error handling response: %s", e)
+
+    def _categorize_edi_error(self, response_body):
+        """Categorize EDI error based on AAA segment error codes."""
+        if 'AAA*N**79*' in response_body:
+            return 'edi_format_error'
+        elif 'AAA*N**72*' in response_body:
+            return 'edi_member_error'
+        elif 'AAA*N**83*' in response_body:
+            return 'edi_amt_error'
+        elif 'AAA*N**85*' in response_body:
+            return 'edi_validation_error'
+        elif 'AAA*N*' in response_body:
+            return 'edi_other_error'
+        return None
 
     @property
     def rps(self) -> float:

@@ -38,7 +38,7 @@ def upload_to_s3(file_path, bucket_name, s3_key):
 
 
 def create_claims(num_gen=number_of_tests_270(), database=db, input_date=date.today(), status="Created"):
-    return generate_claim_transactions(num_gen, transaction_funcs=database, input_date=input_date,
+    return generate_claim_transactions(num_gen=num_gen, transaction_funcs=database, input_date=input_date,
                                        status=status)
 
 
@@ -55,7 +55,7 @@ def cli_mode(database=db, file_type=None, num=0, error_rate=0, upload_s3=False):
 
     ensure_sponsors()
     status, date_used = status_map[file_type]
-    create_claims(num, date_used, status)
+    create_claims(num, db, date_used, status)
 
     if file_type == "270":
         Run270Generator(database, num, error_rate, upload_s3)
@@ -96,11 +96,11 @@ def auto_mode():
         logger.info(f"Creating today's 270 claims...")
         create_claims(num_messages, db, today, "Created")
 
-    Run270Generator(num_messages, error_rate, Config.UPLOAD_TO_S3)
-    Run837PGenerator(error_rate)
-    Run277CAGenerator(error_rate)
-    Run835Generator(error_rate)
-    Run834Generator(error_rate)
+    Run270Generator(database=db, num_messages=num_messages, error_rate=error_rate, upload_s3=Config.UPLOAD_TO_S3)
+    Run837PGenerator(database=db, error_rate=error_rate)
+    Run277CAGenerator(database=db, error_rate=error_rate)
+    Run835Generator(database=db, error_rate=error_rate)
+    Run834Generator(database=db, error_rate=error_rate)
 
 
 def Run270Generator(database=db, num_messages=0, error_rate=None, upload_s3=False):
@@ -250,7 +250,8 @@ def main():
     args = parser.parse_args()
 
     if args.mode == "cli":
-        cli_mode(args.file_type, args.num, args.error_rate, args.upload_s3)
+        cli_mode(database=db, file_type=args.file_type, num=args.num, error_rate=args.error_rate,
+                 upload_s3=args.upload_s3)
     elif args.mode == "auto":
         auto_mode()
     else:

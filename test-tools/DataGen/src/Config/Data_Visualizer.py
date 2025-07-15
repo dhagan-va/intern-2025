@@ -1,6 +1,7 @@
 import os
 
 from Config import Config
+from Config.Config import get_local_db_path, FAMILY_DATABASE_DIRECTORY, FAMILY_DATABASE_SQLITE
 from Repository.DatabaseFactory import get_database_backend
 
 INTRO = [
@@ -79,6 +80,7 @@ log_data = {
 
 
 def create_md():
+    db_file = get_local_db_path(FAMILY_DATABASE_DIRECTORY, FAMILY_DATABASE_SQLITE)
     path = Config.STATISTICS_MD
 
     message_types = [270, 837, 277, 835, 834]
@@ -91,7 +93,7 @@ def create_md():
         if key.startswith("count_"):
             total_messages += value
 
-    db = get_database_backend()
+    db = get_database_backend(db_file)
 
     throughput_270 = log_data["messages"]["count_270"] / log_data["messages"]["time_270"]
     throughput_837 = log_data["messages"]["count_837"] / log_data["messages"]["time_837"]

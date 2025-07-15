@@ -7,19 +7,17 @@ from datetime import date
 from Config import Config
 from Config.Config import logger
 from DataLayer.Datatypes import Address, Sponsor, Beneficiary, ClaimTransaction
-from Repository.DatabaseFactory import get_database_backend
 from Config.Data_Visualizer import log_data
 
 
-def generate_claim_transactions(num_claims, transaction_funcs, input_date=date.today(), status="Created"):
-    npi_funcs = transaction_funcs.npi_funcs
-    beneficiaries = transaction_funcs.get_random_beneficiary(num_claims)
+def generate_claim_transactions(num_gen, transaction_funcs, input_date, status):
+    beneficiaries = transaction_funcs.get_random_beneficiary(num_gen)
 
     transactions = []
 
     for bene in beneficiaries:
         sponsor_id = bene.sponsor_id
-        provider = npi_funcs.get_random_provider(bene.address.state)
+        provider = transaction_funcs.npi_funcs.get_random_provider(bene.address.state)
 
         claim_id = f"CLM{uuid.uuid4().hex[:12]}"
         payer_claim_id = f"PCID{claim_id[-5:]}"

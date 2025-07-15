@@ -17,22 +17,22 @@ The 270 file is used to request information about a member's health insurance el
 ## Transaction Counts
 ```mermaid
 pie title Message type distribution
-    "270" : 10000
-    "837" : 10000
-    "277" : 10000
-    "835" : 10000
-    "834" : 10000
+    "270" : 500
+    "837" : 0
+    "277" : 0
+    "835" : 0
+    "834" : 0
 ```
 
 
-Total Number of Messages Generated: **50000**
+Total Number of Messages Generated: **500**
 ## Throughput
 ```mermaid
 xychart-beta
     title "Throughput (Transactions per Second)"
     x-axis ["270", "837", "277", "835", "834"]
-    y-axis "TPS" 0 --> 3629.43780875738
-    bar [3272.2427428200454, 2893.3870770338267, 2965.5717874479806, 3628.43780875738, 3228.9260107749265]
+    y-axis "TPS" 0 --> 3425.657534246576
+    bar [3424.657534246576, 0.0, 0.0, 0.0, 0.0]
 ```
 
 
@@ -41,8 +41,8 @@ xychart-beta
 xychart-beta
     title "Error Count in Messages"
     x-axis ["270", "837", "277", "835", "834"]
-    y-axis "Errors" 0 --> 1
-    bar [0, 0, 0, 0, 0]
+    y-axis "Errors" 0 --> 26
+    bar [25, 0, 0, 0, 0]
 ```
 
 
@@ -52,7 +52,7 @@ xychart-beta
     title "Error Rate (%)"
     x-axis ["270", "837", "277", "835", "834"]
     y-axis "Percent" 0 --> 5
-    bar [0, 0, 0, 0, 0]
+    bar [5.0, 0, 0, 0, 0]
 ```
 
 
@@ -99,8 +99,8 @@ pie title Beneficiary Relationship Types
 xychart-beta
     title "AMT (deductible) Averages"
     x-axis ["D2", "FK", "R"]
-    y-axis "Amount" 0 --> 51142.34188381168
-    bar [49866.705819418166, 49852.28711128879, 50142.34188381168]
+    y-axis "Amount" 0 --> 1000.0
+    bar [0.0, 0.0, 0.0]
 ```
 
 
@@ -109,10 +109,10 @@ xychart-beta
 xychart-beta
     title "AMT (visit) Averages"
     x-axis ["C1", "P3", "B9"]
-    y-axis "Number of Visits" 0 --> 8.546545345465454
-    bar [7.546545345465454, 7.525947405259474, 7.392560743925608]
+    y-axis "Number of Visits" 0 --> 1.0
+    bar [0.0, 0.0, 0.0]
 ```
 
 
 ## Average 270s per Beneficiary
-- Average 270s per Beneficiary: **0.10**
+- Average 270s per Beneficiary: **0.01**

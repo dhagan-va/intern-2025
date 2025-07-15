@@ -10,6 +10,7 @@ from Repository.DatabaseFactory import get_database_backend
 from Repository.NPI_Functions import NPIFunctions
 from RunGenerator import Run834Generator, Run270Generator
 
+
 # make a sqlite db of 10000 beneficiaries
 # remove upon completion of tests
 class Test270Message(unittest.TestCase):

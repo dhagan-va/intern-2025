@@ -8,6 +8,18 @@ from Config.Data_Visualizer import log_data
 from FileCreation.ErrorInjector import ErrorInjector
 
 
+def split_provider_name(name, entity_type):
+    if entity_type == "2":
+        return name, ""
+
+    parts = name.replace(",", "").split()
+
+    if len(parts) == 1:
+        return parts[0], ""
+    else:
+        return parts[0], parts[1]
+
+
 class EDI270Generator:
     def __init__(self, transaction_funcs, error_rate=None):
         self.transaction_funcs = transaction_funcs
@@ -19,18 +31,6 @@ class EDI270Generator:
         self.error_ctrl = ErrorInjector(self.num_messages, error_rate)
         logger.info(f"Initializing EDI270Generator with {self.num_messages} claims")
 
-    @staticmethod
-    def split_provider_name(name, entity_type):
-        if entity_type == "2":
-            return name, ""
-
-        parts = name.replace(",", "").split()
-
-        if len(parts) == 1:
-            return parts[0], ""
-        else:
-            return parts[0], parts[1]
-
     def create_transaction(self, num, error_ctrl):
         if num - 1 >= len(self.claims) or num <= 0:
             logger.error(f"Index out of range for claim {num}")
@@ -38,7 +38,7 @@ class EDI270Generator:
 
         self.error_ctrl.reset_error_inserted()
         claim = self.claims[num - 1]
-        last, first = self.split_provider_name(claim.provider_name, claim.provider_entity_type)
+        last, first = split_provider_name(claim.provider_name, claim.provider_entity_type)
         error_id = claim.beneficiary_id
         bene = self.transaction_funcs.get_beneficiary(claim.sponsor_id, claim.beneficiary_id)
 
@@ -98,18 +98,6 @@ class EDI837PGenerator:
     def get_num_messages(self):
         return self.num_messages
 
-    @staticmethod
-    def split_provider_name(name, entity_type):
-        if entity_type == "2":
-            return name, ""
-
-        parts = name.replace(",", "").split()
-
-        if len(parts) == 1:
-            return parts[0], ""
-        else:
-            return parts[0], parts[1]
-
     def create_claim_anesthesia(self, num, error_ctrl):
         if num - 1 >= len(self.claims) or num <= 0:
             logger.error(f"Index out of range for claim {num}")
@@ -118,7 +106,7 @@ class EDI837PGenerator:
         claim = self.claims[num - 1]
         bene = self.transaction_funcs.get_beneficiary(claim.sponsor_id, claim.beneficiary_id)
         sponsor = self.transaction_funcs.get_sponsor_by_id(claim.sponsor_id)
-        last, first = self.split_provider_name(claim.provider_name, claim.provider_entity_type)
+        last, first = split_provider_name(claim.provider_name, claim.provider_entity_type)
         bene_relationship = self.relationship_map.get(bene.relationship)
         error_id = bene.beneficiary_id
 
@@ -211,18 +199,6 @@ class EDI277CAGenerator:
     def get_num_messages(self):
         return self.num_messages
 
-    @staticmethod
-    def split_provider_name(name, entity_type):
-        if entity_type == "2":
-            return name, ""
-
-        parts = name.replace(",", "").split()
-
-        if len(parts) == 1:
-            return parts[0], ""
-        else:
-            return parts[0], parts[1]
-
     def create_transaction(self, num, error_ctrl):
         if num - 1 >= len(self.claims) or num <= 0:
             logger.error(f"Index out of range for claim {num}")
@@ -232,7 +208,7 @@ class EDI277CAGenerator:
         claim = self.claims[num - 1]
         error_id = claim.beneficiary_id
         bene = self.transaction_funcs.get_beneficiary(claim.sponsor_id, claim.beneficiary_id)
-        last, first = self.split_provider_name(claim.provider_name, claim.provider_entity_type)
+        last, first = split_provider_name(claim.provider_name, claim.provider_entity_type)
 
         segments = [Seg.ST("277", num).to_edi(),
                     Seg.BHT("85", "08", claim.claim_id, "277CA").to_edi(),
@@ -310,18 +286,6 @@ class EDI835Generator:
 
     def get_num_messages(self):
         return self.num_messages
-
-    @staticmethod
-    def split_provider_name(name, entity_type):
-        if entity_type == "2":
-            return name, ""
-
-        parts = name.replace(",", "").split()
-
-        if len(parts) == 1:
-            return parts[0], ""
-        else:
-            return parts[0], parts[1]
 
     def create_transaction(self, num, error_ctrl):
         if num - 1 >= len(self.claims) or num <= 0:

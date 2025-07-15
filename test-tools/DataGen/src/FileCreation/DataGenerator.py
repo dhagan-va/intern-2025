@@ -162,12 +162,12 @@ class SponsorDataGenerator:
         beneficiary_gender = self.fake.passport_gender()
         if beneficiary_gender == "X":
             beneficiary_gender = random.choice(["M", "F"])
-        sponsor_first = self.fake.first_name_male() if beneficiary_gender == 'M' else self.fake.first_name_female()
+        bene_first = self.fake.first_name_male() if beneficiary_gender == 'M' else self.fake.first_name_female()
 
         beneficiary = Beneficiary(
             ssn=beneficiary_ssn,
             dob=self.fake.date_of_birth(),
-            first_name=sponsor_first.upper(),
+            first_name=bene_first.upper(),
             last_name=sponsor.last_name,
             gender=beneficiary_gender,
             address=sponsor.address,

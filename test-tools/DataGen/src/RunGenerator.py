@@ -101,14 +101,14 @@ def auto_mode():
     Run834Generator(error_rate)
 
 
-def Run270Generator(num_messages=None, error_rate=None, upload_s3=False):
+def Run270Generator(database=db, num_messages=None, error_rate=None, upload_s3=False):
     now = datetime.now()
     log_data["messages"]["count_270"] = num_messages
     error_rate = get_error_rate(error_rate)
     log_data["errors"]["error_rate_270"] = error_rate
 
     logger.info(f"Generating transactions from NPI data and local database")
-    edi = EDI270Generator(transaction_funcs=db, error_rate=error_rate)
+    edi = EDI270Generator(transaction_funcs=database, error_rate=error_rate)
     logger.info(f"Generating transactions into EDI file")
     edi_out = edi.combine_segments()
 
@@ -126,13 +126,13 @@ def Run270Generator(num_messages=None, error_rate=None, upload_s3=False):
         upload_to_s3(file_path, Config.BUCKET_NAME, s3_key)
 
 
-def Run837PGenerator(error_rate=None):
+def Run837PGenerator(database=db, error_rate=None):
     now = datetime.now()
     error_rate = get_error_rate(error_rate)
     log_data["errors"]["error_rate_837"] = error_rate
 
     logger.info(f"Generating transactions from saved 837 information")
-    edi837 = EDI837PGenerator(transaction_funcs=db, error_rate=error_rate)
+    edi837 = EDI837PGenerator(transaction_funcs=database, error_rate=error_rate)
     log_data["messages"]["count_837"] = edi837.get_num_messages()
     logger.info(f"Generating transactions into EDI file")
     edi_out = edi837.combine_segments()
@@ -145,13 +145,13 @@ def Run837PGenerator(error_rate=None):
     logger.info(f"It took {end_time} to generate {edi837.get_num_messages()} transactions for the 837 file")
 
 
-def Run277CAGenerator(error_rate=None):
+def Run277CAGenerator(database=db, error_rate=None):
     now = datetime.now()
     error_rate = get_error_rate(error_rate)
     log_data["errors"]["error_rate_277CA"] = error_rate
 
     logger.info(f"Generating transactions from saved 277CA information")
-    edi277CA = EDI277CAGenerator(transaction_funcs=db, error_rate=error_rate)
+    edi277CA = EDI277CAGenerator(transaction_funcs=database, error_rate=error_rate)
     log_data["messages"]["count_277CA"] = edi277CA.get_num_messages()
     logger.info(f"Generating transactions into EDI file")
     edi_out = edi277CA.combine_segments()
@@ -164,13 +164,13 @@ def Run277CAGenerator(error_rate=None):
     logger.info(f"It took {end_time} to generate {edi277CA.get_num_messages()} transactions for the 277CA file")
 
 
-def Run835Generator(error_rate=None):
+def Run835Generator(database=db, error_rate=None):
     now = datetime.now()
     error_rate = get_error_rate(error_rate)
     log_data["errors"]["error_rate_835"] = error_rate
 
     logger.info(f"Generating transactions from saved 835 information")
-    edi835 = EDI835Generator(transaction_funcs=db, error_rate=error_rate)
+    edi835 = EDI835Generator(transaction_funcs=database, error_rate=error_rate)
     log_data["messages"]["count_835"] = edi835.get_num_messages()
     logger.info(f"Generating transactions into EDI file")
     edi_out = edi835.combine_segments()
@@ -183,12 +183,12 @@ def Run835Generator(error_rate=None):
     logger.info(f"It took {end_time} to generate {edi835.get_num_messages()} transactions for the 835 file")
 
 
-def Run834Generator(error_rate=None):
+def Run834Generator(database=db, error_rate=None):
     now = datetime.now()
     error_rate = get_error_rate(error_rate)
     log_data["errors"]["error_rate_834"] = error_rate
 
-    edi834 = EDI834Generator(transaction_funcs=db, error_rate=error_rate)
+    edi834 = EDI834Generator(transaction_funcs=database, error_rate=error_rate)
     log_data["messages"]["count_834"] = edi834.get_num_messages()
     logger.info("Generating EDI file from stored data")
     edi_out = edi834.combine_segments()

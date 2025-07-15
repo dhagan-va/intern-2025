@@ -33,13 +33,15 @@ class Test270Message(unittest.TestCase):
         self.logger = Config.get_logger(__name__)
 
         self.num_claims = 100
-        self.error_rate_270 = 0.01
+        self.error_rate_270 = 0
 
         ensure_sponsors(database=self.db_funcs)
         create_claims(num_gen=self.num_claims, database=self.db_funcs, input_date=date.today(), status="Created")
-        edi = Run270Generator(database=self.db_funcs, num_messages=self.num_claims,
-                              error_rate=self.error_rate_270, upload_s3=False)
-        self.lines = edi.combine_segments()
+        Run270Generator(database=self.db_funcs, num_messages=self.num_claims,
+                        error_rate=self.error_rate_270, upload_s3=False)
+        self.path = Config.get_edi_path(Config.EDI270_PATH, Config.EDI270_FILE_NAME)
+        with open(self.path) as f:
+            self.lines = [line.strip() for line in f if line.strip()]
 
     # this needs to be a different test (not within 270)
     # def test_valid_NPI(self):
@@ -64,18 +66,17 @@ class Test270Message(unittest.TestCase):
             elif line.startswith("NM1"):
                 self.assertFalse(any(c in parts[9] for c in ("~", ":")), f"Invalid char in NM1: {parts[9]}")
 
+    def test_270_error_rates(self):
+        injector = ErrorInjector(num_messages=self.num_claims, error_rate=self.error_rate_270)
+        expected = self.num_claims * self.error_rate_270
 
-def test_270_error_rates(self):
-    injector = ErrorInjector(num_messages=self.messages_270, error_rate=self.error_rate_270)
-    expected = self.messages_270 * self.error_rate_270
+        actual_inserts = sum(1 for _ in range(self.num_claims)
+                             if injector.reset_error_inserted() or injector.should_insert() and injector.insert("test",
+                                                                                                                "missing"))
 
-    actual_inserts = sum(1 for _ in range(self.messages_270)
-                         if injector.reset_error_inserted() or injector.should_insert() and injector.insert("test",
-                                                                                                            "missing"))
-
-    self.assertTrue(math.isclose(actual_inserts, expected, abs_tol=1),
-                    f"Actual errors {actual_inserts}, expected {expected}"
-                    f"Actual errors {actual_inserts}, expected {expected}")
+        self.assertTrue(math.isclose(actual_inserts, expected, abs_tol=1),
+                        f"Actual errors {actual_inserts}, expected {expected}"
+                        f"Actual errors {actual_inserts}, expected {expected}")
 
 
 class Test834Message(unittest.TestCase):

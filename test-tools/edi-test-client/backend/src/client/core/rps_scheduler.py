@@ -48,15 +48,29 @@ class RPSScheduler:
     
     def _scheduler_loop(self) -> None:
         """Background scheduler that maintains target RPS."""
-        next_run = time.perf_counter()
+        last_time = time.perf_counter()
+        requests_sent = 0
         
         while not self._stop_event.is_set():
-            interval = 1.0 / self.rps
+            current_time = time.perf_counter()
+            elapsed = current_time - last_time
             
-            # Submit request to thread pool
-            future = self.thread_pool.submit(self.request_func)
-            future.add_done_callback(self.response_callback)
+            current_rps = self.rps
+            target_requests = int(elapsed * current_rps)
             
-            # Maintain timing
-            next_run += interval
-            time.sleep(max(0, next_run - time.perf_counter()))
+            requests_to_send = max(0, target_requests - requests_sent)
+            
+            for _ in range(requests_to_send):
+                if self._stop_event.is_set():
+                    break
+                    
+                # Submit request to thread pool
+                future = self.thread_pool.submit(self.request_func)
+                future.add_done_callback(self.response_callback)
+                requests_sent += 1
+            
+            if elapsed >= 1.0:
+                last_time = current_time
+                requests_sent = 0
+            
+            time.sleep(0.001) 

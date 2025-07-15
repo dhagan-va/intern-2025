@@ -34,6 +34,7 @@ class LoadClient:
 
         self.transaction = cfg.transaction
         self.threads = cfg.threads
+        self._configured_rps = cfg.rps
         self._trans_lock = threading.Lock()
 
         # Runtime state
@@ -91,6 +92,8 @@ class LoadClient:
             self._response_processor.process_response(future, self.rps)
 
         self._scheduler = RPSScheduler(self._pool, make_request, handle_response)
+        # Set the configured RPS value on the scheduler
+        self._scheduler.update_rps(self._configured_rps)
         self._scheduler.start_scheduling()
 
         curr_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")

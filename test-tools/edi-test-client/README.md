@@ -1,38 +1,13 @@
 # EDI X12 27x Multi-Threaded Client & Mock Server Test Tool
 
-## Architecture
+## Overview
 
-```mermaid
-graph TB
-    Frontend[React Frontend<br/>Web Dashboard<br/>Port 5173]
-    
-    API[Client API<br/>Flask Server<br/>Port 5001]
-    
-    LoadClient[Load Test Client<br/>Multi-threaded]
-    
-    MockServer[Mock EDI Server<br/>Flask Server<br/>Port 5000]
-    
-    Frontend -->|HTTP Requests| API
-    API -->|Start/Stop/Config| LoadClient
-    LoadClient -->|EDI Transactions| MockServer
-    MockServer -->|EDI Responses| LoadClient
-    LoadClient -->|Statistics| API
-    API -->|Live Data| Frontend
-    
-    classDef frontend fill:#e1f5fe,stroke:#01579b
-    classDef server fill:#f3e5f5,stroke:#4a148c
-    classDef client fill:#e8f5e8,stroke:#1b5e20
-    
-    class Frontend frontend
-    class API,MockServer server
-    class LoadClient client
-```
+This tool provides comprehensive EDI X12 load testing with dynamic payload generation and error injection. It integrates with the DataGen module to create realistic EDI 270 transactions and tracks them using ST control numbers for production-compatible testing.
 
 ## Setup
 
 ### Prerequisites
 - Python 3.8+
-- Node.js 16+ (for frontend)
 - Poetry (Python package manager)
 
 ### Installation
@@ -55,62 +30,29 @@ graph TB
    poetry install
    ```
 
-### Frontend Setup
-5. Navigate to frontend directory
-   ```bash
-   cd frontend
-   ```
-6. Install frontend dependencies
-   ```bash
-   npm install
-   ```
-7. Start the frontend development server
-   ```bash
-   npm run dev
-   ```
-
-### Running the Application
-8. Start mock Flask server (in new terminal)
-   ```bash
-   cd test-tools/edi-test-client
-   source .venv/bin/activate
-   ./runserver.sh
-   ```
-9. Start the API backend (in new terminal)
-   ```bash
-   cd test-tools/edi-test-client
-   source .venv/bin/activate
-   python backend/src/client_api/api.py
-   ```
-10. Access the web dashboard at `http://localhost:5173`
-
-### Testing
-11. Run unit tests
-    ```bash
-    python -m pytest tests/ -v
-    ```
-12. Run with coverage
-    ```bash
-    python -m pytest tests/ --cov=backend/src --cov-report=html
-    ```
-
-### Command Line Usage
-Alternatively, run the client directly from command line:
-```bash
-./runclient.sh
-```
-
-### Logs
-- Backend logs: `backend/src/client/test.log`
-- API logs: `backend/src/client_api/test.log`
-- Frontend logs: Browser console
-
 ## Usage
 
-1. **Web Dashboard**: Access `http://localhost:5173` for the React frontend
-2. **Mock Server**: Runs on `http://localhost:5000`
-3. **API Backend**: Runs on `http://localhost:5001`
+### EDI Metadata Load Testing
 
-### Configuration
-- Default settings: `backend/src/conf/default.toml`
-- Modify RPS, transaction types, and endpoints through the web interface
+Run EDI 270 metadata load tests with dynamic payload generation and error injection:
+
+
+### Command Options
+- `--transactions, -t`: Number of EDI transactions to generate and send (default: 10)
+- `--rps, -r`: Requests per second rate (default: 5.0)
+- `--error-rate, -e`: Error injection rate from 0.0 to 1.0 (default: 0.1)
+- `--preset`: Use predefined configurations (`quick` or `stress`)
+- `--output-metadata`: Save complete test results to JSON file
+- `--verbose, -v`: Show detailed transaction information
+
+
+### Starting the Mock Server
+
+Before running the metadata load test, start the mock EDI server:
+
+```bash
+# In a separate terminal
+./runserver.sh
+```
+
+The mock server will start on `http://localhost:5000` and handle EDI 270 requests.

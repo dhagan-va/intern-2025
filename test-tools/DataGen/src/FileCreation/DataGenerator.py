@@ -66,13 +66,13 @@ def create_amt_data():
 
 
 class SponsorDataGenerator:
-    def __init__(self, faker_seed=Config.FAKER_SEED, random_seed=Config.RANDOM_SEED,
+    def __init__(self, database_backend, faker_seed=Config.FAKER_SEED, random_seed=Config.RANDOM_SEED,
                  relationship_map=Config.RELATIONSHIP_MAP):
         self.fake = Faker()
         Faker.seed(faker_seed)
         random.seed(random_seed)
         self.relationship_map = relationship_map
-        self.repo = get_database_backend()
+        self.repo = database_backend
         existing_ssns = self.repo.get_all_ssns()
         self.used_ssns = set(existing_ssns)
 

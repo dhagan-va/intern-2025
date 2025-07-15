@@ -5,7 +5,8 @@ import boto3
 from dotenv import load_dotenv
 
 from Config import Config
-from Config.Config import logger, number_of_tests_270, get_error_rate
+from Config.Config import logger, number_of_tests_270, get_error_rate, get_local_db_path, FAMILY_DATABASE_DIRECTORY, \
+    FAMILY_DATABASE_SQLITE
 from Config.Data_Visualizer import log_data, create_md
 from FileCreation.DataGenerator import SponsorDataGenerator, generate_claim_transactions
 from FileCreation.EDIGenerator import EDI834Generator, EDI270Generator, EDI837PGenerator, EDI277CAGenerator, \
@@ -14,7 +15,8 @@ from Repository.DatabaseFactory import get_database_backend
 
 load_dotenv()
 
-db = get_database_backend()
+db_file = get_local_db_path(FAMILY_DATABASE_DIRECTORY, FAMILY_DATABASE_SQLITE)
+db = get_database_backend(file=db_file)
 
 status_map = {
     "270": ("Created", date.today()),
@@ -35,18 +37,18 @@ def upload_to_s3(file_path, bucket_name, s3_key):
         logger.error(f"Failed to upload to s3: {e}")
 
 
-def create_claims(num_gen=number_of_tests_270(), input_date=date.today(), status="Created"):
-    return generate_claim_transactions(num_gen, transaction_funcs=db, input_date=input_date,
+def create_claims(num_gen=number_of_tests_270(), database=db, input_date=date.today(), status="Created"):
+    return generate_claim_transactions(num_gen, transaction_funcs=database, input_date=input_date,
                                        status=status)
 
 
-def ensure_sponsors():
-    if db.total_beneficiaries() == 0:
+def ensure_sponsors(database=db):
+    if database.total_beneficiaries() == 0:
         logger.info(f"No sponsors found -- generating {Config.INITIAL_USERS} sponsors...")
-        SponsorDataGenerator().store_sponsor_and_beneficiaries(Config.INITIAL_USERS)
+        SponsorDataGenerator(database).store_sponsor_and_beneficiaries(Config.INITIAL_USERS)
 
 
-def cli_mode(file_type, num, error_rate, upload_s3):
+def cli_mode(database=db, file_type=None, num=0, error_rate=0, upload_s3=False):
     if file_type not in status_map:
         logger.error("Invalid file type.")
         return
@@ -56,15 +58,15 @@ def cli_mode(file_type, num, error_rate, upload_s3):
     create_claims(num, date_used, status)
 
     if file_type == "270":
-        Run270Generator(num, error_rate, upload_s3)
+        Run270Generator(database, num, error_rate, upload_s3)
     elif file_type == "837":
-        Run837PGenerator(error_rate)
+        Run837PGenerator(database, error_rate)
     elif file_type == "277":
-        Run277CAGenerator(error_rate)
+        Run277CAGenerator(database, error_rate)
     elif file_type == "835":
-        Run835Generator(error_rate)
+        Run835Generator(database, error_rate)
     elif file_type == "834":
-        Run834Generator(error_rate)
+        Run834Generator(database, error_rate)
 
 
 def auto_mode():
@@ -77,22 +79,22 @@ def auto_mode():
     num_messages = number_of_tests_270()
 
     if db.total_claim_transactions() == 0:
-        logger.info("No transactions found for today -- running initialization...")
+        logger.info("No transactions found at all -- running initialization...")
         for delta in range(8, -1, -1):
             transaction_date = date.today() - timedelta(days=delta)
             num_messages = number_of_tests_270()
 
             logger.info(
                 f"Creating {num_messages} claims for {transaction_date.isoformat()} with error rate {error_rate:.2%}")
-            create_claims(num_messages, transaction_date, "Created")
-            create_claims(num_messages, transaction_date - timedelta(days=1), "270 Created")
-            create_claims(num_messages, transaction_date - timedelta(days=8), "277CA Created")
+            create_claims(num_messages, db, transaction_date, "Created")
+            create_claims(num_messages, db, transaction_date - timedelta(days=1), "270 Created")
+            create_claims(num_messages, db, transaction_date - timedelta(days=8), "277CA Created")
 
     # Daily run — only create 270 if not yet created today
     existing = db.get_claim_transactions(status="Created", date=today.isoformat())
     if not existing:
         logger.info(f"Creating today's 270 claims...")
-        create_claims(num_messages, today, "Created")
+        create_claims(num_messages, db, today, "Created")
 
     Run270Generator(num_messages, error_rate, Config.UPLOAD_TO_S3)
     Run837PGenerator(error_rate)
@@ -101,7 +103,7 @@ def auto_mode():
     Run834Generator(error_rate)
 
 
-def Run270Generator(database=db, num_messages=None, error_rate=None, upload_s3=False):
+def Run270Generator(database=db, num_messages=0, error_rate=None, upload_s3=False):
     now = datetime.now()
     log_data["messages"]["count_270"] = num_messages
     error_rate = get_error_rate(error_rate)

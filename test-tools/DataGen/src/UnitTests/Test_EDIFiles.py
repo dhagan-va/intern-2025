@@ -3,12 +3,13 @@ import math
 import os.path
 import shutil
 import unittest
+from datetime import date
 
 from Config import Config, Log_Config
+from Config.Config import FAMILY_DATABASE_DIRECTORY, get_local_db_path
 from FileCreation.ErrorInjector import ErrorInjector
 from Repository.DatabaseFactory import get_database_backend
-from Repository.NPI_Functions import NPIFunctions
-from RunGenerator import Run834Generator, Run270Generator
+from RunGenerator import Run834Generator, Run270Generator, ensure_sponsors, create_claims
 
 
 class Test270Message(unittest.TestCase):
@@ -23,17 +24,22 @@ class Test270Message(unittest.TestCase):
         os.makedirs(Log_Config.LOG_DIRECTORY, exist_ok=True)
         os.makedirs(Config.DOWNLOAD_DIRECTORY, exist_ok=True)
 
-        self.npi_funcs = NPIFunctions(Config.NPI_CSV_PATH)
-        self.transaction_funcs = get_database_backend()
+        from Repository.NPI_Functions import download_weekly_npi_data
+        download_weekly_npi_data(Config.DOWNLOAD_DIRECTORY)
+
+        database_file = get_local_db_path(FAMILY_DATABASE_DIRECTORY, "TEST_DATABASE.sqlite")
+
+        self.db_funcs = get_database_backend(file=database_file)
         self.logger = Config.get_logger(__name__)
 
-        self.messages_270 = 100
-        self.error_rate_270 = 1
-        Run270Generator(num_messages=self.messages_270, error_rate=self.error_rate_270)
-        self.path = Config.get_edi_path(Config.EDI270_PATH, Config.EDI270_FILE_NAME)
+        self.num_claims = 100
+        self.error_rate_270 = 0.01
 
-        with open(self.path) as f:
-            self.lines = [line.strip() for line in f if line.strip()]
+        ensure_sponsors(database=self.db_funcs)
+        create_claims(num_gen=self.num_claims, database=self.db_funcs, input_date=date.today(), status="Created")
+        edi = Run270Generator(database=self.db_funcs, num_messages=self.num_claims,
+                              error_rate=self.error_rate_270, upload_s3=False)
+        self.lines = edi.combine_segments()
 
     # this needs to be a different test (not within 270)
     # def test_valid_NPI(self):

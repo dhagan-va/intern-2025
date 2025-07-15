@@ -2,14 +2,14 @@ import sqlite3
 
 from datetime import date
 from DataLayer.Datatypes import Address, Beneficiary, Sponsor, ClaimTransaction
-from Config.Config import get_local_db_path, FAMILY_DATABASE_DIRECTORY, FAMILY_DATABASE_SQLITE, NPI_CSV_PATH
+from Config.Config import NPI_CSV_PATH
 from Config.Config import logger
 from DataLayer.Interfaces import DataAccess
 from Repository.NPI_Functions import NPIFunctions
 
 
 class SQLiteDBFunctions(DataAccess):
-    def __init__(self, file=get_local_db_path(FAMILY_DATABASE_DIRECTORY, FAMILY_DATABASE_SQLITE)):
+    def __init__(self, file):
         self.file = file
         self.connect = sqlite3.connect(self.file)
         self.connect.row_factory = sqlite3.Row

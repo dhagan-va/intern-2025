@@ -10,14 +10,13 @@ import tempfile
 from pathlib import Path
 import argparse
 
-sys.path.insert(0, str(Path(__file__).parent.parent / "utils"))
 sys.path.insert(0, str(Path(__file__).parent.parent))
-
+sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
 from utils.generate_payloads import generate_edi_270_payloads_with_metadata
 from config import load_settings
 from client.load_client import LoadClient
-from client.metadata_manager import MetadataManager
+from client.data.metadata_manager import MetadataManager
 
 
 def run_metadata_load_test(num_transactions, rps=10.0, error_rate=0.0):

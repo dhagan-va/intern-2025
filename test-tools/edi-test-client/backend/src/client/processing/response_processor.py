@@ -44,7 +44,7 @@ class ResponseProcessor:
             status, elapsed, body = future.result()
             edi_error_type = self._analyze_response(status, elapsed, body)
             
-            self.stats_collector.update(elapsed, status, edi_error_type)
+            self.stats_collector.record_response(elapsed, status, edi_error_type)
             self.result_sink.append(curr_time, elapsed, status, current_rps, body)
             
         except Exception as e:

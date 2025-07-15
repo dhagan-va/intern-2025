@@ -4,6 +4,58 @@
 
 This tool provides comprehensive EDI X12 load testing with dynamic payload generation and error injection. It integrates with the DataGen module to create realistic EDI 270 transactions and tracks them using ST control numbers for production-compatible testing.
 
+## Architecture
+
+```mermaid
+classDiagram
+    class LoadClient {
+        +start()
+        +stop()
+        +update_rps()
+        +set_metadata_manager()
+    }
+    
+    class RPSScheduler {
+        +start_scheduling()
+        +stop_scheduling()
+        +update_rps()
+    }
+    
+    class ResponseProcessor {
+        +process_response()
+        -_analyze_response()
+    }
+    
+    class StatsCollector {
+        +record_response()
+        +snapshot()
+    }
+    
+    class MetadataManager {
+        +get_error_info()
+        +load_metadata()
+    }
+    
+    class EdiResponseAnalyzer {
+        +categorize_edi_error()
+        +has_edi_error()
+    }
+    
+    class TrackedEDI270Generator {
+        +generate_edi_270_payloads_with_metadata()
+        +create_transaction()
+    }
+    
+    LoadClient --> RPSScheduler : uses
+    LoadClient --> ResponseProcessor : uses
+    LoadClient --> StatsCollector : uses
+    LoadClient --> MetadataManager : uses
+    ResponseProcessor --> EdiResponseAnalyzer : uses
+    ResponseProcessor --> StatsCollector : updates
+    MetadataManager --> TrackedEDI270Generator : loads from
+    RPSScheduler --> ResponseProcessor : callbacks
+```
+
 ## Setup
 
 ### Prerequisites

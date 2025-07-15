@@ -182,7 +182,7 @@ class EDI837PGenerator:
 
     def combine_segments(self):
         all_segments = [Seg.ISA().to_edi(),
-                        Seg.GS("HC", Config.SENDER_ID, Config.RECEIVER_ID, "005010X222A1").to_edi()
+                        Seg.GS("HC").to_edi()
                         ]
 
         for i in range(1, self.num_messages + 1):
@@ -281,7 +281,7 @@ class EDI277CAGenerator:
         all_segments = []
         for i in range(1, self.num_messages + 1):
             all_segments += [Seg.ISA().to_edi(),
-                             Seg.GS("HN", Config.SENDER_ID, Config.RECEIVER_ID, "005010X214").to_edi()
+                             Seg.GS("HN").to_edi()
                              ]
             all_segments.extend(self.create_transaction(i, self.error_ctrl))
             all_segments += [Seg.GE(1).to_edi(),
@@ -360,7 +360,7 @@ class EDI835Generator:
         all_segments = []
         for i in range(1, self.num_messages + 1):
             all_segments += [Seg.ISA().to_edi(),
-                             Seg.GS("HP", Config.SENDER_ID, Config.RECEIVER_ID, "005010X221A1").to_edi()
+                             Seg.GS("HP").to_edi()
                              ]
             all_segments.extend(self.create_transaction(i, self.error_ctrl))
             all_segments += [Seg.GE(1).to_edi(),

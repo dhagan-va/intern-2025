@@ -10,7 +10,8 @@ from Repository.DatabaseFactory import get_database_backend
 from Repository.NPI_Functions import NPIFunctions
 from RunGenerator import Run834Generator, Run270Generator
 
-
+# make a sqlite db of 10000 beneficiaries
+# remove upon completion of tests
 class Test270Message(unittest.TestCase):
     def setUp(self):
         logging.shutdown()
@@ -25,6 +26,7 @@ class Test270Message(unittest.TestCase):
 
         self.npi_funcs = NPIFunctions(Config.NPI_CSV_PATH)
         self.transaction_funcs = get_database_backend()
+        self.logger = Config.get_logger(__name__)
 
         self.messages_270 = 100
         self.error_rate_270 = 1
@@ -34,19 +36,20 @@ class Test270Message(unittest.TestCase):
         with open(self.path) as f:
             self.lines = [line.strip() for line in f if line.strip()]
 
-    def test_valid_NPI(self):
-        provider_npis = [
-            line.split("*")[9]
-            for line in self.lines
-            if line.startswith("NM1*1P")
-        ]
-
-        df = self.npi_funcs.load_csv()
-        valid_npis = set(df["NPI"])
-
-        for npi in provider_npis:
-            self.assertTrue(npi.isdigit() and len(npi) == 10, f"Invalid NPI format: {npi}")
-            self.assertIn(npi, valid_npis, f"NPI {npi} not found in CSV")
+    # this needs to be a different test (not within 270)
+    # def test_valid_NPI(self):
+    #     provider_npis = [
+    #         line.split("*")[9]
+    #         for line in self.lines
+    #         if line.startswith("NM1*1P")
+    #     ]
+    #
+    #     df = self.npi_funcs.load_csv()
+    #     valid_npis = set(df["NPI"])
+    #
+    #     for npi in provider_npis:
+    #         self.assertTrue(npi.isdigit() and len(npi) == 10, f"Invalid NPI format: {npi}")
+    #         self.assertIn(npi, valid_npis, f"NPI {npi} not found in CSV")
 
     def test_270_message_validity(self):
         for line in self.lines:

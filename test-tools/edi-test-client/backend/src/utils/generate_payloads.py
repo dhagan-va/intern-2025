@@ -104,7 +104,7 @@ class TrackedEDI270Generator(EDI270Generator):
             "!@#" in segment
             or "~" in segment.split("*")[-1]
             or segment.strip().endswith("*")
-            or segment.count("*") != segment.count("*")
+            or segment.count("~") != 1
         )
 
     def get_transaction_metadata(self):

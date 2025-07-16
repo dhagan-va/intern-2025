@@ -44,7 +44,7 @@ def create_claims(num_gen=number_of_tests_270(), database=db, input_date=date.to
 
 def ensure_sponsors(database=db):
     if database.total_beneficiaries() == 0:
-        logger.info(f"No sponsors found -- generating {Config.INITIAL_USERS} sponsors...")
+        logger.info(f"No beneficiaries found -- generating {Config.INITIAL_USERS} beneficiaries...")
         SponsorDataGenerator(database).store_sponsor_and_beneficiaries(Config.INITIAL_USERS)
 
 
@@ -71,6 +71,7 @@ def cli_mode(database=db, file_type=None, num=0, error_rate=0, upload_s3=False):
 
 def auto_mode():
     logger.info("Running automated daily generation...")
+    now = datetime.now()
 
     ensure_sponsors()
 
@@ -90,7 +91,9 @@ def auto_mode():
             create_claims(num_messages, db, transaction_date - timedelta(days=1), "270 Created")
             create_claims(num_messages, db, transaction_date - timedelta(days=8), "277CA Created")
 
-    # Daily run — only create 270 if not yet created today
+            end_time = datetime.now() - now
+            logger.info(f"It took {end_time} to generate {num_messages * 3} claims")
+
     existing = db.get_claim_transactions(status="Created", date=today.isoformat())
     if not existing:
         logger.info("Creating today's 270 claims...")
@@ -101,6 +104,9 @@ def auto_mode():
     Run277CAGenerator(database=db, error_rate=error_rate)
     Run835Generator(database=db, error_rate=error_rate)
     Run834Generator(database=db, error_rate=error_rate)
+
+    end_time = datetime.now() - now
+    logger.info(f"It took {end_time} to generate all claims")
 
 
 def Run270Generator(database=db, num_messages=0, error_rate=None, upload_s3=False):

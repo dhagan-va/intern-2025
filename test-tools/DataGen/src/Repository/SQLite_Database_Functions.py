@@ -36,7 +36,8 @@ class SQLiteDBFunctions(DataAccess):
                 apartment TEXT,
                 city TEXT,
                 state TEXT,
-                zipcode TEXT
+                zipcode TEXT,
+                creation TEXT
             )
         """)
         self.cursor.execute("""
@@ -59,6 +60,7 @@ class SQLiteDBFunctions(DataAccess):
                 city TEXT,
                 state TEXT,
                 zipcode TEXT,
+                creation TEXT,
                 PRIMARY KEY (sponsor_id, beneficiary_id),
                 FOREIGN KEY (sponsor_id) REFERENCES sponsors(sponsor_id)
             )
@@ -182,8 +184,8 @@ class SQLiteDBFunctions(DataAccess):
                 INSERT OR REPLACE INTO sponsors (
                     sponsor_id, ssn, dob, first_name, middle_name, last_name, gender,
                     phone, insurance_company, insurance_FID, building_number, street,
-                    apartment, city, state, zipcode
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    apartment, city, state, zipcode, creation
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             """, (
             sponsor.sponsor_id,
             sponsor.ssn,
@@ -200,7 +202,8 @@ class SQLiteDBFunctions(DataAccess):
             sponsor.address.apartment,
             sponsor.address.city,
             sponsor.address.state,
-            sponsor.address.zipcode
+            sponsor.address.zipcode,
+            sponsor.creation
         ))
 
         for code, amount in sponsor.deductibles.items():
@@ -220,8 +223,8 @@ class SQLiteDBFunctions(DataAccess):
                     INSERT OR REPLACE INTO beneficiaries (
                         sponsor_id, beneficiary_id, ssn, dob, first_name, middle_name, last_name,
                         gender, phone, insurance_company, insurance_FID, relationship,
-                        building_number, street, apartment, city, state, zipcode
-                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                        building_number, street, apartment, city, state, zipcode, creation
+                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 """, (
                 bene.sponsor_id,
                 bene.beneficiary_id,
@@ -240,7 +243,8 @@ class SQLiteDBFunctions(DataAccess):
                 bene.address.apartment,
                 bene.address.city,
                 bene.address.state,
-                bene.address.zipcode
+                bene.address.zipcode,
+                bene.creation
             ))
 
             for code, amount in bene.deductibles.items():
@@ -318,7 +322,8 @@ class SQLiteDBFunctions(DataAccess):
                 beneficiary_id=beneficiary_id,
                 relationship=row["relationship"],
                 deductibles=deductibles,
-                visit_counts=visit_counts
+                visit_counts=visit_counts,
+                creation=row["creation"]
             )
             beneficiaries.append(bene)
         return beneficiaries
@@ -374,7 +379,8 @@ class SQLiteDBFunctions(DataAccess):
             address=address,
             deductibles={},
             visit_counts={},
-            beneficiaries=[]
+            beneficiaries=[],
+            creation=row["creation"]
         )
 
     def get_sponsor_field(self, sponsor_id, field):
@@ -429,7 +435,8 @@ class SQLiteDBFunctions(DataAccess):
             relationship=row["relationship"],
             address=address,
             deductibles=deductibles,
-            visit_counts=visit_counts
+            visit_counts=visit_counts,
+            creation=row["creation"]
         )
 
     def get_beneficiary_field(self, sponsor_id, beneficiary_id, field):

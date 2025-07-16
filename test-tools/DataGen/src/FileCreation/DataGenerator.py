@@ -1,6 +1,8 @@
 import random
 import uuid
+from pathlib import Path
 
+import pandas as pd
 from faker import Faker
 
 from Config import Config
@@ -64,7 +66,7 @@ def create_amt_data():
 
 class SponsorDataGenerator:
     def __init__(self, database_backend, faker_seed=Config.FAKER_SEED, random_seed=Config.RANDOM_SEED,
-                 relationship_map=Config.RELATIONSHIP_MAP):
+                 relationship_map=Config.RELATIONSHIP_MAP, csv_path=Config.DOWNLOAD_DIRECTORY):
         self.fake = Faker()
         Faker.seed(faker_seed)
         random.seed(random_seed)
@@ -72,6 +74,40 @@ class SponsorDataGenerator:
         self.repo = database_backend
         existing_ssns = self.repo.get_all_ssns()
         self.used_ssns = set(existing_ssns)
+        self.csv_path = csv_path
+        self.csv_rows = {}
+        self.curr_csv_row = None
+        self.load_csv_rows()
+
+    def load_csv_rows(self):
+        download_path = Path(self.csv_path)
+
+        matching_csv = None
+        for file in download_path.iterdir():
+            if file.is_file() and file.suffix == ".csv":
+                lower_name = file.stem.lower()
+                if any(kw in lower_name for kw in ["insert", "database", "import"]):
+                    matching_csv = file
+                    break
+
+        if not matching_csv:
+            logger.info(f"No matching .csv file found in {download_path}. Using random data generation.")
+            return
+
+        try:
+            df = pd.read_csv(matching_csv)
+            for row in df.to_dict(orient="records"):
+                key = row.get("Sponsor ICN") or row.get("Sponsor SSN")
+                if not key:
+                    logger.warning(f"Skipping row with no Sponsor ICN/SSN: {row}")
+                    continue
+                self.csv_rows.setdefault(key, []).append(row)
+
+            logger.info(f"Loaded {len(self.csv_rows)} sponsor groups from CSV: {matching_csv.name}")
+
+        except Exception as e:
+            logger.error(f"Failed to load CSV {matching_csv}: {e}")
+            self.csv_rows = {}
 
     def create_address(self):
         address = Address(
@@ -99,18 +135,40 @@ class SponsorDataGenerator:
         generated = 0
         new_sponsors = []
 
-        while generated < total:
-            sponsor = self.create_sponsor()
-            num_beneficiaries = random.randint(Config.MIN_BENEFICIARIES, Config.MAX_BENEFICIARIES)
-            log_data["family"]["size_distribution"][num_beneficiaries] += 1
-            for _ in range(num_beneficiaries):
-                beneficiary = self.create_beneficiary(sponsor)
-                sponsor.beneficiaries.append(beneficiary)
-                generated += 1
+        if self.csv_rows:
+            for sponsor_key, rows in self.csv_rows.items():
+                first_row = rows[0]
+
+                if self.repo.ssn_exists(first_row.get("Sponsor SSN")) or sponsor_key in self.repo.get_all_sponsor_ids():
+                    logger.warning(f"Skipping duplicate sponsor: {sponsor_key}")
+                    continue
+
+                self.curr_csv_row = first_row
+                sponsor = self.create_sponsor()
+
+                for row in rows:
+                    if generated >= total:
+                        break
+                    self.curr_csv_row = row
+                    bene = self.create_beneficiary(sponsor)
+                    sponsor.beneficiaries.append(bene)
+                    generated += 1
+
+                new_sponsors.append(sponsor)
                 if generated >= total:
                     break
 
+        while generated < total:
+            sponsor = self.create_sponsor()
+
+            num_benes = min(Config.MAX_BENEFICIARIES, total - generated)
+            for _ in range(num_benes):
+                bene = self.create_beneficiary(sponsor)
+                sponsor.beneficiaries.append(bene)
+                generated += 1
+
             new_sponsors.append(sponsor)
+
         return new_sponsors
 
     def store_sponsor_and_beneficiaries(self, total):
@@ -120,19 +178,26 @@ class SponsorDataGenerator:
         return sponsors
 
     def create_sponsor(self):
-        sponsor_ssn = self.generate_ssn()
-        sponsor_id = f'{sponsor_ssn.replace("-", "")}V11111111'
-        sponsor_last_name = self.fake.last_name().upper()
+        row = self.curr_csv_row or {}
+
+        sponsor_ssn = row.get("Sponsor SSN", self.generate_ssn())
+        sponsor_id = row.get("Sponsor ICN", f"{sponsor_ssn.replace('-', '')}V11111111")
+        dob = pd.to_datetime(row.get("Sponsor DOB", self.fake.date_of_birth())).date()
+        sponsor_last_name = row.get("Sponsor Name", self.fake.last_name()).upper()
+
         sponsor_address = self.create_address()
+
         sponsor_amt_data = create_amt_data()
+
         sponsor_gender = self.fake.passport_gender()
         if sponsor_gender == "X":
             sponsor_gender = random.choice(["M", "F"])
+
         sponsor_first = self.fake.first_name_male() if sponsor_gender == 'M' else self.fake.first_name_female()
 
         sponsor = Sponsor(
             ssn=sponsor_ssn,
-            dob=self.fake.date_of_birth(),
+            dob=dob,
             first_name=sponsor_first.upper(),
             last_name=sponsor_last_name,
             gender=sponsor_gender,
@@ -143,18 +208,21 @@ class SponsorDataGenerator:
             middle_name=self.fake.first_name().upper(),
             sponsor_id=sponsor_id,
             deductibles=sponsor_amt_data["deductibles"],
-            visit_counts=sponsor_amt_data["visit_counts"]
+            visit_counts=sponsor_amt_data["visit_counts"],
+            creation="CSV" if self.curr_csv_row else "Faker"
         )
 
         logger.debug(f"Created Sponsor: {sponsor_id}")
         return sponsor
 
     def create_beneficiary(self, sponsor):
+        row = self.curr_csv_row or {}
+
         relationship = random.choice(list(self.relationship_map.keys()))
         relationship_code = self.relationship_map[relationship]
         log_data["family"]["relationship_distribution"][relationship_code] += 1
         beneficiary_ssn = self.generate_ssn()
-        beneficiary_id = f'{beneficiary_ssn.replace("-", "")}V11111111'
+        beneficiary_id = row.get("Bene ICN", f"{beneficiary_ssn.replace('-', '')}V11111111")
         beneficiary_amt_data = create_amt_data()
         beneficiary_gender = self.fake.passport_gender()
         if beneficiary_gender == "X":
@@ -176,7 +244,8 @@ class SponsorDataGenerator:
             beneficiary_id=beneficiary_id,
             relationship=relationship,
             deductibles=beneficiary_amt_data["deductibles"],
-            visit_counts=beneficiary_amt_data["visit_counts"]
+            visit_counts=beneficiary_amt_data["visit_counts"],
+            creation="CSV" if self.curr_csv_row else "Faker"
         )
         logger.debug(f"Created beneficiary: {beneficiary_id} for sponsor {sponsor.sponsor_id}")
         return beneficiary

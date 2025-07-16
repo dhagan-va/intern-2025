@@ -1,12 +1,20 @@
 import threading
 import collections
 import time
+import logging
 from typing import Optional, Dict, Any
 import sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 from stats import LiveStats
+
+connection_logger = logging.getLogger("connection_tracker")
+connection_handler = logging.FileHandler("connection_debug.log")
+connection_handler.setFormatter(logging.Formatter("%(asctime)s - %(message)s"))
+connection_logger.addHandler(connection_handler)
+connection_logger.setLevel(logging.INFO)
+connection_logger.propagate = False
 
 
 class ConnectionTracker:
@@ -30,8 +38,9 @@ class ConnectionTracker:
             current_count = len(self.active_connections)
             if current_count > self.max_concurrent:
                 self.max_concurrent = current_count
-                # DEBUG
-                print(f"[DEBUG] New peak concurrent connections: {current_count}")
+                connection_logger.info(
+                    f"New peak concurrent connections: {current_count}"
+                )
 
             return conn_id
 

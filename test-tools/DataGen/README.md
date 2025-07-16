@@ -26,6 +26,90 @@ graph TD
     class EDIGen,S3Upload,Markdown edi
 ```
 
+## Database ERD
+
+```mermaid
+erDiagram
+    sponsors ||--o{ beneficiaries : has
+    beneficiaries ||--o{ claim_transactions : has
+    beneficiaries ||--o{ deductibles : has
+    beneficiaries ||--o{ visit_counts : has
+
+    sponsors {
+        TEXT sponsor_id
+        TEXT ssn
+        TEXT dob
+        TEXT first_name
+        TEXT middle_name
+        TEXT last_name
+        TEXT gender
+        TEXT phone
+        TEXT insurance_company
+        TEXT insurance_FID
+        TEXT building_number
+        TEXT street
+        TEXT apartment
+        TEXT city
+        TEXT state
+        TEXT zipcode
+    }
+
+    beneficiaries {
+        TEXT sponsor_id
+        TEXT beneficiary_id
+        TEXT ssn
+        TEXT dob
+        TEXT first_name
+        TEXT middle_name
+        TEXT last_name
+        TEXT gender
+        TEXT phone
+        TEXT insurance_company
+        TEXT insurance_FID
+        TEXT relationship
+        TEXT building_number
+        TEXT street
+        TEXT apartment
+        TEXT city
+        TEXT state
+        TEXT zipcode
+    }
+
+    claim_transactions {
+        TEXT claim_id
+        TEXT status
+        TEXT date
+        TEXT service_line_id
+        TEXT sponsor_id
+        TEXT beneficiary_id
+        TEXT provider_npi
+        TEXT provider_name
+        TEXT provider_entity_type
+        TEXT provider_address_1
+        TEXT provider_address_2
+        TEXT provider_city
+        TEXT provider_state
+        TEXT provider_zip
+        TEXT provider_phone
+        REAL amount
+        TEXT payer_claim_id
+    }
+
+    deductibles {
+        TEXT sponsor_id
+        TEXT beneficiary_id
+        TEXT code
+        REAL amount
+    }
+
+    visit_counts {
+        TEXT sponsor_id
+        TEXT beneficiary_id
+        TEXT code
+        INTEGER count
+    }
+```
+
 ---
 
 ## Setup
@@ -60,13 +144,57 @@ graph TD
 
 ---
 
-## Running the Generator
+## Initialization and Run Modes
 
-To run the full EDI file generation pipeline:
+### Output of both modes:
+- Generate EDI file(s)
+- Generates a Markdown summary: `Statistics_Visualizer.md`
+
+### Initialization Logic
+
+On first execution, the generator will:
+
+- **Check if the database exists and is populated**.
+- If **no beneficiaries** are found, it will generate the number set in `config.initial_beneficiaries`.
+- If **no claim transactions** are found, it will create an **8-day backlog of transactions** following the standard file flow:
+
+  1. `Created (Day 1)` → 270
+  2. `270 Created (Day 2)` → 837
+  3. `837 Created (Day 2)` → 277CA
+  4. `277CA Created (Day 8)` → 835
+  5. `835 Created (Day 8)` → 834
+
+---
+
+### Auto Mode
+
+- Checks for missing sponsors or claims and runs **initialization** if needed.
+- On subsequent daily runs:
+  - Creates a new `270` transaction for today (if not already made).
+  - Sequentially generates all EDI files (270, 837, 277CA, 835, 834) using appropriate transactions and updates their statuses.
+
+This mode is ideal for **daily scheduled runs** or testing the full pipeline behavior.
 
 ```bash
 cd src
 python RunGenerator.py auto # for a random number of messages and error rate which you can alter in config.toml
+
+# Example Usage
+python RunGenerator.py auto
+```
+
+---
+
+### Manual Mode
+
+- Only creates transactions for the **specified file type**.
+- Then generates the corresponding EDI file.
+
+⚠️ If you run only one file type manually (e.g., 837), this may unintentionally generate transactions required for downstream files (e.g., 277CA, 835), which may **cause inconsistencies** in later stages.
+
+Use this mode for **targeted testing or debugging**, not for full-pipeline simulation.
+
+```bash
 python RunGenerator.py cli <file_type> -n <count> -e <error_rate> [--upload_s3] # upload_s3 only for 270
 
 # Example Usage
@@ -74,27 +202,7 @@ python RunGenerator.py cli 270 -n 500 -e 0.01 --upload_s3
 python RunGenerator.py cli 835 -n 500 -e 0.05 
 ```
 
-This performs the following:
-
-- Creates sponsors and beneficiaries (if under threshold)
-- Creates claim transactions in 5 states:
-  - `Created` (for 270)
-  - `270 Created` (for 837P)
-  - `837 Created` (for 277CA)
-  - `277CA Created` (for 835)
-  - `835 Created` (for 834)
-- Produces EDI files:
-  - ✅ 270 (Eligibility Inquiry)
-  - ✅ 837P (Professional Claim)
-  - ✅ 277CA (Claim Acknowledgment)
-  - ✅ 835 (Payment Remittance)
-  - ✅ 834 (Enrollment Update)
-  - 🔜 999 (Implementation Acknowledgment)
-- Optionally uploads files to AWS S3
-- Generates a Markdown summary: `Statistics_Visualizer.md`
-
 ---
-
 ## Configuration
 
 Edit `Config/config.toml` to adjust:
@@ -137,14 +245,6 @@ Types include:
 - Malformed formats
 - Invalid values
 - Negative numbers (for amounts)
-
-### Claim Status Flow
-
-```text
-Created → 270 Created → 837 Created → 277CA → 835 → 834
-```
-
-Each EDI generator updates claim status accordingly for later reuse.
 
 ### Database Support
 

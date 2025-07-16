@@ -45,10 +45,9 @@ class LoadClient:
         self._log = logging.getLogger("edi_load_client")
         logging.basicConfig(filename="test.log", level=logging.INFO)
 
-        # Data collection components (using new architecture)
         self._sink = CsvSink("test.csv")
         self._stats_collector = StatsCollector()
-        self._stats = self._stats_collector.live_stats  # For backward compatibility
+        self._stats = self._stats_collector.live_stats  
 
         # Response processing component
         self._response_processor = ResponseProcessor(
@@ -57,7 +56,6 @@ class LoadClient:
             self._log,
         )
 
-        # Request scheduling component (will be initialized in start())
         self._scheduler = None
         self._metadata_manager = None
 
@@ -86,6 +84,7 @@ class LoadClient:
                 self.transaction,
                 self.endpoints[self.transaction],
                 self._metadata_manager,
+                self._stats_collector,  
             )
 
         def handle_response(future):

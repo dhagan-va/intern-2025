@@ -19,14 +19,19 @@ def extract_st_control_number(edi_content):
         return None
 
 
-def send_edi_request(transaction, endpoint, metadata_manager=None):
+def send_edi_request(transaction, endpoint, metadata_manager=None, stats_collector=None):
     start = time.perf_counter()
     session = None
+    conn_id = None
+    
     try:
+        if stats_collector:
+            conn_id = stats_collector.start_connection()
+            
         payload = random.choice(payloads[transaction])
         headers = {
             "Content-Type": "application/x-edi",
-            "Connection": "close"  
+            "Connection": "close"
         }
         
         if metadata_manager:
@@ -43,5 +48,8 @@ def send_edi_request(transaction, endpoint, metadata_manager=None):
     except Exception:
         return -1, (time.perf_counter() - start) * 1000, ""
     finally:
+        if stats_collector and conn_id:
+            stats_collector.end_connection(conn_id)
+            
         if session:
             session.close()

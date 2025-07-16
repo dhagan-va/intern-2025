@@ -20,9 +20,9 @@ from client.data.metadata_manager import MetadataManager
 
 
 def run_metadata_load_test(num_transactions, rps=10.0, error_rate=0.0):
-    calculated_duration = (num_transactions / rps) + 5.0  
-    max_duration = calculated_duration * 2.0  
-    
+    calculated_duration = (num_transactions / rps) + 5.0
+    max_duration = calculated_duration * 2.0
+
     print(f"=== EDI 270 Load Test with Header-Based Error Categorization ===")
     print(f"Generating {num_transactions} EDI 270 transactions...")
     print(f"Target: {num_transactions} transactions at {rps} RPS")
@@ -45,9 +45,11 @@ def run_metadata_load_test(num_transactions, rps=10.0, error_rate=0.0):
         print(
             f"  - EDI payload size: {payload_result['metadata']['file_info']['file_size_bytes']} bytes"
         )
-        
-        if payload_result['metadata']['error_breakdown']:
-            print(f"  - Error breakdown: {payload_result['metadata']['error_breakdown']}")
+
+        if payload_result["metadata"]["error_breakdown"]:
+            print(
+                f"  - Error breakdown: {payload_result['metadata']['error_breakdown']}"
+            )
 
     except Exception as e:
         return {"error": f"Failed to generate payloads: {str(e)}"}
@@ -57,12 +59,17 @@ def run_metadata_load_test(num_transactions, rps=10.0, error_rate=0.0):
         cfg.rps = rps
         cfg.transaction = 270
 
+        calculated_threads = max(10, int(rps * 0.1) + 5)
+        cfg.threads = calculated_threads
+
         client = LoadClient(cfg)
-        
-        with tempfile.NamedTemporaryFile(mode='w', suffix='.json', delete=False) as temp_file:
+
+        with tempfile.NamedTemporaryFile(
+            mode="w", suffix=".json", delete=False
+        ) as temp_file:
             json.dump(payload_result, temp_file, indent=2)
             temp_metadata_path = temp_file.name
-        
+
         metadata_manager = MetadataManager(temp_metadata_path)
         client.set_metadata_manager(metadata_manager)
 
@@ -70,12 +77,18 @@ def run_metadata_load_test(num_transactions, rps=10.0, error_rate=0.0):
         print(f"  - RPS: {rps}")
         print(f"  - Target transactions: {num_transactions}")
         print(f"  - Transaction type: EDI 270")
-        
+
         metadata_summary = metadata_manager.get_error_summary()
-        print(f"  - Metadata loaded: {metadata_summary.get('total_transactions', 0)} transactions")
-        print(f"  - Error transactions: {metadata_summary.get('error_transactions', 0)}")
-        if metadata_summary.get('error_breakdown'):
-            print(f"  - Error types: {list(metadata_summary['error_breakdown'].keys())}")
+        print(
+            f"  - Metadata loaded: {metadata_summary.get('total_transactions', 0)} transactions"
+        )
+        print(
+            f"  - Error transactions: {metadata_summary.get('error_transactions', 0)}"
+        )
+        if metadata_summary.get("error_breakdown"):
+            print(
+                f"  - Error types: {list(metadata_summary['error_breakdown'].keys())}"
+            )
 
     except Exception as e:
         return {"error": f"Failed to configure load client: {str(e)}"}
@@ -86,30 +99,37 @@ def run_metadata_load_test(num_transactions, rps=10.0, error_rate=0.0):
         start_time = time.time()
 
         print("Monitoring progress...")
-        check_interval = 0.5  
+        check_interval = 0.5
         last_count = 0
-        
+
         while True:
             current_time = time.time()
             elapsed = current_time - start_time
-            
+
             current_stats = client._stats.snapshot()
             current_count = current_stats.get("count", 0)
-            
+
             if current_count >= num_transactions:
-                print(f"Target reached: {current_count}/{num_transactions} transactions sent")
+                print(
+                    f"Target reached: {current_count}/{num_transactions} transactions sent"
+                )
                 break
-                
+
             if elapsed > max_duration:
-                print(f"Maximum duration reached ({max_duration:.1f}s), stopping at {current_count} transactions")
+                print(
+                    f"Maximum duration reached ({max_duration:.1f}s), stopping at {current_count} transactions"
+                )
                 break
-                
+
             if current_count != last_count:
                 progress_pct = (current_count / num_transactions) * 100
                 current_rps = current_count / elapsed if elapsed > 0 else 0
-                print(f"  Progress: {current_count}/{num_transactions} ({progress_pct:.1f}%) - {current_rps:.1f} RPS actual")
+                concurrent_connections = client._stats_collector.get_concurrent_connections()
+                print(
+                    f"  Progress: {current_count}/{num_transactions} ({progress_pct:.1f}%) - {current_rps:.1f} RPS actual - {concurrent_connections} concurrent connections"
+                )
                 last_count = current_count
-            
+
             time.sleep(check_interval)
 
         print(f"Stopping load test...")
@@ -132,30 +152,44 @@ def run_metadata_load_test(num_transactions, rps=10.0, error_rate=0.0):
         final_stats = client._stats.snapshot()
 
         total_requests = final_stats.get("count", 0)
-        
+
         edi_success_responses = final_stats.get("edi_success_count", 0)
         edi_error_responses = final_stats.get("edi_error_count", 0)
         http_error_responses = final_stats.get("http_error_count", 0)
         edi_errors_breakdown = final_stats.get("edi_errors", {})
-        
+
         total_error_responses = edi_error_responses + http_error_responses
         avg_latency = final_stats.get("avg_latency", 0)
         actual_rps = total_requests / actual_duration if actual_duration > 0 else 0
         edi_success_rate = (edi_success_responses / max(1, total_requests)) * 100
-        
-        completion_accuracy = (total_requests / num_transactions) * 100 if num_transactions > 0 else 0
+
+        completion_accuracy = (
+            (total_requests / num_transactions) * 100 if num_transactions > 0 else 0
+        )
 
         print(f"\nTest Results with EDI Error Categorization:")
         print(f"  - Target transactions: {num_transactions}")
         print(f"  - Total requests sent: {total_requests}")
-        print(f"  - Completion accuracy: {completion_accuracy:.1f}% ({total_requests}/{num_transactions})")
+        print(
+            f"  - Completion accuracy: {completion_accuracy:.1f}% ({total_requests}/{num_transactions})"
+        )
         print(f"  - EDI successful responses: {edi_success_responses}")
         print(f"  - Error Response Breakdown:")
-        print(f"    - EDI Format errors: {edi_errors_breakdown.get('edi_format_error', 0)}")
-        print(f"    - EDI Member errors: {edi_errors_breakdown.get('edi_member_error', 0)}")
-        print(f"    - EDI Amount errors: {edi_errors_breakdown.get('edi_amt_error', 0)}")
-        print(f"    - EDI Validation errors: {edi_errors_breakdown.get('edi_validation_error', 0)}")
-        print(f"    - EDI Other errors: {edi_errors_breakdown.get('edi_other_error', 0)}")
+        print(
+            f"    - EDI Format errors: {edi_errors_breakdown.get('edi_format_error', 0)}"
+        )
+        print(
+            f"    - EDI Member errors: {edi_errors_breakdown.get('edi_member_error', 0)}"
+        )
+        print(
+            f"    - EDI Amount errors: {edi_errors_breakdown.get('edi_amt_error', 0)}"
+        )
+        print(
+            f"    - EDI Validation errors: {edi_errors_breakdown.get('edi_validation_error', 0)}"
+        )
+        print(
+            f"    - EDI Other errors: {edi_errors_breakdown.get('edi_other_error', 0)}"
+        )
         print(f"    - HTTP/Network errors: {http_error_responses}")
         print(f"  - EDI success rate: {edi_success_rate:.1f}%")
         print(f"  - Average latency: {avg_latency:.2f}ms")
@@ -208,18 +242,6 @@ def run_metadata_load_test(num_transactions, rps=10.0, error_rate=0.0):
 
     except Exception as e:
         return {"error": f"Failed to collect results: {str(e)}"}
-
-
-def quick_test(num_transactions=10, rps=5.0):
-    return run_metadata_load_test(
-        num_transactions=num_transactions, rps=rps, error_rate=0.1
-    )
-
-
-def stress_test(num_transactions=100, rps=50.0):
-    return run_metadata_load_test(
-        num_transactions=num_transactions, rps=rps, error_rate=0.02
-    )
 
 
 if __name__ == "__main__":
@@ -281,28 +303,21 @@ if __name__ == "__main__":
         sys.exit(1)
 
     calculated_duration = (args.transactions / args.rps) + 5.0
-    
+
     print("=== EDI 270 Metadata Load Testing ===\n")
 
-    if args.preset == "quick":
-        print("Using quick test preset...")
-        result = quick_test(num_transactions=5, rps=3.0)
-    elif args.preset == "stress":
-        print("Using stress test preset...")
-        result = stress_test(num_transactions=50, rps=20.0)
-    else:
-        print(f"Running custom test:")
-        print(f"  Transactions: {args.transactions}")
-        print(f"  RPS: {args.rps}")
-        print(f"  Calculated duration: {calculated_duration:.1f}s")
-        print(f"  Error rate: {args.error_rate}")
-        print()
+    print(f"Running custom test:")
+    print(f"  Transactions: {args.transactions}")
+    print(f"  RPS: {args.rps}")
+    print(f"  Calculated duration: {calculated_duration:.1f}s")
+    print(f"  Error rate: {args.error_rate}")
+    print()
 
-        result = run_metadata_load_test(
-            num_transactions=args.transactions,
-            rps=args.rps,
-            error_rate=args.error_rate,
-        )
+    result = run_metadata_load_test(
+        num_transactions=args.transactions,
+        rps=args.rps,
+        error_rate=args.error_rate,
+    )
 
     if "error" in result:
         print(f"Test failed: {result['error']}")
@@ -334,13 +349,15 @@ if __name__ == "__main__":
             )
             print(f"    - Target RPS: {result['test_results']['target_rps']}")
             print(f"    - Actual RPS: {result['test_results']['actual_rps']:.2f}")
-            print(f"    - Calculated duration: {result['test_results']['calculated_duration']:.1f}s")
-            print(f"    - Actual duration: {result['test_results']['duration_seconds']:.1f}s")
+            print(
+                f"    - Calculated duration: {result['test_results']['calculated_duration']:.1f}s"
+            )
+            print(
+                f"    - Actual duration: {result['test_results']['duration_seconds']:.1f}s"
+            )
 
             print(f"  Transaction Breakdown:")
-            for i, txn in enumerate(
-                result["payload_data"]["transactions"][:5], 1
-            ):  
+            for i, txn in enumerate(result["payload_data"]["transactions"][:5], 1):
                 print(
                     f"    {i}. ST#{txn['st_control_number']} - {txn['beneficiary_id']} - "
                     f"{'ERROR' if txn['error_injected'] else 'CLEAN'}"

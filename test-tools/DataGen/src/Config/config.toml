@@ -8,32 +8,32 @@ bucket_name = "edi-file-storage"
 
 [database]
 backend = "sqlite"
-user_limit = 500000
 jsonl_path = "localdb.jsonl"
 sqlite_path = "localdb.sqlite"
 
 [paths]
-markdown_directory = "Statistics_Visualizer.md"
 download_directory = "Downloads"
 family_database_directory = "Output/Local_DB"
-edi834_path = "Output/EDI834_Output"
 edi270_path = "Output/EDI270_Output"
 edi837_path = "Output/EDI837_Output"
 edi277ca_path = "Output/EDI277CA_Output"
+edi835_path = "Output/EDI835_Output"
+edi834_path = "Output/EDI834_Output"
 
 [filenames]
-edi834_file_template = "834.VFMP.{year}.{ymd}.{hm}.{full_date}1.edi"
 edi270_file_template = "270.VFMP.{year}.{ymd}.{hm}.{full_date}1.edi"
 edi277ca_file_template = "277CA.VFMP.{year}.{ymd}.{hm}.{full_date}1.edi"
 edi837_file_template = "837.VFMP.{year}.{ymd}.{hm}.{full_date}1.edi"
+edi835_file_template = "835.VFMP.{year}.{ymd}.{hm}.{full_date}1.edi"
+edi834_file_template = "834.VFMP.{year}.{ymd}.{hm}.{full_date}1.edi"
 statistics_md = "Statistics_Visualizer.md"
 
 [constants]
 sender_id = "83-1002022"
 receiver_id = "841439824"
-sponsor_qualifier = "OCC PAYER EDI"
+sponsor_name = "OCC PAYER EDI"
 sponsor_id = "841469824"
-payer_qualifier = "CLAIMS XM"
+payer_name = "CLAIMS XM"
 payer_id = "831002042"
 toggle_new_line = true
 total_error_rate = 0.005
@@ -43,6 +43,7 @@ max_deductibles = 100000.0
 min_deductibles = 0.0
 max_visits = 15
 min_visits = 0
+initial_beneficiaries = 100000
 
 [relationship_map]
 Spouse = "01"

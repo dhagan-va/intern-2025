@@ -3,29 +3,28 @@ import uuid
 
 from faker import Faker
 
-from datetime import date
 from Config import Config
 from Config.Config import logger
 from DataLayer.Datatypes import Address, Sponsor, Beneficiary, ClaimTransaction
-from Repository.DatabaseFactory import get_database_backend
 from Config.Data_Visualizer import log_data
 
 
-def generate_claim_transactions(num_claims, transaction_funcs, input_date=date.today(), status="Created"):
-    localdb = transaction_funcs.family_db
-    npi_funcs = transaction_funcs.npi_funcs
+def generate_claim_transactions(num_gen, transaction_funcs, input_date, status):
+    beneficiaries = transaction_funcs.get_random_beneficiary(num_gen)
 
-    beneficiaries = localdb.get_random_beneficiary(num_claims)
     transactions = []
 
     for bene in beneficiaries:
         sponsor_id = bene.sponsor_id
-        provider = npi_funcs.get_random_provider(bene.address.state)
+        provider = transaction_funcs.npi_funcs.get_random_provider(bene.address.state)
+
+        claim_id = f"CLM{uuid.uuid4().hex[:12]}"
+        payer_claim_id = f"PCID{claim_id[-5:]}"
 
         claim = ClaimTransaction(
             status=status,
             date=input_date,
-            claim_id=f"CLM{uuid.uuid4().hex[:12]}",
+            claim_id=claim_id,
             service_line_id=f"SRV{bene.beneficiary_id}",
             sponsor_id=sponsor_id,
             beneficiary_id=bene.beneficiary_id,
@@ -39,7 +38,7 @@ def generate_claim_transactions(num_claims, transaction_funcs, input_date=date.t
             provider_zip=provider["zipcode"],
             provider_phone=provider["phone"],
             amount=round(random.uniform(50, 1500), 2),
-            payer_claim_id=None
+            payer_claim_id=payer_claim_id
         )
         transactions.append(claim)
     transaction_funcs.save_many_claims(transactions)
@@ -64,13 +63,13 @@ def create_amt_data():
 
 
 class SponsorDataGenerator:
-    def __init__(self, faker_seed=Config.FAKER_SEED, random_seed=Config.RANDOM_SEED,
+    def __init__(self, database_backend, faker_seed=Config.FAKER_SEED, random_seed=Config.RANDOM_SEED,
                  relationship_map=Config.RELATIONSHIP_MAP):
         self.fake = Faker()
         Faker.seed(faker_seed)
         random.seed(random_seed)
         self.relationship_map = relationship_map
-        self.repo = get_database_backend()
+        self.repo = database_backend
         existing_ssns = self.repo.get_all_ssns()
         self.used_ssns = set(existing_ssns)
 
@@ -160,12 +159,12 @@ class SponsorDataGenerator:
         beneficiary_gender = self.fake.passport_gender()
         if beneficiary_gender == "X":
             beneficiary_gender = random.choice(["M", "F"])
-        sponsor_first = self.fake.first_name_male() if beneficiary_gender == 'M' else self.fake.first_name_female()
+        bene_first = self.fake.first_name_male() if beneficiary_gender == 'M' else self.fake.first_name_female()
 
         beneficiary = Beneficiary(
             ssn=beneficiary_ssn,
             dob=self.fake.date_of_birth(),
-            first_name=sponsor_first.upper(),
+            first_name=bene_first.upper(),
             last_name=sponsor.last_name,
             gender=beneficiary_gender,
             address=sponsor.address,

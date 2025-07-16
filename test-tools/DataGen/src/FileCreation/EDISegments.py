@@ -50,21 +50,33 @@ class IEA:
 
 # Group Header
 class GS:
-    def __init__(self, functional_id, sender=Config.SENDER_ID, receiver=Config.RECEIVER_ID, version="005010X220A1",
-                 nl_toggle=True):
+    def __init__(self, functional_id, sender=Config.SENDER_ID, receiver=Config.RECEIVER_ID, nl_toggle=True):
         now = datetime.now()
         self.functional_id = functional_id
         self.sender = sender
         self.receiver = receiver
         self.date = now.strftime("%Y%m%d")
         self.time = now.strftime("%H%M%S")
-        self.version = version
         self.nl_toggle = nl_toggle
 
     def to_edi(self):
-        nl = "~\n" if self.nl_toggle else "~"
         logger.debug("Generating GS segment")
-        return f"GS*{self.functional_id}*{self.sender}*{self.receiver}*{self.date}*{self.time}*61*X*{self.version}{nl}"
+        nl = "~\n" if self.nl_toggle else "~"
+        segment = f"GS*{self.functional_id}*{self.sender}*{self.receiver}*{self.date}*{self.time}*61*X"
+        match self.functional_id:
+            case "HS":
+                segment += "*005010X279A1"
+            case "HC":
+                segment += "*005010X222A2"
+            case "HN":
+                segment += "*005010X214"
+            case "HP":
+                segment += "*005010X221A1"
+            case "BE":
+                segment += "*005010X220A1"
+            case _:
+                logger.warning(f"Unknown functional ID: {self.functional_id} in GS segment")
+        return segment + nl
 
 
 # Group Trailer
@@ -85,7 +97,21 @@ class ST:
 
     def to_edi(self):
         logger.debug(f"Generating ST segment for an {self.file_type} file, transaction #{self.num}")
-        return f"ST*{self.file_type}*{self.num:06}~\n"
+        segment = f"ST*{self.file_type}*{self.num:06}"
+        match self.file_type:
+            case "270":
+                segment += "*005010X279A1"
+            case "837":
+                segment += "*005010X222A2"
+            case "277":
+                segment += "*005010X214"
+            case "835":
+                pass
+            case "834":
+                segment += "*005010X220A1"
+            case _:
+                logger.warning(f"Unknown file type: {self.file_type} in ST segment")
+        return segment + "~\n"
 
 
 # Transaction Set Trailer
@@ -114,9 +140,10 @@ class BGN:
 
 # Sponsor Name
 class N1:
-    def __init__(self, entity_id_code, name, id_code, error_ctrl, error_id):
+    def __init__(self, entity_id_code, name, id_code_qualifier, id_code, error_ctrl, error_id):
         self.entity_id_code = entity_id_code
         self.name = name
+        self.id_code_qualifier = id_code_qualifier
         self.id_code = id_code
         self.error_ctrl = error_ctrl
         self.error_id = error_id
@@ -130,8 +157,8 @@ class N1:
             )
             id_code = erroneous
         else:
-            logger.debug(f"Generating N1 segment")
-        return f"N1*{self.entity_id_code}*{self.name}*FI*{id_code}~\n"
+            logger.debug("Generating N1 segment")
+        return f"N1*{self.entity_id_code}*{self.name}*{self.id_code_qualifier}*{id_code}~\n"
 
 
 # Insured Benefit
@@ -306,19 +333,22 @@ class DTP:
 
 
 class BHT:
-    def __init__(self, transaction_id, purpose_code, file_type=None):
+    def __init__(self, transaction_id, purpose_code, unique_id, file_type=None):
         now = datetime.now()
         self.file_type = file_type
         self.transaction_id = transaction_id
         self.purpose_code = purpose_code
+        self.unique_id = unique_id
         self.date = now.strftime("%Y%m%d")
         self.time = now.strftime("%H%M")
 
     def to_edi(self):
-        logger.debug(f"Generating BHT segment")
-        segment = f"BHT*00{self.transaction_id}*{self.purpose_code}*123456789*{self.date}*{self.time}"
-        if self.file_type == "837" or self.file_type == "277CA":
+        logger.debug("Generating BHT segment")
+        segment = f"BHT*00{self.transaction_id}*{self.purpose_code}*{self.unique_id}*{self.date}*{self.time}"
+        if self.file_type == "837":
             segment += "*CH"
+        elif self.file_type == "277CA":
+            segment += "*TH"
         return segment + "~\n"
 
 
@@ -340,7 +370,11 @@ class HL:
             )
         else:
             logger.debug(f"Generating HL {hl_code} segment")
-        return f"HL*{self.hl_id}*{self.hl_parent}*{hl_code}*{self.children}~\n"
+        segment = f"HL*{self.hl_id}*{self.hl_parent}*{hl_code}"
+        if self.children is not None:
+            segment += f"*{self.children}"
+
+        return segment + "~\n"
 
 
 class EQ:
@@ -348,7 +382,7 @@ class EQ:
         self.service_code = service_code
 
     def to_edi(self):
-        logger.debug(f"Generating EQ segment")
+        logger.debug("Generating EQ segment")
         return f"EQ*{self.service_code}~\n"
 
 
@@ -413,7 +447,7 @@ class LX:
 
     def to_edi(self):
         logger.debug(f"Generating LX segment line {self.number}")
-        return f"LX*{self.number}~\n"
+        return f"LX*{self.number:04}~\n"
 
 
 class SV1:
@@ -439,10 +473,10 @@ class PAT:
 
 
 class TRN:
-    def __init__(self, trace_code, ref_id, orig_id, error_ctrl, error_id):
+    def __init__(self, trace_code, ref_id, payer_id=None, error_ctrl=None, error_id=None):
         self.trace_code = trace_code
         self.ref_id = ref_id
-        self.orig_id = orig_id
+        self.payer_id = payer_id
         self.error_ctrl = error_ctrl
         self.error_id = error_id
 
@@ -454,17 +488,20 @@ class TRN:
                 f"[ERROR INSERTED] TRN segment: reference ID changed to '{ref_id}' for member: {self.error_id}")
         else:
             logger.debug("Generating TRN segment")
+        segment = f"TRN*{self.trace_code}*{ref_id}"
+        if self.payer_id is not None:
+            segment += f"*1{self.payer_id}"
 
-        return f"TRN*{self.trace_code}*{ref_id}*{self.orig_id}~\n"
+        return segment + "~\n"
 
 
 class STC:
-    def __init__(self, status_info, action_code, ref_num, error_ctrl, error_id):
+    def __init__(self, status_info, action_code, units, error_ctrl, error_id):
         now = datetime.now()
         self.status_info = status_info
         self.action_code = action_code
         self.date = now.strftime("%Y%m%d")
-        self.ref_num = ref_num
+        self.units = units
         self.error_ctrl = error_ctrl
         self.error_id = error_id
 
@@ -477,18 +514,49 @@ class STC:
         else:
             logger.debug("Generating STC segment")
 
-        return f"STC*{status_info}*{self.date}*{self.action_code}*{self.ref_num}~\n"
+        return f"STC*{status_info}*{self.date}*{self.action_code}*{self.units}~\n"
 
 
 class SVC:
-    def __init__(self, proc_code, charge_amt, unit, quantity, diagnosis_ptr):
+    def __init__(self, proc_code, charge_amt, quantity, unit, diagnosis_ptr):
+        now = datetime.now()
         self.proc_code = proc_code
         self.charge_amt = charge_amt
         self.unit = unit
         self.quantity = quantity
         self.diagnosis_ptr = diagnosis_ptr
+        self.date = now.strftime("%Y%m%d")
 
     def to_edi(self):
         logger.debug("Generating SVC segment")
-        return (f"SVC*{self.proc_code}*{self.charge_amt}*{self.charge_amt}*{self.quantity}*{self.unit}*"
-                f"{self.diagnosis_ptr}~\n")
+        return f"SVC*{self.proc_code}*{self.charge_amt}*{self.quantity}*{self.unit}*{self.diagnosis_ptr}~\n"
+
+
+class BPR:
+    def __init__(self, transaction_handling_code, amt, credit_debit_code, payment_method):
+        now = datetime.now()
+        self.transaction_handling_code = transaction_handling_code
+        self.amt = amt
+        self.credit_debit_code = credit_debit_code
+        self.payment_method = payment_method
+        self.date = now.strftime("%Y%m%d")
+
+    def to_edi(self):
+        logger.debug("Generating BPR segment")
+        return (f"BPR*{self.transaction_handling_code}*{self.amt}*{self.credit_debit_code}*{self.payment_method}******"
+                f"******{self.date}~\n")
+
+
+class CLP:
+    def __init__(self, claim_id, claim_status, total_amt, paid_amt, filing_code, ctrl_num):
+        self.claim_id = claim_id
+        self.claim_status = claim_status
+        self.total_amt = total_amt
+        self.paid_amt = paid_amt
+        self.filing_code = filing_code
+        self.ctrl_num = ctrl_num
+
+    def to_edi(self):
+        logger.debug("Generating CLP segment")
+        return (f"CLP*{self.claim_id}*{self.claim_status}*{self.total_amt}*{self.paid_amt}**{self.filing_code}*"
+                f"{self.ctrl_num}~\n")

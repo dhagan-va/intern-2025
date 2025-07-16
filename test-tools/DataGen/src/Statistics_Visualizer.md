@@ -17,20 +17,22 @@ The 270 file is used to request information about a member's health insurance el
 ## Transaction Counts
 ```mermaid
 pie title Message type distribution
+    "270" : 1
+    "837" : 0
+    "277" : 0
+    "835" : 0
     "834" : 0
-    "270" : 100
-    "837" : 100
 ```
 
 
-Total Number of Messages Generated: **200**
+Total Number of Messages Generated: **1**
 ## Throughput
 ```mermaid
 xychart-beta
     title "Throughput (Transactions per Second)"
-    x-axis ["834", "270", "837"]
-    y-axis "TPS" 0 --> 2778.777777777778
-    bar [0.0, 2777.777777777778, 2631.6482012684546]
+    x-axis ["270", "837", "277", "835", "834"]
+    y-axis "TPS" 0 --> 143.836737608913
+    bar [142.836737608913, 0.0, 0.0, 0.0, 0.0]
 ```
 
 
@@ -38,9 +40,9 @@ xychart-beta
 ```mermaid
 xychart-beta
     title "Error Count in Messages"
-    x-axis ["834", "270", "837"]
-    y-axis "Errors" 0 --> 6
-    bar [0, 5, 0]
+    x-axis ["270", "837", "277", "835", "834"]
+    y-axis "Errors" 0 --> 1
+    bar [0, 0, 0, 0, 0]
 ```
 
 
@@ -48,9 +50,9 @@ xychart-beta
 ```mermaid
 xychart-beta
     title "Error Rate (%)"
-    x-axis ["834", "270", "837"]
+    x-axis ["270", "837", "277", "835", "834"]
     y-axis "Percent" 0 --> 5
-    bar [0, 5.0, 0]
+    bar [0.0, 0, 0, 0, 0]
 ```
 
 
@@ -59,17 +61,17 @@ xychart-beta
 xychart-beta
     title "Family Size Histogram"
     x-axis ["1", "2", "3", "4"]
-    y-axis "Count" 0 --> 15
-    bar [14, 13, 8, 9]
+    y-axis "Count" 0 --> 10046
+    bar [10006, 9979, 9952, 10045]
 ```
 
 
 ```mermaid
 pie title Family Size Breakdown
-    "1" : 14
-    "2" : 13
-    "3" : 8
-    "4" : 9
+    "1" : 10006
+    "2" : 9979
+    "3" : 9952
+    "4" : 10045
 ```
 
 
@@ -78,17 +80,17 @@ pie title Family Size Breakdown
 xychart-beta
     title "Beneficiary Code Distribution"
     x-axis ["Spouse (01)", "Child (19)", "Caregiver (26)", "Ex-Spouse (25)"]
-    y-axis "Count" 0 --> 29
-    bar [27, 19, 26, 28]
+    y-axis "Count" 0 --> 25099
+    bar [25029, 24999, 25098, 24874]
 ```
 
 
 ```mermaid
 pie title Beneficiary Relationship Types
-    "Spouse (01)" : 27
-    "Child (19)" : 19
-    "Caregiver (26)" : 26
-    "Ex-Spouse (25)" : 28
+    "Spouse (01)" : 25029
+    "Child (19)" : 24999
+    "Caregiver (26)" : 25098
+    "Ex-Spouse (25)" : 24874
 ```
 
 
@@ -113,4 +115,4 @@ xychart-beta
 
 
 ## Average 270s per Beneficiary
-- Average 270s per Beneficiary: **0.09**
+- Average 270s per Beneficiary: **0.00**

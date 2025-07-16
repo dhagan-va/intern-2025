@@ -1,6 +1,7 @@
 import os
 
 from Config import Config
+from Config.Config import get_local_db_path, FAMILY_DATABASE_DIRECTORY, FAMILY_DATABASE_SQLITE
 from Repository.DatabaseFactory import get_database_backend
 
 INTRO = [
@@ -28,20 +29,28 @@ RELATIONSHIP_LABELS = {
 
 log_data = {
     "messages": {
-        "count_834": 0,
         "count_270": 0,
         "count_837": 0,
-        "time_834": 1,
+        "count_277CA": 0,
+        "count_834": 0,
+        "count_835": 0,
         "time_270": 1,
         "time_837": 1,
+        "time_277CA": 1,
+        "time_835": 1,
+        "time_834": 1,
     },
     "errors": {
-        "error_ct_834": 0,
         "error_ct_270": 0,
         "error_ct_837": 0,
-        "error_rate_834": 0,
+        "error_ct_277CA": 0,
+        "error_ct_835": 0,
+        "error_ct_834": 0,
         "error_rate_270": 0,
-        "error_rate_837": 0
+        "error_rate_837": 0,
+        "error_rate_277CA": 0,
+        "error_rate_835": 0,
+        "error_rate_834": 0,
     },
     "family": {
         "size": 0,
@@ -71,26 +80,26 @@ log_data = {
 
 
 def create_md():
-    if not os.path.exists(Config.MARKDOWN_DIRECTORY):
-        os.makedirs(Config.MARKDOWN_DIRECTORY)
-    path = Config.MARKDOWN_DIRECTORY
+    db_file = get_local_db_path(FAMILY_DATABASE_DIRECTORY, FAMILY_DATABASE_SQLITE)
+    path = Config.STATISTICS_MD
 
-    message_types = [834, 270, 837]
-    message_count = [log_data["messages"]["count_834"], log_data["messages"]["count_270"],
-                     log_data["messages"]["count_837"]]
+    message_types = [270, 837, 277, 835, 834]
+    message_count = [log_data["messages"]["count_270"], log_data["messages"]["count_837"],
+                     log_data["messages"]["count_277CA"], log_data["messages"]["count_835"],
+                     log_data["messages"]["count_834"]]
     total_messages = 0
 
     for key, value in log_data["messages"].items():
         if key.startswith("count_"):
             total_messages += value
 
-    db = get_database_backend()
+    db = get_database_backend(db_file)
 
-    avg_family_size = log_data["family"]["size"] / log_data["family"]["count"]
-
-    throughput_834 = log_data["messages"]["count_834"] / log_data["messages"]["time_834"]
     throughput_270 = log_data["messages"]["count_270"] / log_data["messages"]["time_270"]
     throughput_837 = log_data["messages"]["count_837"] / log_data["messages"]["time_837"]
+    throughput_277CA = log_data["messages"]["count_277CA"] / log_data["messages"]["time_277CA"]
+    throughput_835 = log_data["messages"]["count_835"] / log_data["messages"]["time_835"]
+    throughput_834 = log_data["messages"]["count_834"] / log_data["messages"]["time_834"]
 
     avg_d2 = log_data["amt"]["D2"]["sum"] / log_data["amt"]["D2"]["count"]
     avg_fk = log_data["amt"]["FK"]["sum"] / log_data["amt"]["FK"]["count"]
@@ -99,7 +108,7 @@ def create_md():
     avg_p3 = log_data["amt"]["P3"]["sum"] / log_data["amt"]["P3"]["count"]
     avg_b9 = log_data["amt"]["B9"]["sum"] / log_data["amt"]["B9"]["count"]
 
-    with open(path, "w") as f:
+    with open(path, "w+") as f:
         f.write("# Data Visualizer \n\n")
 
         f.writelines(INTRO)
@@ -116,30 +125,33 @@ def create_md():
         f.write("## Throughput\n")
         f.writelines(create_bar_graph(
             title="Throughput (Transactions per Second)",
-            x=[834, 270, 837],
+            x=[270, 837, 277, 835, 834],
             y="TPS",
-            values=[throughput_834, throughput_270, throughput_837],
-            y_max=max(throughput_834, throughput_270, throughput_837) + 1
+            values=[throughput_270, throughput_837, throughput_277CA, throughput_835, throughput_834],
+            y_max=max(throughput_270, throughput_837, throughput_277CA, throughput_835, throughput_834) + 1
         ))
 
         f.write("## Error Count\n")
         f.writelines(create_bar_graph(
             title="Error Count in Messages",
-            x=[834, 270, 837],
+            x=[270, 837, 277, 835, 834],
             y="Errors",
-            values=[log_data["errors"]["error_ct_834"], log_data["errors"]["error_ct_270"],
-                    log_data["errors"]["error_ct_837"]],
-            y_max=max(log_data["errors"]["error_ct_834"], log_data["errors"]["error_ct_270"],
-                      log_data["errors"]["error_ct_837"]) + 1
+            values=[log_data["errors"]["error_ct_270"], log_data["errors"]["error_ct_837"],
+                    log_data["errors"]["error_ct_277CA"], log_data["errors"]["error_ct_835"],
+                    log_data["errors"]["error_ct_834"]],
+            y_max=max(log_data["errors"]["error_ct_270"], log_data["errors"]["error_ct_837"],
+                      log_data["errors"]["error_ct_277CA"], log_data["errors"]["error_ct_835"],
+                      log_data["errors"]["error_ct_834"]) + 1
         ))
 
         f.write("## Error Rate\n")
         f.writelines(create_bar_graph(
             title="Error Rate (%)",
-            x=[834, 270, 837],
+            x=[270, 837, 277, 835, 834],
             y="Percent",
-            values=[log_data["errors"]["error_rate_834"] * 100, log_data["errors"]["error_rate_270"] * 100,
-                    log_data["errors"]["error_rate_837"] * 100],
+            values=[log_data["errors"]["error_rate_270"] * 100, log_data["errors"]["error_rate_837"] * 100,
+                    log_data["errors"]["error_rate_277CA"] * 100, log_data["errors"]["error_rate_835"] * 100,
+                    log_data["errors"]["error_rate_834"] * 100],
             y_max=5
         ))
 

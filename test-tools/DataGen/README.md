@@ -6,13 +6,13 @@
 graph TD
     Generator["RunGenerator.py<br/>Main Script Execution"]
     SponsorGen["Sponsor & Beneficiary<br/>Data Generation"]
-    ClaimGen["Claim Transaction<br/>Creation (270, 837, 834)"]
-    EDIGen["EDI Generators<br/>270, 837P, 834, 277CA, 835, 999"]
+    ClaimGen["Claim Transaction<br/>Creation (270, 837, 277CA, 835, 834)"]
+    EDIGen["EDI Generators<br/>270, 837, 277CA, 835, 834, 999"]
     S3Upload["Optional S3 Upload<br/>via boto3"]
     Markdown["Markdown Report<br/>Stats & Charts"]
 
     Generator --> SponsorGen
-    Generator --> ClaimGen
+    SponsorGen --> ClaimGen
     ClaimGen --> EDIGen
     EDIGen --> S3Upload
     EDIGen --> Markdown
@@ -25,6 +25,10 @@ graph TD
     class SponsorGen,ClaimGen data
     class EDIGen,S3Upload,Markdown edi
 ```
+
+## Database ERD
+
+![ER Diagram](./Readme_Assets/Database-Relationships.png)
 
 ---
 
@@ -60,35 +64,65 @@ graph TD
 
 ---
 
-## Running the Generator
+## Initialization and Run Modes
 
-To run the full EDI file generation pipeline:
-
-```bash
-python RunGenerator.py
-```
-
-This performs the following:
-
-- Creates sponsors and beneficiaries (if under threshold)
-- Creates claim transactions in 5 states:
-  - `Created` (for 270)
-  - `270 Created` (for 837P)
-  - `837 Created` (for 277CA)
-  - `277CA Created` (for 835)
-  - `835 Created` (for 834)
-- Produces EDI files:
-  - ✅ 270 (Eligibility Inquiry)
-  - ✅ 837P (Professional Claim)
-  - 🔜 277CA (Claim Acknowledgment)
-  - 🔜 835 (Payment Remittance)
-  - ✅ 834 (Enrollment Update)
-  - 🔜 999 (Implementation Acknowledgment)
-- Optionally uploads files to AWS S3
+### Output of both modes:
+- Generate EDI file(s)
 - Generates a Markdown summary: `Statistics_Visualizer.md`
+
+### Initialization Logic
+
+On first execution, the generator will:
+
+- **Check if the database exists and is populated**.
+- If **no beneficiaries** are found, it will generate the number set in `config.initial_beneficiaries`.
+- If **no claim transactions** are found, it will create an **8-day backlog of transactions** following the standard file flow:
+
+  1. `Created (Day 1)` → 270
+  2. `270 Created (Day 2)` → 837
+  3. `837 Created (Day 2)` → 277CA
+  4. `277CA Created (Day 8)` → 835
+  5. `835 Created (Day 8)` → 834
 
 ---
 
+### Auto Mode
+
+- Checks for missing sponsors or claims and runs **initialization** if needed.
+- On subsequent daily runs:
+  - Creates a new `270` transaction for today (if not already made).
+  - Sequentially generates all EDI files (270, 837, 277CA, 835, 834) using appropriate transactions and updates their statuses.
+
+This mode is ideal for **daily scheduled runs** or testing the full pipeline behavior.
+
+```bash
+cd src
+python RunGenerator.py auto # for a random number of messages and error rate which you can alter in config.toml
+
+# Example Usage
+python RunGenerator.py auto
+```
+
+---
+
+### Manual Mode
+
+- Only creates transactions for the **specified file type**.
+- Then generates the corresponding EDI file.
+
+⚠️ If you run only one file type manually (e.g., 837), this may unintentionally generate transactions required for downstream files (e.g., 277CA, 835), which may **cause inconsistencies** in later stages.
+
+Use this mode for **targeted testing or debugging**, not for full-pipeline simulation.
+
+```bash
+python RunGenerator.py cli <file_type> -n <count> -e <error_rate> [--upload_s3] # upload_s3 only for 270
+
+# Example Usage
+python RunGenerator.py cli 270 -n 500 -e 0.01 --upload_s3
+python RunGenerator.py cli 835 -n 500 -e 0.05 
+```
+
+---
 ## Configuration
 
 Edit `Config/config.toml` to adjust:
@@ -110,12 +144,12 @@ Edit `Config/config.toml` to adjust:
 |-----------|--------------------------|-----------------------------------------|
 | 270       | `Output/EDI270_Output/`  | Eligibility Inquiry                     |
 | 837P      | `Output/EDI837_Output/`  | Professional Claims                     |
-| 277CA     | `Output/EDI277CA_Output/`| Claim Acknowledgment (coming)           |
-| 835       | `Output/EDI835_Output/`  | Remittance Advice (coming)              |
+| 277CA     | `Output/EDI277CA_Output/`| Claim Acknowledgment                    |
+| 835       | `Output/EDI835_Output/`  | Remittance Advice                       |
 | 834       | `Output/EDI834_Output/`  | Enrollment Updates                      |
 | 999       | `Output/EDI999_Output/`  | Syntax Acknowledgment (coming)          |
 | Logs      | `Output/Logs/`           | Execution logging                       |
-| Markdown  | `Statistics_Visualizer.md`| Throughput, errors, relationships, etc.|
+| Markdown  | `Statistics_Visualizer.md`| Throughput, errors, relationships, etc. |
 
 ---
 
@@ -132,17 +166,9 @@ Types include:
 - Invalid values
 - Negative numbers (for amounts)
 
-### Claim Status Flow
-
-```text
-Created → 270 Created → 837 Created → 277CA → 835 → 834
-```
-
-Each EDI generator updates claim status accordingly for later reuse.
-
 ### Database Support
 
-- SQLite
+- SQLite -- [SQLite Browser](https://sqlitebrowser.org/)
 - JSONL
 
 ---
@@ -150,12 +176,13 @@ Each EDI generator updates claim status accordingly for later reuse.
 ## Example Output
 
 ```bash
-INFO:Config.Config:Saving 100 claim transactions in bulk
-INFO:Config.Config:It took 0:00:00.531589 to generate 100 claims for status Created
-INFO:Config.Config:Initializing EDI837PGenerator with 100 claims
-INFO:Config.Config:Generating transactions into EDI file
-INFO:Config.Config:Generated total of 100 transactions
+INFO:Config.Config:Fetching claim transactions with status=835 Created and date=2025-07-03
+INFO:Config.Config:Generating EDI file from stored data
+INFO:Config.Config:Generated total of 500 transactions
 INFO:Config.Config:There were 0 errors
 INFO:Config.Config:EDI file generation complete
+INFO:Config.Config:File generation took: 0:00:00.135001
+INFO:Config.Config:It took 0:00:00.140000 to generate 500 transactions for the 834 file
+INFO:Config.Config:It took 0:00:23.599000 to generate the output
 ```
 

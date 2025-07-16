@@ -17,7 +17,7 @@ The 270 file is used to request information about a member's health insurance el
 ## Transaction Counts
 ```mermaid
 pie title Message type distribution
-    "270" : 500
+    "270" : 1
     "837" : 0
     "277" : 0
     "835" : 0
@@ -25,14 +25,14 @@ pie title Message type distribution
 ```
 
 
-Total Number of Messages Generated: **500**
+Total Number of Messages Generated: **1**
 ## Throughput
 ```mermaid
 xychart-beta
     title "Throughput (Transactions per Second)"
     x-axis ["270", "837", "277", "835", "834"]
-    y-axis "TPS" 0 --> 3425.657534246576
-    bar [3424.657534246576, 0.0, 0.0, 0.0, 0.0]
+    y-axis "TPS" 0 --> 143.836737608913
+    bar [142.836737608913, 0.0, 0.0, 0.0, 0.0]
 ```
 
 
@@ -41,8 +41,8 @@ xychart-beta
 xychart-beta
     title "Error Count in Messages"
     x-axis ["270", "837", "277", "835", "834"]
-    y-axis "Errors" 0 --> 26
-    bar [25, 0, 0, 0, 0]
+    y-axis "Errors" 0 --> 1
+    bar [0, 0, 0, 0, 0]
 ```
 
 
@@ -52,7 +52,7 @@ xychart-beta
     title "Error Rate (%)"
     x-axis ["270", "837", "277", "835", "834"]
     y-axis "Percent" 0 --> 5
-    bar [5.0, 0, 0, 0, 0]
+    bar [0.0, 0, 0, 0, 0]
 ```
 
 
@@ -115,4 +115,4 @@ xychart-beta
 
 
 ## Average 270s per Beneficiary
-- Average 270s per Beneficiary: **0.01**
+- Average 270s per Beneficiary: **0.00**

@@ -282,7 +282,7 @@ class EDI835Generator:
         self.transaction_control_number = 0
         self.num_messages = len(self.claims)
         self.error_ctrl = ErrorInjector(self.num_messages, error_rate)
-        logger.debug(f"Initialized EDI835Generator")
+        logger.debug("Initialized EDI835Generator")
 
     def get_num_messages(self):
         return self.num_messages

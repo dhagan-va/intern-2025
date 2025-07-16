@@ -1,9 +1,9 @@
 import sqlite3
-
 from datetime import date
-from DataLayer.Datatypes import Address, Beneficiary, Sponsor, ClaimTransaction
+
 from Config.Config import NPI_CSV_PATH
 from Config.Config import logger
+from DataLayer.Datatypes import Address, Beneficiary, Sponsor, ClaimTransaction
 from DataLayer.Interfaces import DataAccess
 from Repository.NPI_Functions import NPIFunctions
 
@@ -176,7 +176,6 @@ class SQLiteDBFunctions(DataAccess):
         self.cursor.execute("SELECT COUNT(*) FROM claim_transactions")
         result = self.cursor.fetchone()
         return result[0] if result else 0
-
 
     def save_sponsor(self, sponsor, commit=True):
         self.cursor.execute("""

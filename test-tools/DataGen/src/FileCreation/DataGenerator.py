@@ -3,7 +3,6 @@ import uuid
 
 from faker import Faker
 
-from datetime import date
 from Config import Config
 from Config.Config import logger
 from DataLayer.Datatypes import Address, Sponsor, Beneficiary, ClaimTransaction

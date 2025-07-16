@@ -1,7 +1,7 @@
 """
 Defines data classes for database
 """
-from dataclasses import dataclass, field, asdict
+from dataclasses import dataclass, field
 from datetime import date
 from typing import List, Dict, Optional
 

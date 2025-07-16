@@ -157,7 +157,7 @@ class N1:
             )
             id_code = erroneous
         else:
-            logger.debug(f"Generating N1 segment")
+            logger.debug("Generating N1 segment")
         return f"N1*{self.entity_id_code}*{self.name}*{self.id_code_qualifier}*{id_code}~\n"
 
 
@@ -343,7 +343,7 @@ class BHT:
         self.time = now.strftime("%H%M")
 
     def to_edi(self):
-        logger.debug(f"Generating BHT segment")
+        logger.debug("Generating BHT segment")
         segment = f"BHT*00{self.transaction_id}*{self.purpose_code}*{self.unique_id}*{self.date}*{self.time}"
         if self.file_type == "837":
             segment += "*CH"
@@ -382,7 +382,7 @@ class EQ:
         self.service_code = service_code
 
     def to_edi(self):
-        logger.debug(f"Generating EQ segment")
+        logger.debug("Generating EQ segment")
         return f"EQ*{self.service_code}~\n"
 
 

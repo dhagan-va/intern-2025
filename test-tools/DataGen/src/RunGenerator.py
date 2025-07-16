@@ -93,7 +93,7 @@ def auto_mode():
     # Daily run — only create 270 if not yet created today
     existing = db.get_claim_transactions(status="Created", date=today.isoformat())
     if not existing:
-        logger.info(f"Creating today's 270 claims...")
+        logger.info("Creating today's 270 claims...")
         create_claims(num_messages, db, today, "Created")
 
     Run270Generator(database=db, num_messages=num_messages, error_rate=error_rate, upload_s3=Config.UPLOAD_TO_S3)
@@ -109,9 +109,9 @@ def Run270Generator(database=db, num_messages=0, error_rate=None, upload_s3=Fals
     error_rate = get_error_rate(error_rate)
     log_data["errors"]["error_rate_270"] = error_rate
 
-    logger.info(f"Generating transactions from NPI data and local database")
+    logger.info("Generating transactions from NPI data and local database")
     edi = EDI270Generator(transaction_funcs=database, error_rate=error_rate)
-    logger.info(f"Generating transactions into EDI file")
+    logger.info("Generating transactions into EDI file")
     edi_out = edi.combine_segments()
 
     file_path = Config.get_edi_path(Config.EDI270_PATH, Config.EDI270_FILE_NAME)
@@ -133,10 +133,10 @@ def Run837PGenerator(database=db, error_rate=None):
     error_rate = get_error_rate(error_rate)
     log_data["errors"]["error_rate_837"] = error_rate
 
-    logger.info(f"Generating transactions from saved 837 information")
+    logger.info("Generating transactions from saved 837 information")
     edi837 = EDI837PGenerator(transaction_funcs=database, error_rate=error_rate)
     log_data["messages"]["count_837"] = edi837.get_num_messages()
-    logger.info(f"Generating transactions into EDI file")
+    logger.info("Generating transactions into EDI file")
     edi_out = edi837.combine_segments()
 
     with open(Config.get_edi_path(Config.EDI837_PATH, Config.EDI837_FILE_NAME), 'w') as f:
@@ -152,10 +152,10 @@ def Run277CAGenerator(database=db, error_rate=None):
     error_rate = get_error_rate(error_rate)
     log_data["errors"]["error_rate_277CA"] = error_rate
 
-    logger.info(f"Generating transactions from saved 277CA information")
+    logger.info("Generating transactions from saved 277CA information")
     edi277CA = EDI277CAGenerator(transaction_funcs=database, error_rate=error_rate)
     log_data["messages"]["count_277CA"] = edi277CA.get_num_messages()
-    logger.info(f"Generating transactions into EDI file")
+    logger.info("Generating transactions into EDI file")
     edi_out = edi277CA.combine_segments()
 
     with open(Config.get_edi_path(Config.EDI277CA_PATH, Config.EDI277CA_FILE_NAME), 'w') as f:
@@ -171,10 +171,10 @@ def Run835Generator(database=db, error_rate=None):
     error_rate = get_error_rate(error_rate)
     log_data["errors"]["error_rate_835"] = error_rate
 
-    logger.info(f"Generating transactions from saved 835 information")
+    logger.info("Generating transactions from saved 835 information")
     edi835 = EDI835Generator(transaction_funcs=database, error_rate=error_rate)
     log_data["messages"]["count_835"] = edi835.get_num_messages()
-    logger.info(f"Generating transactions into EDI file")
+    logger.info("Generating transactions into EDI file")
     edi_out = edi835.combine_segments()
 
     with open(Config.get_edi_path(Config.EDI835_PATH, Config.EDI835_FILE_NAME), 'w') as f:

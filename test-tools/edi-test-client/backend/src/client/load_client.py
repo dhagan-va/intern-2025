@@ -1,19 +1,17 @@
-from concurrent.futures import ThreadPoolExecutor
-from datetime import datetime
-import threading
-import logging
-import time
-from pathlib import Path
-import sys
-
-sys.path.insert(0, str(Path(__file__).parent.parent))
 from config import Setting
 from client.network import send_edi_request
-from client.stats import LiveStats
 from client.data import CsvSink, MetadataManager
 from client.processing import ResponseProcessor
 from client.core import RPSScheduler
 from client.statistics import StatsCollector
+from concurrent.futures import ThreadPoolExecutor
+from datetime import datetime
+import threading
+import logging
+from pathlib import Path
+import sys
+
+sys.path.insert(0, str(Path(__file__).parent.parent))
 
 
 class LoadClient:
@@ -47,7 +45,7 @@ class LoadClient:
 
         self._sink = CsvSink("test.csv")
         self._stats_collector = StatsCollector()
-        self._stats = self._stats_collector.live_stats  
+        self._stats = self._stats_collector.live_stats
 
         # Response processing component
         self._response_processor = ResponseProcessor(
@@ -84,7 +82,7 @@ class LoadClient:
                 self.transaction,
                 self.endpoints[self.transaction],
                 self._metadata_manager,
-                self._stats_collector,  
+                self._stats_collector,
             )
 
         def handle_response(future):
@@ -134,7 +132,7 @@ class LoadClient:
         """Get current requests per second rate (thread-safe)."""
         if self._scheduler:
             return self._scheduler.rps
-        return 1.0  
+        return 1.0
 
     def update_rps(self, new_rps: float):
         """Update request rate during runtime."""

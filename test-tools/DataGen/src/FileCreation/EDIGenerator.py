@@ -34,7 +34,7 @@ class EDI270Generator:
     def create_transaction(self, num, error_ctrl):
         if num - 1 >= len(self.claims) or num <= 0:
             logger.error(f"Index out of range for claim {num}")
-            return
+            return None
 
         self.error_ctrl.reset_error_inserted()
         claim = self.claims[num - 1]
@@ -53,12 +53,14 @@ class EDI270Generator:
                     Seg.HL(3, 2, 22, 0, error_ctrl, error_id).to_edi(),
                     Seg.NM1("IL", "1", bene.last_name, bene.first_name,
                             bene.middle_name, "MI", bene.beneficiary_id, error_ctrl, error_id).to_edi(),
+                    Seg.DMG(bene.dob.strftime, bene.gender).to_edi(),
+                    Seg.DTP("291", Config.DATE_TIME_FMT_QUALIFIER).to_edi(),
                     Seg.EQ("30").to_edi()
                     ]
 
         segments.append(Seg.SE(len(segments) + 1, num).to_edi())
 
-        if self.error_ctrl.error_inserted is True:
+        if self.error_ctrl.error_inserted:
             log_data["errors"]["error_ct_270"] += 1
             logger.warning(f"[ERROR INSERTED] Transaction {num}")
 
@@ -101,7 +103,7 @@ class EDI837PGenerator:
     def create_claim_anesthesia(self, num, error_ctrl):
         if num - 1 >= len(self.claims) or num <= 0:
             logger.error(f"Index out of range for claim {num}")
-            return
+            return None
 
         claim = self.claims[num - 1]
         bene = self.transaction_funcs.get_beneficiary(claim.sponsor_id, claim.beneficiary_id)
@@ -109,6 +111,7 @@ class EDI837PGenerator:
         last, first = split_provider_name(claim.provider_name, claim.provider_entity_type)
         bene_relationship = self.relationship_map.get(bene.relationship)
         error_id = bene.beneficiary_id
+        service_date_qualifier = "472"
 
         if bene_relationship == "25" or bene_relationship == "26":
             bene_relationship = "G8"
@@ -156,14 +159,14 @@ class EDI837PGenerator:
                     Seg.PRV("PE", "PXC", "207L00000X").to_edi(),
                     Seg.LX("1").to_edi(),
                     Seg.SV1("HC:00142:QK:QS:P1", "827", "MJ", "61", 1).to_edi(),
-                    Seg.DTP("472", "D8").to_edi(),
+                    Seg.DTP(service_date_qualifier, Config.DATE_TIME_FMT_QUALIFIER).to_edi(),
                     Seg.REF("6R", claim.claim_id, error_ctrl).to_edi()
                     ]
 
         segments.append(Seg.SE(len(segments) + 1, self.transaction_control_number).to_edi())
         self.transaction_control_number += 1
 
-        if self.error_ctrl.error_inserted is True:
+        if self.error_ctrl.error_inserted:
             log_data["errors"]["error_ct_837"] += 1
 
         return segments
@@ -202,7 +205,7 @@ class EDI277CAGenerator:
     def create_transaction(self, num, error_ctrl):
         if num - 1 >= len(self.claims) or num <= 0:
             logger.error(f"Index out of range for claim {num}")
-            return
+            return None
 
         self.error_ctrl.reset_error_inserted()
         claim = self.claims[num - 1]
@@ -216,8 +219,8 @@ class EDI277CAGenerator:
                     Seg.NM1("PR", 2, Config.PAYER_NAME, "", "", "PI",
                             Config.PAYER_ID, error_ctrl, error_id).to_edi(),
                     Seg.TRN("1", claim.payer_claim_id, error_ctrl=error_ctrl, error_id=error_id).to_edi(),
-                    Seg.DTP("050", "D8").to_edi(),
-                    Seg.DTP("009", "D8").to_edi(),
+                    Seg.DTP("050", Config.DATE_TIME_FMT_QUALIFIER).to_edi(),
+                    Seg.DTP("009", Config.DATE_TIME_FMT_QUALIFIER).to_edi(),
                     Seg.HL("2", "1", 21, 1).to_edi(),
                     Seg.NM1("41", "2", "Submitter Group",
                             "", "", "46", "133052274", error_ctrl).to_edi(),
@@ -234,21 +237,21 @@ class EDI277CAGenerator:
                     Seg.TRN("2", claim.claim_id, error_ctrl=error_ctrl, error_id=error_id).to_edi(),
                     Seg.STC("A1:19:PR", "WQ", claim.amount, error_ctrl, error_id).to_edi(),
                     Seg.REF("1K", claim.payer_claim_id, error_ctrl).to_edi(),
-                    Seg.DTP("472", "D8").to_edi(),
+                    Seg.DTP("472", Config.DATE_TIME_FMT_QUALIFIER).to_edi(),
                     ]
 
         if self.optional_L2220D:
             optional_segments = [Seg.SVC("HC:00142:QK:QS:P1", claim.amount, "1", "MJ", 1).to_edi(),
                                  Seg.STC("A1:19:PR", "U", claim.amount, error_ctrl, error_id).to_edi(),
                                  Seg.REF("FJ", claim.claim_id, error_ctrl).to_edi(),
-                                 Seg.DTP("472", "D8").to_edi(),
+                                 Seg.DTP("472", Config.DATE_TIME_FMT_QUALIFIER).to_edi(),
                                  ]
             segments.extend(optional_segments)
             logger.debug("L2220D conditional in 277CA -- Claim is rejected")
 
         segments.append(Seg.SE(len(segments) + 1, num).to_edi())
 
-        if self.error_ctrl.error_inserted is True:
+        if self.error_ctrl.error_inserted:
             log_data["errors"]["error_ct_277CA"] += 1
 
         return segments
@@ -290,7 +293,7 @@ class EDI835Generator:
     def create_transaction(self, num, error_ctrl):
         if num - 1 >= len(self.claims) or num <= 0:
             logger.error(f"Index out of range for claim {num}")
-            return
+            return None
 
         self.error_ctrl.reset_error_inserted()
         claim = self.claims[num - 1]
@@ -315,7 +318,7 @@ class EDI835Generator:
 
         segments.append(Seg.SE(len(segments) + 1, num).to_edi())
 
-        if self.error_ctrl.error_inserted is True:
+        if self.error_ctrl.error_inserted:
             log_data["errors"]["error_ct_835"] += 1
 
         return segments
@@ -390,11 +393,11 @@ class EDI834Generator:
             log_data["amt"][f"{code}"]["count"] += 1
 
         segments += [Seg.HD().to_edi(),
-                     Seg.DTP(348, "D8").to_edi(),
+                     Seg.DTP(348, Config.DATE_TIME_FMT_QUALIFIER).to_edi(),
                      Seg.SE(len(segments) + 3, self.transaction_control_number).to_edi()
                      ]
 
-        if self.error_ctrl.error_inserted is True:
+        if self.error_ctrl.error_inserted:
             log_data["errors"]["error_ct_834"] += 1
         logger.debug(f"Completed {len(segments)} segments for member {bene.beneficiary_id}")
         return segments

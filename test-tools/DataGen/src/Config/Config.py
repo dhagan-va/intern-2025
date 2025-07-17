@@ -88,6 +88,8 @@ PAYER_ID = config["constants"]["payer_id"]
 TOGGLE_NEW_LINE = config["constants"]["toggle_new_line"]
 TOTAL_ERROR_RATE = config["constants"]["total_error_rate"]
 
+DATE_TIME_FMT_QUALIFIER = config["constants"]["date_time_format_qualifier"]
+
 MAX_BENEFICIARIES = config["constants"]["max_beneficiaries"]
 MIN_BENEFICIARIES = config["constants"]["min_beneficiaries"]
 MAX_DEDUCTIBLES = config["constants"]["max_deductibles"]

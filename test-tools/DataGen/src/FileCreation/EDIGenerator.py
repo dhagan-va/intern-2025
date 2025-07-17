@@ -53,7 +53,7 @@ class EDI270Generator:
                     Seg.HL(3, 2, 22, 0, error_ctrl, error_id).to_edi(),
                     Seg.NM1("IL", "1", bene.last_name, bene.first_name,
                             bene.middle_name, "MI", bene.beneficiary_id, error_ctrl, error_id).to_edi(),
-                    Seg.DMG(bene.dob.strftime, bene.gender).to_edi(),
+                    Seg.DMG(bene.dob.strftime("%Y%m%d"), bene.gender).to_edi(),
                     Seg.DTP("291", Config.DATE_TIME_FMT_QUALIFIER).to_edi(),
                     Seg.EQ("30").to_edi()
                     ]

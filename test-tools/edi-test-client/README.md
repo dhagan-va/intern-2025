@@ -4,6 +4,46 @@
 
 This tool provides comprehensive EDI X12 load testing with dynamic payload generation and error injection. It integrates with the DataGen module to create realistic EDI 270 transactions and tracks them using ST control numbers for production-compatible testing.
 
+## Test Client Workflow
+
+```mermaid
+flowchart TD
+    A[📋 Configure Test] --> B[🏭 Generate EDI Data]
+    B --> C[🚀 Start Load Test]
+    C --> D[📡 Send Requests]
+    D --> E[📊 Collect Results]
+    E --> F[📈 Generate Report]
+    
+    subgraph "DataGen"
+        B1[Create EDI 270 Transactions]
+        B2[Inject Errors]
+    end
+    
+    subgraph "Load Testing"
+        D1[HTTP Requests at Target RPS]
+        D2[Track Connections]
+    end
+    
+    subgraph "Analysis"
+        E1[Response Processing]
+        E2[Performance Metrics]
+    end
+    
+    B --> B1
+    D --> D1
+    E --> E1
+    
+    classDef config fill:#e3f2fd,stroke:#1976d2
+    classDef generation fill:#f3e5f5,stroke:#7b1fa2
+    classDef testing fill:#e8f5e8,stroke:#388e3c
+    classDef results fill:#fff8e1,stroke:#f57c00
+    
+    class A config
+    class B,B1,B2 generation
+    class C,D,D1,D2 testing
+    class E,F,E1,E2 results
+```
+
 ## Architecture
 
 ```mermaid

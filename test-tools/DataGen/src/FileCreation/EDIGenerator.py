@@ -25,7 +25,8 @@ class EDI270Generator:
         self.transaction_funcs = transaction_funcs
         self.claims = self.transaction_funcs.get_claim_transactions(
             status="Created",
-            date=date.today().isoformat()
+            date=date.today().isoformat(),
+            creation=
         )
         self.num_messages = len(self.claims)
         self.error_ctrl = ErrorInjector(self.num_messages, error_rate)

@@ -162,6 +162,7 @@ class ClaimTransaction:
     provider_zip: str
     provider_phone: str
     amount: float
+    creation: str
     provider_address_2: Optional[str] = None
     payer_claim_id: Optional[str] = None
 
@@ -182,6 +183,7 @@ class ClaimTransaction:
             "provider_zip": self.provider_zip,
             "provider_phone": self.provider_phone,
             "amount": self.amount,
+            "creation": self.creation,
             "provider_address_2": self.provider_address_2,
             "payer_claim_id": self.payer_claim_id
         }
@@ -204,6 +206,7 @@ class ClaimTransaction:
             provider_zip=data["provider_zip"],
             provider_phone=data["provider_phone"],
             amount=data["amount"],
+            creation=data["creation"],
             provider_address_2=data["provider_address_2"],
             payer_claim_id=data["payer_claim_id"]
         )

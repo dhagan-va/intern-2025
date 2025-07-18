@@ -18,6 +18,7 @@ def generate_claim_transactions(num_gen, transaction_funcs, input_date, status):
 
     beneficiaries = csv_beneficiaries
     if num_random_needed > 0:
+        logger.info(f"There were {len(csv_beneficiaries)} CSV beneficiaries, generating {num_random_needed} random beneficiaries.")
         random_beneficiaries = transaction_funcs.get_random_beneficiary(num_random_needed)
         beneficiaries.extend(random_beneficiaries)
 

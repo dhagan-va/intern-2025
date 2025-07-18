@@ -38,14 +38,25 @@ def upload_to_s3(file_path, bucket_name, s3_key):
 
 
 def create_claims(num_gen=number_of_tests_270(), database=db, input_date=date.today(), status="Created"):
-    return generate_claim_transactions(num_gen=num_gen, transaction_funcs=database, input_date=input_date,
-                                       status=status)
+    now = datetime.now()
+    transactions = generate_claim_transactions(num_gen=num_gen, transaction_funcs=database, input_date=input_date,
+                                               status=status)
+    end_time = datetime.now() - now
+    log_data["generation"]["claims_count"] += len(transactions)
+    log_data["generation"]["claims_time"] += end_time.total_seconds()
+    return transactions
 
 
 def ensure_sponsors(database=db):
     if database.total_beneficiaries() == 0:
+        now = datetime.now()
         logger.info(f"No beneficiaries found -- generating {Config.INITIAL_USERS} beneficiaries...")
-        SponsorDataGenerator(database).store_sponsor_and_beneficiaries(Config.INITIAL_USERS)
+        sponsors = SponsorDataGenerator(database).store_sponsor_and_beneficiaries(Config.INITIAL_USERS)
+        end_time = datetime.now() - now
+        log_data["generation"]["sponsors_beneficiaries_time"] += end_time.total_seconds()
+        log_data["generation"]["sponsors_count"] += len(sponsors)
+        total_benes = sum(len(s.beneficiaries) for s in sponsors)
+        log_data["generation"]["beneficiaries_count"] += total_benes
 
 
 def cli_mode(database=db, file_type=None, num=0, error_rate=0, upload_s3=False):

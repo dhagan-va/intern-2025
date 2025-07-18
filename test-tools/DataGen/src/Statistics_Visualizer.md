@@ -14,25 +14,35 @@ The 270 file is used to request information about a member's health insurance el
 - Service eligibility
 - Co-pays, deductibles, or benefit limits
 
-## Transaction Counts
+## Data Generation Speed
 ```mermaid
-pie title Message type distribution
-    "270" : 1
-    "837" : 0
-    "277" : 0
-    "835" : 0
-    "834" : 0
+xychart-beta
+    title "Records Generated per Second"
+    x-axis ["Claims", "Sponsors/Beneficiaries"]
+    y-axis "Records/Second" 0 --> 4658.492402203366
+    bar [4082.3711381886405, 4648.492402203366]
 ```
 
 
-Total Number of Messages Generated: **1**
+## Transaction Counts
+```mermaid
+pie title Message type distribution
+    "270" : 4211
+    "837" : 4211
+    "277" : 4211
+    "835" : 4211
+    "834" : 4211
+```
+
+
+Total Number of Messages Generated: **21055**
 ## Throughput
 ```mermaid
 xychart-beta
     title "Throughput (Transactions per Second)"
     x-axis ["270", "837", "277", "835", "834"]
-    y-axis "TPS" 0 --> 125.9843769528809
-    bar [124.9843769528809, 0.0, 0.0, 0.0, 0.0]
+    y-axis "TPS" 0 --> 3962.4299153339607
+    bar [3961.4299153339607, 3311.4249271423605, 3529.759874065276, 3931.8357312458156, 3541.634601879396]
 ```
 
 
@@ -52,7 +62,7 @@ xychart-beta
     title "Error Rate (%)"
     x-axis ["270", "837", "277", "835", "834"]
     y-axis "Percent" 0 --> 5
-    bar [0.0, 0, 0, 0, 0]
+    bar [0, 0, 0, 0, 0]
 ```
 
 
@@ -99,8 +109,8 @@ pie title Beneficiary Relationship Types
 xychart-beta
     title "AMT (deductible) Averages"
     x-axis ["D2", "FK", "R"]
-    y-axis "Amount" 0 --> 1000.0
-    bar [0.0, 0.0, 0.0]
+    y-axis "Amount" 0 --> 51612.51082621083
+    bar [49393.66552469148, 50612.51082621083, 49349.43000949669]
 ```
 
 
@@ -109,10 +119,10 @@ xychart-beta
 xychart-beta
     title "AMT (visit) Averages"
     x-axis ["C1", "P3", "B9"]
-    y-axis "Number of Visits" 0 --> 1.0
-    bar [0.0, 0.0, 0.0]
+    y-axis "Number of Visits" 0 --> 8.626780626780626
+    bar [7.626780626780627, 7.420702754036087, 7.476495726495727]
 ```
 
 
 ## Average 270s per Beneficiary
-- Average 270s per Beneficiary: **0.00**
+- Average 270s per Beneficiary: **0.04**

@@ -276,7 +276,7 @@ class SQLiteDBFunctions(DataAccess):
             raise e
 
     def get_beneficiaries_by_creation(self, creation_source, count):
-        logger.info(f"Fetching {count} beneficiaries with creation source '{creation_source}'")
+        logger.info(f"Attempting to fetch {count} beneficiaries with creation source '{creation_source}'")
         self.cursor.execute("""
             SELECT *
             FROM beneficiaries

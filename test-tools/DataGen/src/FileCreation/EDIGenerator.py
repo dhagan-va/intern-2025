@@ -25,9 +25,9 @@ class EDI270Generator:
         self.transaction_funcs = transaction_funcs
         self.claims = self.transaction_funcs.get_claim_transactions(
             status="Created",
-            date=date.today().isoformat(),
-            creation=
+            date=date.today().isoformat()
         )
+        self.claims = sorted(self.claims, key=lambda c: c.creation != "CSV")
         self.num_messages = len(self.claims)
         self.error_ctrl = ErrorInjector(self.num_messages, error_rate)
         logger.info(f"Initializing EDI270Generator with {self.num_messages} claims")

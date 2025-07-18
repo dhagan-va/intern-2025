@@ -12,7 +12,14 @@ from Config.Data_Visualizer import log_data
 
 
 def generate_claim_transactions(num_gen, transaction_funcs, input_date, status):
-    beneficiaries = transaction_funcs.get_random_beneficiary(num_gen)
+    csv_beneficiaries = transaction_funcs.get_beneficiaries_by_creation("CSV", num_gen)
+
+    num_random_needed = num_gen - len(csv_beneficiaries)
+
+    beneficiaries = csv_beneficiaries
+    if num_random_needed > 0:
+        random_beneficiaries = transaction_funcs.get_random_beneficiary(num_random_needed)
+        beneficiaries.extend(random_beneficiaries)
 
     transactions = []
 
@@ -40,7 +47,8 @@ def generate_claim_transactions(num_gen, transaction_funcs, input_date, status):
             provider_zip=provider["zipcode"],
             provider_phone=provider["phone"],
             amount=round(random.uniform(50, 1500), 2),
-            payer_claim_id=payer_claim_id
+            payer_claim_id=payer_claim_id,
+            creation=bene.creation
         )
         transactions.append(claim)
     transaction_funcs.save_many_claims(transactions)
@@ -134,13 +142,20 @@ class SponsorDataGenerator:
     def generate_sponsor_and_beneficiaries(self, total):
         generated = 0
         new_sponsors = []
+        all_sponsor_ids = self.repo.get_all_sponsor_ids()
 
         if self.csv_rows:
             for sponsor_key, rows in self.csv_rows.items():
-                first_row = rows[0]
+                if generated >= total:
+                    break
 
-                if self.repo.ssn_exists(first_row.get("Sponsor SSN")) or sponsor_key in self.repo.get_all_sponsor_ids():
-                    logger.warning(f"Skipping duplicate sponsor: {sponsor_key}")
+                first_row = rows[0]
+                sponsor_ssn = first_row.get("Sponsor SSN")
+                sponsor_icn = first_row.get("Sponsor ICN")
+
+                if (sponsor_ssn and self.repo.ssn_exists(sponsor_ssn)) or (
+                        sponsor_icn and sponsor_icn in all_sponsor_ids):
+                    logger.warning(f"Skipping duplicate sponsor from CSV: SSN={sponsor_ssn}, ICN={sponsor_icn}")
                     continue
 
                 self.curr_csv_row = first_row
@@ -155,14 +170,16 @@ class SponsorDataGenerator:
                     generated += 1
 
                 new_sponsors.append(sponsor)
-                if generated >= total:
-                    break
+
+        self.curr_csv_row = None
 
         while generated < total:
             sponsor = self.create_sponsor()
 
-            num_benes = min(Config.MAX_BENEFICIARIES, total - generated)
+            num_benes = min(random.randint(1, Config.MAX_BENEFICIARIES), total - generated)
             for _ in range(num_benes):
+                if generated >= total:
+                    break
                 bene = self.create_beneficiary(sponsor)
                 sponsor.beneficiaries.append(bene)
                 generated += 1
@@ -183,7 +200,8 @@ class SponsorDataGenerator:
         sponsor_ssn = row.get("Sponsor SSN", self.generate_ssn())
         sponsor_id = row.get("Sponsor ICN", f"{sponsor_ssn.replace('-', '')}V11111111")
         dob = pd.to_datetime(row.get("Sponsor DOB", self.fake.date_of_birth())).date()
-        sponsor_last_name = row.get("Sponsor Name", self.fake.last_name()).upper()
+        sponsor_last_name = row.get("Sponsor Last Name", self.fake.last_name()).upper()
+        sponsor_first_name = row.get("Sponsor First Name", self.fake.first_name()).upper()
 
         sponsor_address = self.create_address()
 
@@ -193,12 +211,10 @@ class SponsorDataGenerator:
         if sponsor_gender == "X":
             sponsor_gender = random.choice(["M", "F"])
 
-        sponsor_first = self.fake.first_name_male() if sponsor_gender == 'M' else self.fake.first_name_female()
-
         sponsor = Sponsor(
             ssn=sponsor_ssn,
             dob=dob,
-            first_name=sponsor_first.upper(),
+            first_name=sponsor_first_name,
             last_name=sponsor_last_name,
             gender=sponsor_gender,
             address=sponsor_address,
@@ -221,25 +237,28 @@ class SponsorDataGenerator:
         relationship = random.choice(list(self.relationship_map.keys()))
         relationship_code = self.relationship_map[relationship]
         log_data["family"]["relationship_distribution"][relationship_code] += 1
-        beneficiary_ssn = self.generate_ssn()
+        beneficiary_ssn = row.get("Bene SSN", self.generate_ssn())
         beneficiary_id = row.get("Bene ICN", f"{beneficiary_ssn.replace('-', '')}V11111111")
+        dob = pd.to_datetime(row.get("Bene DOB", self.fake.date_of_birth())).date()
+        bene_first_name = row.get("Bene First Name", self.fake.first_name()).upper()
+        bene_last_name = row.get("Bene Last Name", sponsor.last_name).upper()
         beneficiary_amt_data = create_amt_data()
         beneficiary_gender = self.fake.passport_gender()
+
         if beneficiary_gender == "X":
             beneficiary_gender = random.choice(["M", "F"])
-        bene_first = self.fake.first_name_male() if beneficiary_gender == 'M' else self.fake.first_name_female()
 
         beneficiary = Beneficiary(
             ssn=beneficiary_ssn,
-            dob=self.fake.date_of_birth(),
-            first_name=bene_first.upper(),
-            last_name=sponsor.last_name,
+            dob=dob,
+            first_name=bene_first_name,
+            last_name=bene_last_name,
             gender=beneficiary_gender,
             address=sponsor.address,
             phone=self.fake.basic_phone_number(),
             insurance_company=sponsor.insurance_company,
             insurance_FID=sponsor.insurance_FID,
-            middle_name=self.fake.first_name().upper(),
+            middle_name=self.fake.first_name().upper() if self.curr_csv_row is None else "",
             sponsor_id=sponsor.sponsor_id,
             beneficiary_id=beneficiary_id,
             relationship=relationship,

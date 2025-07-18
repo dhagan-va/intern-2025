@@ -7,18 +7,22 @@ from faker import Faker
 
 from Config import Config
 from Config.Config import logger
-from DataLayer.Datatypes import Address, Sponsor, Beneficiary, ClaimTransaction
 from Config.Data_Visualizer import log_data
+from DataLayer.Datatypes import Address, Sponsor, Beneficiary, ClaimTransaction
 
 
 def generate_claim_transactions(num_gen, transaction_funcs, input_date, status):
+    sponsor_generator = SponsorDataGenerator(transaction_funcs)
+    sponsor_generator.store_sponsor_and_beneficiaries(total=0)
+
     csv_beneficiaries = transaction_funcs.get_beneficiaries_by_creation("CSV", num_gen)
 
     num_random_needed = num_gen - len(csv_beneficiaries)
 
     beneficiaries = csv_beneficiaries
     if num_random_needed > 0:
-        logger.info(f"There were {len(csv_beneficiaries)} CSV beneficiaries, generating {num_random_needed} random beneficiaries.")
+        logger.info(
+            f"There were {len(csv_beneficiaries)} CSV beneficiaries, generating {num_random_needed} random beneficiaries.")
         random_beneficiaries = transaction_funcs.get_random_beneficiary(num_random_needed)
         beneficiaries.extend(random_beneficiaries)
 
@@ -147,9 +151,6 @@ class SponsorDataGenerator:
 
         if self.csv_rows:
             for sponsor_key, rows in self.csv_rows.items():
-                if generated >= total:
-                    break
-
                 first_row = rows[0]
                 sponsor_ssn = first_row.get("Sponsor SSN")
                 sponsor_icn = first_row.get("Sponsor ICN")
@@ -163,8 +164,6 @@ class SponsorDataGenerator:
                 sponsor = self.create_sponsor()
 
                 for row in rows:
-                    if generated >= total:
-                        break
                     self.curr_csv_row = row
                     bene = self.create_beneficiary(sponsor)
                     sponsor.beneficiaries.append(bene)
@@ -176,11 +175,8 @@ class SponsorDataGenerator:
 
         while generated < total:
             sponsor = self.create_sponsor()
-
             num_benes = min(random.randint(1, Config.MAX_BENEFICIARIES), total - generated)
             for _ in range(num_benes):
-                if generated >= total:
-                    break
                 bene = self.create_beneficiary(sponsor)
                 sponsor.beneficiaries.append(bene)
                 generated += 1

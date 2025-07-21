@@ -19,8 +19,8 @@ The 270 file is used to request information about a member's health insurance el
 xychart-beta
     title "Records Generated per Second"
     x-axis ["Claims", "Sponsors/Beneficiaries"]
-    y-axis "Records/Second" 0 --> 13.387065744300923
-    bar [3.387065744300923, 0.0]
+    y-axis "Records/Second" 0 --> 13.44827824019189
+    bar [3.4482782401918897, 0.0]
 ```
 
 
@@ -41,8 +41,8 @@ Total Number of Messages Generated: **5**
 xychart-beta
     title "Throughput (Transactions per Second)"
     x-axis ["270", "837", "277", "835", "834"]
-    y-axis "TPS" 0 --> 626.0781347668459
-    bar [625.0781347668459, 0.0, 0.0, 0.0, 0.0]
+    y-axis "TPS" 0 --> 228.27272727272728
+    bar [227.27272727272728, 0.0, 0.0, 0.0, 0.0]
 ```
 
 
@@ -90,15 +90,15 @@ pie title Family Size Breakdown
 xychart-beta
     title "Beneficiary Code Distribution"
     x-axis ["Spouse (01)", "Child (19)", "Caregiver (26)", "Ex-Spouse (25)"]
-    y-axis "Count" 0 --> 2
-    bar [0, 1, 0, 0]
+    y-axis "Count" 0 --> 1
+    bar [0, 0, 0, 0]
 ```
 
 
 ```mermaid
 pie title Beneficiary Relationship Types
     "Spouse (01)" : 0
-    "Child (19)" : 1
+    "Child (19)" : 0
     "Caregiver (26)" : 0
     "Ex-Spouse (25)" : 0
 ```

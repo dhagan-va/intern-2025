@@ -21,7 +21,7 @@ edi835_path = "Output/EDI835_Output"
 edi834_path = "Output/EDI834_Output"
 
 [filenames]
-edi270_file_template = "270.VFMP.{year}.{ymd}.{hm}.{full_date}1.edi"
+edi270_file_template = "270.VFMP.{year}.{ymd}.{hm}.{ssmmm}.{full_date}1.edi"
 edi277ca_file_template = "277CA.VFMP.{year}.{ymd}.{hm}.{full_date}1.edi"
 edi837_file_template = "837.VFMP.{year}.{ymd}.{hm}.{full_date}1.edi"
 edi835_file_template = "835.VFMP.{year}.{ymd}.{hm}.{full_date}1.edi"

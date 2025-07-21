@@ -13,6 +13,7 @@ DATE = datetime.now()
 YEAR = DATE.year
 YMD = DATE.strftime("%y%m%d")
 HM = DATE.strftime("%H%M")
+SSMMM = DATE.strftime("%S%f")[:6]
 FULL_DATE = DATE.strftime("%Y%m%d")
 
 log_config = config.get("logging", {})
@@ -51,7 +52,7 @@ EDI834_PATH = os.path.join(ROOT_PATH, config["paths"]["edi834_path"])
 NPI_CSV_PATH = download_weekly_npi_data(DOWNLOAD_DIRECTORY)
 
 EDI834_FILE_NAME = config["filenames"]["edi834_file_template"].format(year=YEAR, ymd=YMD, hm=HM, full_date=FULL_DATE)
-EDI270_FILE_NAME = config["filenames"]["edi270_file_template"].format(year=YEAR, ymd=YMD, hm=HM, full_date=FULL_DATE)
+EDI270_FILE_NAME = config["filenames"]["edi270_file_template"].format(year=YEAR, ymd=YMD, hm=HM, ssmmm=SSMMM, full_date=FULL_DATE)
 EDI277CA_FILE_NAME = config["filenames"]["edi277ca_file_template"].format(year=YEAR, ymd=YMD, hm=HM,
                                                                           full_date=FULL_DATE)
 EDI837_FILE_NAME = config["filenames"]["edi837_file_template"].format(year=YEAR, ymd=YMD, hm=HM, full_date=FULL_DATE)

@@ -1,4 +1,5 @@
 import argparse
+import os
 from datetime import datetime, date, timedelta
 
 import boto3
@@ -128,21 +129,19 @@ def Run270Generator(database=db, num_messages=0, error_rate=None, upload_s3=Fals
 
     logger.info("Generating transactions from NPI data and local database")
     edi = EDI270Generator(transaction_funcs=database, error_rate=error_rate)
-    logger.info("Generating transactions into EDI file")
-    edi_out = edi.combine_segments()
-
-    file_path = Config.get_edi_path(Config.EDI270_PATH, Config.EDI270_FILE_NAME)
-    with open(file_path, 'w') as f:
-        f.writelines(edi_out)
+    logger.info("Generating transactions into EDI files")
+    file_paths = edi.combine_segments()
 
     end_time = datetime.now() - now
     log_data["messages"]["time_270"] = end_time.total_seconds()
-    logger.info(f"It took {end_time} to generate {num_messages} transactions for the 270 file")
+    logger.info(f"It took {end_time} to generate {num_messages} transactions for the 270 file(s)")
 
+    # Caution, you may be uploading thousands of files to S3
     if upload_s3:
-        file_name = Config.EDI270_FILE_NAME
-        s3_key = f"270/{file_name}"
-        upload_to_s3(file_path, Config.BUCKET_NAME, s3_key)
+        for file_path in file_paths:
+            file_name = os.path.basename(file_path)
+            s3_key = f"270/{file_name}"
+            upload_to_s3(file_path, Config.BUCKET_NAME, s3_key)
 
 
 def Run837PGenerator(database=db, error_rate=None):

@@ -1,4 +1,5 @@
 import uuid
+import os
 from datetime import date, timedelta
 
 import FileCreation.EDISegments as Seg
@@ -68,19 +69,35 @@ class EDI270Generator:
         return segments
 
     def combine_segments(self):
-        all_segments = []
+        file_paths = []
+        output_dir = os.path.join(Config.EDI270_PATH, Config.YMDHM)
         for i in range(1, self.num_messages + 1):
-            all_segments += [Seg.ISA().to_edi(),
-                             Seg.GS("HS").to_edi()
-                             ]
-            all_segments.extend(self.create_transaction(i, self.error_ctrl))
-            all_segments += [Seg.GE(1).to_edi(),
-                             Seg.IEA().to_edi()
-                             ]
+            transaction_segments = [Seg.ISA().to_edi(),
+                                    Seg.GS("HS").to_edi()
+                                    ]
+            transaction_segments.extend(self.create_transaction(i, self.error_ctrl))
+            transaction_segments += [Seg.GE(1).to_edi(),
+                                     Seg.IEA().to_edi()
+                                     ]
+
+            edi_content = "".join(transaction_segments)
+            byte_size = len(edi_content.encode('utf-8'))
+            transaction_id = f"MPII{i:02}"
+            header = f"{byte_size:06d}{transaction_id}"
+
+            file_name = Config.EDI270_FILE_NAME.format(
+                year=Config.YEAR, ymd=Config.YMD, hm=Config.HM, claim_id=transaction_id, full_date=Config.FULL_DATE
+            )
+            file_path = Config.get_edi_path(output_dir, file_name)
+
+            with open(file_path, 'w') as f:
+                f.write(header + "\n")
+                f.write(edi_content)
+            file_paths.append(file_path)
 
         claim_ids = [claim.claim_id for claim in self.claims]
         self.transaction_funcs.update_claims_status(claim_ids, "270 Created")
-        return all_segments
+        return file_paths
 
 
 class EDI837PGenerator:

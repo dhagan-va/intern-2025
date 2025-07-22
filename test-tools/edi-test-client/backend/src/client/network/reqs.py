@@ -1,0 +1,53 @@
+import requests
+import time
+import sys
+from pathlib import Path
+import random
+import re
+
+sys.path.insert(0, str(Path(__file__).parent.parent.parent))
+from client.data.samples import payloads
+
+
+def extract_st_control_number(edi_content):
+    """Extract ST control number from EDI content for header mapping."""
+    try:
+        match = re.search(r"ST\*270\*(\d+)", edi_content)
+        return match.group(1) if match else None
+    except Exception:
+        return None
+
+
+def send_edi_request(
+    transaction, endpoint, metadata_manager=None, stats_collector=None
+):
+    start = time.perf_counter()
+    session = None
+    conn_id = None
+
+    try:
+        if stats_collector:
+            conn_id = stats_collector.start_connection()
+
+        payload = random.choice(payloads[transaction])
+        headers = {"Content-Type": "application/x-edi", "Connection": "close"}
+
+        if metadata_manager:
+            st_control = extract_st_control_number(payload)
+            if st_control:
+                error_info = metadata_manager.get_error_info(st_control)
+                if error_info:
+                    headers.update(error_info)
+
+        session = requests.Session()
+        resp = session.post(url=endpoint, data=payload, headers=headers)
+        elapsed = (time.perf_counter() - start) * 1000
+        return resp.status_code, elapsed, resp.content
+    except Exception:
+        return -1, (time.perf_counter() - start) * 1000, ""
+    finally:
+        if stats_collector and conn_id:
+            stats_collector.end_connection(conn_id)
+
+        if session:
+            session.close()

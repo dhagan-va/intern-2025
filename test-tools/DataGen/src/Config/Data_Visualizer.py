@@ -75,6 +75,13 @@ log_data = {
         "C1": {"sum": 0, "count": 1},
         "P3": {"sum": 0, "count": 1},
         "B9": {"sum": 0, "count": 1}
+    },
+    "generation": {
+        "claims_count": 0,
+        "claims_time": 1,
+        "sponsors_count": 0,
+        "beneficiaries_count": 0,
+        "sponsors_beneficiaries_time": 1
     }
 }
 
@@ -108,10 +115,24 @@ def create_md():
     avg_p3 = log_data["amt"]["P3"]["sum"] / log_data["amt"]["P3"]["count"]
     avg_b9 = log_data["amt"]["B9"]["sum"] / log_data["amt"]["B9"]["count"]
 
+    claims_tps = log_data["generation"]["claims_count"] / log_data["generation"]["claims_time"]
+    sponsors_beneficiaries_tps = (
+                (log_data["generation"]["sponsors_count"] + log_data["generation"]["beneficiaries_count"]) /
+                log_data["generation"]["sponsors_beneficiaries_time"])
+
     with open(path, "w+") as f:
         f.write("# Data Visualizer \n\n")
 
         f.writelines(INTRO)
+
+        f.write("## Data Generation Speed\n")
+        f.writelines(create_bar_graph(
+            title="Records Generated per Second",
+            x=["Claims", "Sponsors/Beneficiaries"],
+            y="Records/Second",
+            values=[claims_tps, sponsors_beneficiaries_tps],
+            y_max=max(claims_tps, sponsors_beneficiaries_tps) + 10
+        ))
 
         f.write("## Transaction Counts\n")
         f.writelines(create_pie_chart(

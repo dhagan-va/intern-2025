@@ -1,4 +1,5 @@
 import argparse
+import os
 from datetime import datetime, date, timedelta
 
 import boto3
@@ -38,14 +39,25 @@ def upload_to_s3(file_path, bucket_name, s3_key):
 
 
 def create_claims(num_gen=number_of_tests_270(), database=db, input_date=date.today(), status="Created"):
-    return generate_claim_transactions(num_gen=num_gen, transaction_funcs=database, input_date=input_date,
-                                       status=status)
+    now = datetime.now()
+    transactions = generate_claim_transactions(num_gen=num_gen, transaction_funcs=database, input_date=input_date,
+                                               status=status)
+    end_time = datetime.now() - now
+    log_data["generation"]["claims_count"] += len(transactions)
+    log_data["generation"]["claims_time"] += end_time.total_seconds()
+    return transactions
 
 
 def ensure_sponsors(database=db):
     if database.total_beneficiaries() == 0:
-        logger.info(f"No sponsors found -- generating {Config.INITIAL_USERS} sponsors...")
-        SponsorDataGenerator(database).store_sponsor_and_beneficiaries(Config.INITIAL_USERS)
+        now = datetime.now()
+        logger.info(f"No beneficiaries found -- generating {Config.INITIAL_USERS} beneficiaries...")
+        sponsors = SponsorDataGenerator(database).store_sponsor_and_beneficiaries(Config.INITIAL_USERS)
+        end_time = datetime.now() - now
+        log_data["generation"]["sponsors_beneficiaries_time"] += end_time.total_seconds()
+        log_data["generation"]["sponsors_count"] += len(sponsors)
+        total_benes = sum(len(s.beneficiaries) for s in sponsors)
+        log_data["generation"]["beneficiaries_count"] += total_benes
 
 
 def cli_mode(database=db, file_type=None, num=0, error_rate=0, upload_s3=False):
@@ -71,6 +83,7 @@ def cli_mode(database=db, file_type=None, num=0, error_rate=0, upload_s3=False):
 
 def auto_mode():
     logger.info("Running automated daily generation...")
+    now = datetime.now()
 
     ensure_sponsors()
 
@@ -90,7 +103,9 @@ def auto_mode():
             create_claims(num_messages, db, transaction_date - timedelta(days=1), "270 Created")
             create_claims(num_messages, db, transaction_date - timedelta(days=8), "277CA Created")
 
-    # Daily run — only create 270 if not yet created today
+            end_time = datetime.now() - now
+            logger.info(f"It took {end_time} to generate {num_messages * 3} claims")
+
     existing = db.get_claim_transactions(status="Created", date=today.isoformat())
     if not existing:
         logger.info("Creating today's 270 claims...")
@@ -102,6 +117,9 @@ def auto_mode():
     Run835Generator(database=db, error_rate=error_rate)
     Run834Generator(database=db, error_rate=error_rate)
 
+    end_time = datetime.now() - now
+    logger.info(f"It took {end_time} to generate all claims")
+
 
 def Run270Generator(database=db, num_messages=0, error_rate=None, upload_s3=False):
     now = datetime.now()
@@ -111,21 +129,19 @@ def Run270Generator(database=db, num_messages=0, error_rate=None, upload_s3=Fals
 
     logger.info("Generating transactions from NPI data and local database")
     edi = EDI270Generator(transaction_funcs=database, error_rate=error_rate)
-    logger.info("Generating transactions into EDI file")
-    edi_out = edi.combine_segments()
-
-    file_path = Config.get_edi_path(Config.EDI270_PATH, Config.EDI270_FILE_NAME)
-    with open(file_path, 'w') as f:
-        f.writelines(edi_out)
+    logger.info("Generating transactions into EDI files")
+    file_paths = edi.combine_segments()
 
     end_time = datetime.now() - now
     log_data["messages"]["time_270"] = end_time.total_seconds()
-    logger.info(f"It took {end_time} to generate {num_messages} transactions for the 270 file")
+    logger.info(f"It took {end_time} to generate {num_messages} transactions for the 270 file(s)")
 
+    # Caution, you may be uploading thousands of files to S3
     if upload_s3:
-        file_name = Config.EDI270_FILE_NAME
-        s3_key = f"270/{file_name}"
-        upload_to_s3(file_path, Config.BUCKET_NAME, s3_key)
+        for file_path in file_paths:
+            file_name = os.path.basename(file_path)
+            s3_key = f"270/{file_name}"
+            upload_to_s3(file_path, Config.BUCKET_NAME, s3_key)
 
 
 def Run837PGenerator(database=db, error_rate=None):

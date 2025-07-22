@@ -14,10 +14,20 @@ The 270 file is used to request information about a member's health insurance el
 - Service eligibility
 - Co-pays, deductibles, or benefit limits
 
+## Data Generation Speed
+```mermaid
+xychart-beta
+    title "Records Generated per Second"
+    x-axis ["Claims", "Sponsors/Beneficiaries"]
+    y-axis "Records/Second" 0 --> 5113.909983572282
+    bar [256.67337953111934, 5103.909983572282]
+```
+
+
 ## Transaction Counts
 ```mermaid
 pie title Message type distribution
-    "270" : 1
+    "270" : 500
     "837" : 0
     "277" : 0
     "835" : 0
@@ -25,14 +35,14 @@ pie title Message type distribution
 ```
 
 
-Total Number of Messages Generated: **1**
+Total Number of Messages Generated: **500**
 ## Throughput
 ```mermaid
 xychart-beta
     title "Throughput (Transactions per Second)"
     x-axis ["270", "837", "277", "835", "834"]
-    y-axis "TPS" 0 --> 143.836737608913
-    bar [142.836737608913, 0.0, 0.0, 0.0, 0.0]
+    y-axis "TPS" 0 --> 1578.2870662460568
+    bar [1577.2870662460568, 0.0, 0.0, 0.0, 0.0]
 ```
 
 
@@ -61,17 +71,17 @@ xychart-beta
 xychart-beta
     title "Family Size Histogram"
     x-axis ["1", "2", "3", "4"]
-    y-axis "Count" 0 --> 10046
-    bar [10006, 9979, 9952, 10045]
+    y-axis "Count" 0 --> 1
+    bar [0, 0, 0, 0]
 ```
 
 
 ```mermaid
 pie title Family Size Breakdown
-    "1" : 10006
-    "2" : 9979
-    "3" : 9952
-    "4" : 10045
+    "1" : 0
+    "2" : 0
+    "3" : 0
+    "4" : 0
 ```
 
 
@@ -80,17 +90,17 @@ pie title Family Size Breakdown
 xychart-beta
     title "Beneficiary Code Distribution"
     x-axis ["Spouse (01)", "Child (19)", "Caregiver (26)", "Ex-Spouse (25)"]
-    y-axis "Count" 0 --> 25099
-    bar [25029, 24999, 25098, 24874]
+    y-axis "Count" 0 --> 25093
+    bar [25030, 24999, 25092, 24879]
 ```
 
 
 ```mermaid
 pie title Beneficiary Relationship Types
-    "Spouse (01)" : 25029
+    "Spouse (01)" : 25030
     "Child (19)" : 24999
-    "Caregiver (26)" : 25098
-    "Ex-Spouse (25)" : 24874
+    "Caregiver (26)" : 25092
+    "Ex-Spouse (25)" : 24879
 ```
 
 
@@ -115,4 +125,4 @@ xychart-beta
 
 
 ## Average 270s per Beneficiary
-- Average 270s per Beneficiary: **0.00**
+- Average 270s per Beneficiary: **0.01**

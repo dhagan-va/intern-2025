@@ -36,7 +36,8 @@ class SQLiteDBFunctions(DataAccess):
                 apartment TEXT,
                 city TEXT,
                 state TEXT,
-                zipcode TEXT
+                zipcode TEXT,
+                creation TEXT
             )
         """)
         self.cursor.execute("""
@@ -59,6 +60,7 @@ class SQLiteDBFunctions(DataAccess):
                 city TEXT,
                 state TEXT,
                 zipcode TEXT,
+                creation TEXT,
                 PRIMARY KEY (sponsor_id, beneficiary_id),
                 FOREIGN KEY (sponsor_id) REFERENCES sponsors(sponsor_id)
             )
@@ -104,6 +106,7 @@ class SQLiteDBFunctions(DataAccess):
                 provider_phone TEXT,
                 amount REAL,
                 payer_claim_id TEXT,
+                creation TEXT,
                 FOREIGN KEY (sponsor_id, beneficiary_id)
                     REFERENCES beneficiaries(sponsor_id, beneficiary_id)
             )
@@ -118,8 +121,8 @@ class SQLiteDBFunctions(DataAccess):
                 claim_id, status, date, service_line_id,
                 sponsor_id, beneficiary_id, provider_npi, provider_name,
                 provider_entity_type, provider_address_1, provider_address_2, provider_city, provider_state,
-                provider_zip, provider_phone, amount, payer_claim_id
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                provider_zip, provider_phone, amount, payer_claim_id, creation
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         """, (
             claim.claim_id,
             claim.status,
@@ -137,7 +140,8 @@ class SQLiteDBFunctions(DataAccess):
             claim.provider_zip,
             claim.provider_phone,
             claim.amount,
-            claim.payer_claim_id
+            claim.payer_claim_id,
+            claim.creation
         ))
         if commit:
             self.connect.commit()
@@ -182,8 +186,8 @@ class SQLiteDBFunctions(DataAccess):
                 INSERT OR REPLACE INTO sponsors (
                     sponsor_id, ssn, dob, first_name, middle_name, last_name, gender,
                     phone, insurance_company, insurance_FID, building_number, street,
-                    apartment, city, state, zipcode
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    apartment, city, state, zipcode, creation
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             """, (
             sponsor.sponsor_id,
             sponsor.ssn,
@@ -200,7 +204,8 @@ class SQLiteDBFunctions(DataAccess):
             sponsor.address.apartment,
             sponsor.address.city,
             sponsor.address.state,
-            sponsor.address.zipcode
+            sponsor.address.zipcode,
+            sponsor.creation
         ))
 
         for code, amount in sponsor.deductibles.items():
@@ -220,8 +225,8 @@ class SQLiteDBFunctions(DataAccess):
                     INSERT OR REPLACE INTO beneficiaries (
                         sponsor_id, beneficiary_id, ssn, dob, first_name, middle_name, last_name,
                         gender, phone, insurance_company, insurance_FID, relationship,
-                        building_number, street, apartment, city, state, zipcode
-                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                        building_number, street, apartment, city, state, zipcode, creation
+                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 """, (
                 bene.sponsor_id,
                 bene.beneficiary_id,
@@ -240,7 +245,8 @@ class SQLiteDBFunctions(DataAccess):
                 bene.address.apartment,
                 bene.address.city,
                 bene.address.state,
-                bene.address.zipcode
+                bene.address.zipcode,
+                bene.creation
             ))
 
             for code, amount in bene.deductibles.items():
@@ -268,6 +274,68 @@ class SQLiteDBFunctions(DataAccess):
             self.connect.rollback()
             logger.error(f"No sponsors were saved due to an error: {e}")
             raise e
+
+    def get_beneficiaries_by_creation(self, creation_source, count):
+        logger.info(f"Attempting to fetch {count} beneficiaries with creation source '{creation_source}'")
+        self.cursor.execute("""
+            SELECT *
+            FROM beneficiaries
+            WHERE creation = ?
+            ORDER BY RANDOM()
+            LIMIT ?
+        """, (creation_source, count))
+        bene_rows = self.cursor.fetchall()
+
+        beneficiaries = []
+        for row in bene_rows:
+            sponsor_id = row["sponsor_id"]
+            beneficiary_id = row["beneficiary_id"]
+
+            self.cursor.execute("""
+                SELECT building_number, street, apartment, city, state, zipcode
+                FROM sponsors
+                WHERE sponsor_id = ?
+            """, (sponsor_id,))
+            sponsor_addr_row = self.cursor.fetchone()
+            if not sponsor_addr_row:
+                logger.warning(f"Sponsor address not found for sponsor_id={sponsor_id}, skipping beneficiary.")
+                continue
+            address = Address.from_dict(dict(sponsor_addr_row))
+
+            self.cursor.execute("""
+                SELECT code, amount FROM deductibles
+                WHERE sponsor_id = ? AND  beneficiary_id = ?
+            """, (sponsor_id, beneficiary_id))
+            deductibles = {code: amount for code, amount in self.cursor.fetchall()}
+
+            self.cursor.execute("""
+                SELECT code, count FROM visit_counts
+                WHERE sponsor_id = ? AND beneficiary_id = ?
+            """, (sponsor_id, beneficiary_id))
+            visit_counts = {code: count for code, count in self.cursor.fetchall()}
+
+            bene = Beneficiary(
+                ssn=row["ssn"],
+                dob=date.fromisoformat(row["dob"]),
+                first_name=row["first_name"],
+                last_name=row["last_name"],
+                gender=row["gender"],
+                address=address,
+                phone=row["phone"],
+                insurance_company=row["insurance_company"],
+                insurance_FID=row["insurance_FID"],
+                middle_name=row["middle_name"],
+                sponsor_id=sponsor_id,
+                beneficiary_id=beneficiary_id,
+                relationship=row["relationship"],
+                deductibles=deductibles,
+                visit_counts=visit_counts,
+                creation=row["creation"]
+            )
+            beneficiaries.append(bene)
+
+        logger.info(f"Found {len(beneficiaries)} beneficiaries with creation source '{creation_source}'")
+        return beneficiaries
 
     def get_random_beneficiary(self, count):
         self.cursor.execute("""
@@ -318,7 +386,8 @@ class SQLiteDBFunctions(DataAccess):
                 beneficiary_id=beneficiary_id,
                 relationship=row["relationship"],
                 deductibles=deductibles,
-                visit_counts=visit_counts
+                visit_counts=visit_counts,
+                creation=row["creation"]
             )
             beneficiaries.append(bene)
         return beneficiaries
@@ -327,6 +396,11 @@ class SQLiteDBFunctions(DataAccess):
         self.cursor.execute("SELECT COUNT(*) FROM beneficiaries")
         result = self.cursor.fetchone()
         return result[0] if result else 0
+
+    def get_all_sponsor_ids(self):
+        self.cursor.execute("SELECT sponsor_id from sponsors")
+        rows = self.cursor.fetchall()
+        return [row["sponsor_id"] for row in rows]
 
     def get_all_ssns(self):
         sponsor_ssns = self.cursor.execute("SELECT ssn from sponsors").fetchall()
@@ -374,7 +448,8 @@ class SQLiteDBFunctions(DataAccess):
             address=address,
             deductibles={},
             visit_counts={},
-            beneficiaries=[]
+            beneficiaries=[],
+            creation=row["creation"]
         )
 
     def get_sponsor_field(self, sponsor_id, field):
@@ -429,7 +504,8 @@ class SQLiteDBFunctions(DataAccess):
             relationship=row["relationship"],
             address=address,
             deductibles=deductibles,
-            visit_counts=visit_counts
+            visit_counts=visit_counts,
+            creation=row["creation"]
         )
 
     def get_beneficiary_field(self, sponsor_id, beneficiary_id, field):

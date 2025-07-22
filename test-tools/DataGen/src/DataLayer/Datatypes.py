@@ -41,6 +41,7 @@ class Base:
     phone: str
     insurance_company: str
     insurance_FID: str
+    creation: str
 
 
 @dataclass
@@ -68,7 +69,8 @@ class Beneficiary(Base):
             "relationship": self.relationship,
             "middle_name": self.middle_name,
             "deductibles": self.deductibles,
-            "visit_counts": self.visit_counts
+            "visit_counts": self.visit_counts,
+            "creation": self.creation
         }
 
     @staticmethod
@@ -88,7 +90,8 @@ class Beneficiary(Base):
             beneficiary_id=data["beneficiary_id"],
             relationship=data["relationship"],
             deductibles=data["deductibles"],
-            visit_counts=data["visit_counts"]
+            visit_counts=data["visit_counts"],
+            creation=data["creation"]
         )
 
 
@@ -115,6 +118,7 @@ class Sponsor(Base):
             "middle_name": self.middle_name,
             "deductibles": self.deductibles,
             "visit_counts": self.visit_counts,
+            "creation": self.creation,
             "beneficiaries": [b.to_dict() for b in self.beneficiaries]
         }
 
@@ -134,6 +138,7 @@ class Sponsor(Base):
             sponsor_id=data["sponsor_id"],
             deductibles=data["deductibles"],
             visit_counts=data["visit_counts"],
+            creation=data["creation"],
             beneficiaries=[
                 Beneficiary.from_dict(b) for b in data.get("beneficiaries", [])
             ]
@@ -157,6 +162,7 @@ class ClaimTransaction:
     provider_zip: str
     provider_phone: str
     amount: float
+    creation: str
     provider_address_2: Optional[str] = None
     payer_claim_id: Optional[str] = None
 
@@ -177,6 +183,7 @@ class ClaimTransaction:
             "provider_zip": self.provider_zip,
             "provider_phone": self.provider_phone,
             "amount": self.amount,
+            "creation": self.creation,
             "provider_address_2": self.provider_address_2,
             "payer_claim_id": self.payer_claim_id
         }
@@ -199,6 +206,7 @@ class ClaimTransaction:
             provider_zip=data["provider_zip"],
             provider_phone=data["provider_phone"],
             amount=data["amount"],
+            creation=data["creation"],
             provider_address_2=data["provider_address_2"],
             payer_claim_id=data["payer_claim_id"]
         )

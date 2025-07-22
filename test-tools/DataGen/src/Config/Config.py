@@ -13,6 +13,8 @@ DATE = datetime.now()
 YEAR = DATE.year
 YMD = DATE.strftime("%y%m%d")
 HM = DATE.strftime("%H%M")
+YMDHM = DATE.strftime("%Y-%m-%d.%H%M")
+SSMMM = DATE.strftime("%S%f")[:6]
 FULL_DATE = DATE.strftime("%Y%m%d")
 
 log_config = config.get("logging", {})
@@ -51,9 +53,8 @@ EDI834_PATH = os.path.join(ROOT_PATH, config["paths"]["edi834_path"])
 NPI_CSV_PATH = download_weekly_npi_data(DOWNLOAD_DIRECTORY)
 
 EDI834_FILE_NAME = config["filenames"]["edi834_file_template"].format(year=YEAR, ymd=YMD, hm=HM, full_date=FULL_DATE)
-EDI270_FILE_NAME = config["filenames"]["edi270_file_template"].format(year=YEAR, ymd=YMD, hm=HM, full_date=FULL_DATE)
-EDI277CA_FILE_NAME = config["filenames"]["edi277ca_file_template"].format(year=YEAR, ymd=YMD, hm=HM,
-                                                                          full_date=FULL_DATE)
+EDI270_FILE_NAME = config["filenames"]["edi270_file_template"].format(year=YEAR, ymd=YMD, hm=HM, claim_id="{claim_id}", full_date=FULL_DATE)
+EDI277CA_FILE_NAME = config["filenames"]["edi277ca_file_template"].format(year=YEAR, ymd=YMD, hm=HM,full_date=FULL_DATE)
 EDI837_FILE_NAME = config["filenames"]["edi837_file_template"].format(year=YEAR, ymd=YMD, hm=HM, full_date=FULL_DATE)
 EDI835_FILE_NAME = config["filenames"]["edi835_file_template"].format(year=YEAR, ymd=YMD, hm=HM, full_date=FULL_DATE)
 STATISTICS_MD = os.path.join(ROOT_PATH, config["filenames"]["statistics_md"])
@@ -87,6 +88,8 @@ PAYER_NAME = config["constants"]["payer_name"]
 PAYER_ID = config["constants"]["payer_id"]
 TOGGLE_NEW_LINE = config["constants"]["toggle_new_line"]
 TOTAL_ERROR_RATE = config["constants"]["total_error_rate"]
+
+DATE_TIME_FMT_QUALIFIER = config["constants"]["date_time_fmt_qualifier"]
 
 MAX_BENEFICIARIES = config["constants"]["max_beneficiaries"]
 MIN_BENEFICIARIES = config["constants"]["min_beneficiaries"]

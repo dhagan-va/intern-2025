@@ -1,5 +1,3 @@
-import os
-
 from Config import Config
 from Config.Config import get_local_db_path, FAMILY_DATABASE_DIRECTORY, FAMILY_DATABASE_SQLITE
 from Repository.DatabaseFactory import get_database_backend

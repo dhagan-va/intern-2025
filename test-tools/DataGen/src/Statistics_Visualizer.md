@@ -19,15 +19,15 @@ The 270 file is used to request information about a member's health insurance el
 xychart-beta
     title "Records Generated per Second"
     x-axis ["Claims", "Sponsors/Beneficiaries"]
-    y-axis "Records/Second" 0 --> 5113.909983572282
-    bar [256.67337953111934, 5103.909983572282]
+    y-axis "Records/Second" 0 --> 13.40367597004765
+    bar [3.4036759700476518, 0.0]
 ```
 
 
 ## Transaction Counts
 ```mermaid
 pie title Message type distribution
-    "270" : 500
+    "270" : 0
     "837" : 0
     "277" : 0
     "835" : 0
@@ -35,14 +35,14 @@ pie title Message type distribution
 ```
 
 
-Total Number of Messages Generated: **500**
+Total Number of Messages Generated: **15**
 ## Throughput
 ```mermaid
 xychart-beta
     title "Throughput (Transactions per Second)"
     x-axis ["270", "837", "277", "835", "834"]
-    y-axis "TPS" 0 --> 1578.2870662460568
-    bar [1577.2870662460568, 0.0, 0.0, 0.0, 0.0]
+    y-axis "TPS" 0 --> 1.0
+    bar [0.0, 0.0, 0.0, 0.0, 0.0]
 ```
 
 
@@ -62,7 +62,7 @@ xychart-beta
     title "Error Rate (%)"
     x-axis ["270", "837", "277", "835", "834"]
     y-axis "Percent" 0 --> 5
-    bar [0.0, 0, 0, 0, 0]
+    bar [0, 0, 0, 0, 0]
 ```
 
 
@@ -90,17 +90,17 @@ pie title Family Size Breakdown
 xychart-beta
     title "Beneficiary Code Distribution"
     x-axis ["Spouse (01)", "Child (19)", "Caregiver (26)", "Ex-Spouse (25)"]
-    y-axis "Count" 0 --> 25093
-    bar [25030, 24999, 25092, 24879]
+    y-axis "Count" 0 --> 1
+    bar [0, 0, 0, 0]
 ```
 
 
 ```mermaid
 pie title Beneficiary Relationship Types
-    "Spouse (01)" : 25030
-    "Child (19)" : 24999
-    "Caregiver (26)" : 25092
-    "Ex-Spouse (25)" : 24879
+    "Spouse (01)" : 0
+    "Child (19)" : 0
+    "Caregiver (26)" : 0
+    "Ex-Spouse (25)" : 0
 ```
 
 
@@ -125,4 +125,4 @@ xychart-beta
 
 
 ## Average 270s per Beneficiary
-- Average 270s per Beneficiary: **0.01**
+- Average 270s per Beneficiary: **0.00**

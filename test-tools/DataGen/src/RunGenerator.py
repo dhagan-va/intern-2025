@@ -11,7 +11,7 @@ from Config.Config import logger, number_of_tests_270, get_error_rate, get_local
 from Config.Data_Visualizer import log_data, create_md
 from FileCreation.DataGenerator import SponsorDataGenerator, generate_claim_transactions
 from FileCreation.EDIGenerator import EDI834Generator, EDI270Generator, EDI837PGenerator, EDI277CAGenerator, \
-    EDI835Generator
+    EDI835Generator, EDI999Generator
 from Repository.DatabaseFactory import get_database_backend
 
 load_dotenv()
@@ -25,6 +25,7 @@ status_map = {
     "277": ("837 Created", date.today() - timedelta(days=1)),
     "835": ("277CA Created", date.today() - timedelta(days=8)),
     "834": ("835 Created", date.today() - timedelta(days=8)),
+    "999": ("834 Created", date.today() - timedelta(days=8))
 }
 
 
@@ -79,6 +80,8 @@ def cli_mode(database=db, file_type=None, num=0, error_rate=0, upload_s3=False):
         Run835Generator(database, error_rate)
     elif file_type == "834":
         Run834Generator(database, error_rate)
+    elif file_type == "999":
+        Run999Generator(database, error_rate)
 
 
 def auto_mode():
@@ -116,6 +119,7 @@ def auto_mode():
     Run277CAGenerator(database=db, error_rate=error_rate)
     Run835Generator(database=db, error_rate=error_rate)
     Run834Generator(database=db, error_rate=error_rate)
+    Run999Generator(database=db,error_rate=error_rate)
 
     end_time = datetime.now() - now
     logger.info(f"It took {end_time} to generate all claims")
@@ -219,6 +223,24 @@ def Run834Generator(database=db, error_rate=None):
     log_data["messages"]["time_834"] = end_time.total_seconds()
     logger.info(f"It took {end_time} to generate {edi834.get_num_messages()} transactions for the 834 file")
 
+def Run999Generator(database=db, error_rate=None):
+    now = datetime.now()
+    error_rate = get_error_rate(error_rate)
+    log_data["errors"]["error_rate_999"] = error_rate
+
+    edi999 = EDI999Generator(transaction_funcs=database, error_rate=error_rate)
+    log_data["messages"]["count_999"] = edi999.get_num_messages()
+    logger.info("Generating EDI file from stored data")
+    edi_out = edi999.combine_segments()
+    logger.info("EDI file generation complete")
+
+    with open(Config.get_edi_path(Config.EDI999_PATH, Config.EDI999_FILE_NAME), 'w') as f:
+        f.writelines(edi_out)
+
+    end_time = datetime.now() - now
+    log_data["messages"]["time_999"] = end_time.total_seconds()
+    logger.info(f"It took {end_time} to generate {edi999.get_num_messages()} transactions for the 999 file")
+
 
 def main():
     start = datetime.now()
@@ -245,8 +267,8 @@ def main():
 
     cli_parser = subparsers.add_parser("cli", help="Manually generate a specific EDI file.")
     cli_parser.add_argument(
-        "file_type", type=str, choices=["270", "837", "277", "835", "834"],
-        help="EDI file type to generate. Choices: 270, 837, 277, 835, 834"
+        "file_type", type=str, choices=["270", "837", "277", "835", "834", "999"],
+        help="EDI file type to generate. Choices: 270, 837, 277, 835, 834, 999"
     )
     cli_parser.add_argument(
         "-n", "--num", type=int, required=True,

@@ -50,13 +50,15 @@ EDI837_PATH = os.path.join(ROOT_PATH, config["paths"]["edi837_path"])
 EDI277CA_PATH = os.path.join(ROOT_PATH, config["paths"]["edi277ca_path"])
 EDI835_PATH = os.path.join(ROOT_PATH, config["paths"]["edi835_path"])
 EDI834_PATH = os.path.join(ROOT_PATH, config["paths"]["edi834_path"])
+EDI999_PATH = os.path.join(ROOT_PATH, config["paths"]["edi999_path"])
 NPI_CSV_PATH = download_weekly_npi_data(DOWNLOAD_DIRECTORY)
 
-EDI834_FILE_NAME = config["filenames"]["edi834_file_template"].format(year=YEAR, ymd=YMD, hm=HM, full_date=FULL_DATE)
 EDI270_FILE_NAME = config["filenames"]["edi270_file_template"].format(year=YEAR, ymd=YMD, hm=HM, claim_id="{claim_id}", full_date=FULL_DATE)
 EDI277CA_FILE_NAME = config["filenames"]["edi277ca_file_template"].format(year=YEAR, ymd=YMD, hm=HM,full_date=FULL_DATE)
 EDI837_FILE_NAME = config["filenames"]["edi837_file_template"].format(year=YEAR, ymd=YMD, hm=HM, full_date=FULL_DATE)
 EDI835_FILE_NAME = config["filenames"]["edi835_file_template"].format(year=YEAR, ymd=YMD, hm=HM, full_date=FULL_DATE)
+EDI834_FILE_NAME = config["filenames"]["edi834_file_template"].format(year=YEAR, ymd=YMD, hm=HM, full_date=FULL_DATE)
+EDI999_FILE_NAME = config["filenames"]["edi999_file_template"].format(year=YEAR, ymd=YMD, hm=HM, full_date=FULL_DATE)
 STATISTICS_MD = os.path.join(ROOT_PATH, config["filenames"]["statistics_md"])
 
 

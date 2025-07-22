@@ -439,3 +439,53 @@ class EDI834Generator:
         logger.info(f"Generated total of {self.transaction_control_number} transactions")
         logger.info(f"There were {self.error_ctrl.error_count} errors")
         return all_segments
+
+class EDI999Generator:
+    def __init__(self, transaction_funcs, error_rate=None):
+        self.transaction_funcs = transaction_funcs
+        week_and_day_before = date.today() - timedelta(days=8)
+        self.claims = self.transaction_funcs.get_claim_transactions(
+            status="834 Created",
+            date=week_and_day_before
+        )
+        self.num_messages = len(self.claims)
+        self.error_ctrl = ErrorInjector(self.num_messages, error_rate)
+        logger.debug(f"Initialized EDI999Generator with {self.num_messages} claims")
+
+    def get_num_messages(self):
+        return self.num_messages
+
+    def create_transaction(self, num):
+        if num - 1 >= len(self.claims) or num <= 0:
+            logger.error(f"Index out of range for claim {num}")
+            return None
+
+        self.error_ctrl.reset_error_inserted()
+        claim = self.claims[num - 1]
+
+        # L2000 included in error
+        # AK2 segment included if error
+        # add claim datatype that takes in error inserted
+        segments = [Seg.ST("999", num).to_edi(),
+                    Seg.AK1("837", num).to_edi(),
+                    Seg.AK9("A", "1", "1").to_edi(),
+                    ]
+        segments.extend(Seg.SE(len(segments) + 1, num).to_edi())
+
+        if self.error_ctrl.error_inserted:
+            log_data["errors"]["error_ct_999"] += 1
+
+        return segments
+
+    def combine_segments(self):
+        all_segments = []
+        for i in range(1, self.num_messages + 1):
+            all_segments += [Seg.ISA().to_edi(),
+                             Seg.GS("FA").to_edi()
+                             ]
+            all_segments.extend(self.create_transaction(i))
+            all_segments += [Seg.GE(1).to_edi(),
+                             Seg.IEA().to_edi()
+                             ]
+
+        return all_segments

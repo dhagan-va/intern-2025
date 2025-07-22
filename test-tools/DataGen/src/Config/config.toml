@@ -19,6 +19,7 @@ edi837_path = "Output/EDI837_Output"
 edi277ca_path = "Output/EDI277CA_Output"
 edi835_path = "Output/EDI835_Output"
 edi834_path = "Output/EDI834_Output"
+edi999_path = "Output/EDI999_Output"
 
 [filenames]
 edi270_file_template = "270.VFMP.{year}.{ymd}.{hm}.{claim_id}.{full_date}1.edi"
@@ -26,6 +27,7 @@ edi277ca_file_template = "277CA.VFMP.{year}.{ymd}.{hm}.{full_date}1.edi"
 edi837_file_template = "837.VFMP.{year}.{ymd}.{hm}.{full_date}1.edi"
 edi835_file_template = "835.VFMP.{year}.{ymd}.{hm}.{full_date}1.edi"
 edi834_file_template = "834.VFMP.{year}.{ymd}.{hm}.{full_date}1.edi"
+edi999_file_template = "999.VFMP.{year}.{ymd}.{hm}.{full_date}1.edi"
 statistics_md = "Statistics_Visualizer.md"
 
 [constants]

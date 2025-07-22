@@ -466,9 +466,11 @@ class EDI999Generator:
         # L2000 included in error
         # AK2 segment included if error
         # add claim datatype that takes in error inserted
+        # HC corresponds to 005010X222A1 (837)
+        # BE corresponds to 005010X220A1 (834)
         segments = [Seg.ST("999", num).to_edi(),
-                    Seg.AK1("837", num).to_edi(),
-                    Seg.AK9("A", "1", "1").to_edi(),
+                    Seg.AK1("BE", num).to_edi(),
+                    Seg.AK9("A", "1", "1", "1").to_edi(),
                     ]
         segments.extend(Seg.SE(len(segments) + 1, num).to_edi())
 

@@ -565,6 +565,7 @@ class CLP:
         return (f"CLP*{self.claim_id}*{self.claim_status}*{self.total_amt}*{self.paid_amt}**{self.filing_code}*"
                 f"{self.ctrl_num}~\n")
 
+
 class AK1:
     def __init__(self, functional_id, group_ctrl_num):
         self.group_ctrl_num = group_ctrl_num
@@ -572,11 +573,11 @@ class AK1:
 
     def to_edi(self):
         logger.debug("Generating AK1 segment")
-        segment = f"AK1*{self.functional_id}*{self.group_ctrl_num}"
+        segment = f"AK1*{self.functional_id}*{self.group_ctrl_num:06}"
 
         match self.functional_id:
             case "HC":
-                segment += "*005010X222A2"
+                segment += "*005010X222A1"
             case "BE":
                 segment += "*005010X220A1"
             case _:
@@ -584,12 +585,14 @@ class AK1:
 
         return segment + "~\n"
 
+
 class AK9:
-    def __init__(self, functional_code, number_sets, number_sets_received):
+    def __init__(self, functional_code, number_sets, number_received, number_accepted):
         self.functional_code = functional_code
         self.number_sets = number_sets
-        self.number_sets_received = number_sets_received
+        self.number_received = number_received
+        self.number_accepted = number_accepted
 
     def to_edi(self):
         logger.debug("Generating AK9 segment")
-        return f"AK9*{self.functional_code}*{self.number_sets}*{self.number_sets_received}~\n"
+        return f"AK9*{self.functional_code}*{self.number_sets}*{self.number_received}*{self.number_accepted}~\n"

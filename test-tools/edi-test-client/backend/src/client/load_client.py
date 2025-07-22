@@ -1,26 +1,26 @@
-from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime
 import threading
 import logging
-import time
 from pathlib import Path
 import sys
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 from config import Setting
-from client import reqs
-from client.stats import LiveStats
-from client import results
+from client.network import send_edi_request
+from client.data import CsvSink, MetadataManager
+from client.processing import ResponseProcessor
+from client.core import RPSScheduler
+from client.statistics import StatsCollector
+from concurrent.futures import ThreadPoolExecutor
 
 
 class LoadClient:
     """
     Load testing client for EDI transactions (270, 276, 278).
-    
-    Manages concurrent HTTP requests with configurable RPS and thread pools.
-    Supports runtime adjustment of request rates and transaction types.
+
+    Now uses composition with specialized components for better separation of concerns.
     """
-    
+
     def __init__(self, cfg: Setting):
         """Initialize load client with configuration settings."""
         # EDI transaction endpoints
@@ -29,24 +29,43 @@ class LoadClient:
             276: "http://127.0.0.1:5000/276/",  # Healthcare Claim Status Request
             278: "http://127.0.0.1:5000/278/",  # Healthcare Services Review
         }
-        
+
         self.transaction = cfg.transaction
-        self._rps = cfg.rps
-        self._rps_lock = threading.Lock()
         self.threads = cfg.threads
+        self._configured_rps = cfg.rps
         self._trans_lock = threading.Lock()
 
         # Runtime state
         self._running = False
         self._pool = None
-        self._sched_thread = None
-        self._stop_event = threading.Event()
 
-        # Data collection
-        self._sink = results.CsvSink("test.csv")
-        self._stats = LiveStats()
+        # Initialize logging first
         self._log = logging.getLogger("edi_load_client")
         logging.basicConfig(filename="test.log", level=logging.INFO)
+
+        self._sink = CsvSink("test.csv")
+        self._stats_collector = StatsCollector()
+        self._stats = self._stats_collector.live_stats
+
+        # Response processing component
+        self._response_processor = ResponseProcessor(
+            self._stats_collector,
+            self._sink,
+            self._log,
+        )
+
+        self._scheduler = None
+        self._metadata_manager = None
+
+    def set_metadata_manager(self, metadata_manager: MetadataManager):
+        """Set metadata manager for header-based error information."""
+        self._metadata_manager = metadata_manager
+        if metadata_manager:
+            summary = metadata_manager.get_error_summary()
+            self._log.info(
+                f"Metadata loaded: {summary.get('total_transactions', 0)} transactions, "
+                f"{summary.get('total_errors', 0)} errors ({summary.get('error_rate', 0):.1%} rate)"
+            )
 
     def start(self):
         """Start the load testing client."""
@@ -54,13 +73,26 @@ class LoadClient:
             return
 
         self._running = True
-        self._stop_event.clear()
 
-        # Initialize components
-        self._sched_thread = threading.Thread(target=self._scheduler, daemon=True)
+        # Initialize thread pool
         self._pool = ThreadPoolExecutor(max_workers=self.threads)
-        self._sched_thread.start()
-        
+
+        def make_request():
+            return send_edi_request(
+                self.transaction,
+                self.endpoints[self.transaction],
+                self._metadata_manager,
+                self._stats_collector,
+            )
+
+        def handle_response(future):
+            self._response_processor.process_response(future, self.rps)
+
+        self._scheduler = RPSScheduler(self._pool, make_request, handle_response)
+        # Set the configured RPS value on the scheduler
+        self._scheduler.update_rps(self._configured_rps)
+        self._scheduler.start_scheduling()
+
         curr_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         self._log.info(
             "Client started at %s → %s, %.1f rps, %d threads.",
@@ -74,19 +106,16 @@ class LoadClient:
         """Stop the client and write final results."""
         if not self._running:
             return
-            
-        self._stop_event.set()
+
         self._running = False
         self._log.info("Stopping client")
 
-        # Wait for threads to complete
-        if self._sched_thread:
-            self._sched_thread.join()
+        if self._scheduler:
+            self._scheduler.stop_scheduling()
 
         if self._pool:
             self._pool.shutdown(wait=True)
 
-        # Log final statistics
         curr_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         self._log.info("Client stopped at %s", curr_time)
         result = self._stats.snapshot()
@@ -95,54 +124,20 @@ class LoadClient:
             "%d requests sent, %.2f ms avg latency, %d 200 OK",
             result["count"],
             result["avg_latency"],
-            result["codes"][200],
+            result["codes"].get(200, 0),
         )
-
-    def _scheduler(self):
-        """Background scheduler that maintains target RPS."""
-        next_run = time.perf_counter()
-        while not self._stop_event.is_set():
-            interval = 1.0 / self.rps
-            
-            # Submit request to thread pool
-            fut = self._pool.submit(
-                reqs.send_edi_request,
-                self.transaction,
-                self.endpoints[self.transaction],
-            )
-            fut.add_done_callback(self._handle_response)
-            
-            # Maintain timing
-            next_run += interval
-            time.sleep(max(0, next_run - time.perf_counter()))
-        return
-
-    def _handle_response(self, future):
-        """Process completed HTTP requests and update statistics."""
-        curr_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        try:
-            status, elapsed, body = future.result()
-            
-            self._stats.update(elapsed, status)
-            self._sink.append(curr_time, elapsed, status, self.rps, body)
-            
-            if status == 200:
-                self._log.info("200 OK in %.3f ms", elapsed)
-            else:
-                self._log.error("ERR %d in %.3f ms", status, elapsed)
-        except Exception as e:
-            self._log.error("Error handling response: %s", e)
 
     @property
     def rps(self) -> float:
         """Get current requests per second rate (thread-safe)."""
-        with self._rps_lock:
-            return self._rps
+        if self._scheduler:
+            return self._scheduler.rps
+        return 1.0
 
     def update_rps(self, new_rps: float):
         """Update request rate during runtime."""
-        with self._rps_lock:
-            self._rps = new_rps
+        if self._scheduler:
+            self._scheduler.update_rps(new_rps)
 
         curr_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         self._log.info("RPS updated at %s to %.1f", curr_time, new_rps)

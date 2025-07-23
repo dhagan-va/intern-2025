@@ -30,6 +30,7 @@ graph TD
 
 ## File Structure
 
+```
 edi-x12-generator/
 ├── Config/
 │ ├── Config.py (loads configuration)
@@ -64,6 +65,7 @@ edi-x12-generator/
 ├── RunGenerator.py
 ├── requirements.txt
 ├── README.md
+```
 
 ---
 

@@ -1,3 +1,4 @@
 rps = 2
 threads = 2
 transaction = 270
+max_concurrent_connections = 150

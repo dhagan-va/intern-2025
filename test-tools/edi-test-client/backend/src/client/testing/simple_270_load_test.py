@@ -141,14 +141,15 @@ def create_metadata_for_client(payload_data):
     }
 
 
-def run_simple_270_load_test(num_transactions, rps=10.0):
-    """Run a simple EDI 270 load test using clean sample transactions."""
+def run_simple_270_load_test(num_transactions, rps=10.0, max_connections=150):
+    """Run a simple EDI 270 load test using clean sample transactions with connection throttling."""
     calculated_duration = (num_transactions / rps) + 5.0
     max_duration = calculated_duration * 2.0
 
     print(f"=== Simple EDI 270 Load Test ===")
     print(f"Generating {num_transactions} clean EDI 270 transactions...")
     print(f"Target: {num_transactions} transactions at {rps} RPS")
+    print(f"Connection limit: {max_connections} concurrent connections")
     print(f"Calculated duration: {calculated_duration:.1f}s (max: {max_duration:.1f}s)")
 
     try:
@@ -166,6 +167,7 @@ def run_simple_270_load_test(num_transactions, rps=10.0):
         cfg.rps = rps
         cfg.transaction = 270
         cfg.threads = max(10, int(rps * 0.1) + 5)
+        cfg.max_concurrent_connections = max_connections
 
         client = LoadClient(cfg)
 
@@ -186,6 +188,7 @@ def run_simple_270_load_test(num_transactions, rps=10.0):
         print(f"  - RPS: {rps}")
         print(f"  - Target transactions: {num_transactions}")
         print(f"  - Threads: {cfg.threads}")
+        print(f"  - Max concurrent connections: {max_connections}")
 
     except Exception as e:
         return {"error": f"Failed to configure load client: {str(e)}"}
@@ -198,6 +201,7 @@ def run_simple_270_load_test(num_transactions, rps=10.0):
         print("Monitoring progress...")
         check_interval = 0.5
         last_count = 0
+        last_throttle_count = 0
 
         while True:
             current_time = time.time()
@@ -205,6 +209,10 @@ def run_simple_270_load_test(num_transactions, rps=10.0):
 
             current_stats = client._stats.snapshot()
             current_count = current_stats.get("count", 0)
+            
+            # Get throttling statistics
+            throttle_stats = client.get_throttle_stats()
+            current_throttled = throttle_stats.get("throttled_requests", 0)
 
             if current_count >= num_transactions:
                 print(f"✓ Target reached: {current_count}/{num_transactions} transactions sent")
@@ -214,11 +222,19 @@ def run_simple_270_load_test(num_transactions, rps=10.0):
                 print(f"⚠ Maximum duration reached ({max_duration:.1f}s), stopping at {current_count} transactions")
                 break
 
-            if current_count != last_count:
+            if current_count != last_count or current_throttled != last_throttle_count:
                 progress_pct = (current_count / num_transactions) * 100
                 current_rps = current_count / elapsed if elapsed > 0 else 0
-                print(f"  Progress: {current_count}/{num_transactions} ({progress_pct:.1f}%) - {current_rps:.1f} RPS actual")
+                concurrent_connections = current_stats.get("current_connections", 0)
+                
+                throttle_info = ""
+                if current_throttled > 0:
+                    throttle_info = f" ({current_throttled} throttled)"
+                
+                print(f"  Progress: {current_count}/{num_transactions} ({progress_pct:.1f}%) - "
+                      f"{current_rps:.1f} RPS actual - {concurrent_connections}/{max_connections} connections{throttle_info}")
                 last_count = current_count
+                last_throttle_count = current_throttled
 
             time.sleep(check_interval)
 
@@ -240,17 +256,20 @@ def run_simple_270_load_test(num_transactions, rps=10.0):
 
     try:
         final_stats = client._stats.snapshot()
+        throttle_stats = client.get_throttle_stats()
 
         total_requests = final_stats.get("count", 0)
         edi_success_responses = final_stats.get("edi_success_count", 0)
         edi_error_responses = final_stats.get("edi_error_count", 0)
         http_error_responses = final_stats.get("http_error_count", 0)
         edi_errors_breakdown = final_stats.get("edi_errors", {})
+        throttled_requests = throttle_stats.get("throttled_requests", 0)
 
         avg_latency = final_stats.get("avg_latency", 0)
         actual_rps = total_requests / actual_duration if actual_duration > 0 else 0
         edi_success_rate = (edi_success_responses / max(1, total_requests)) * 100
         completion_accuracy = (total_requests / num_transactions) * 100 if num_transactions > 0 else 0
+        max_concurrent_reached = final_stats.get("max_concurrent_connections", 0)
 
         print(f"\n=== Test Results ===")
         print(f"  Target transactions: {num_transactions}")
@@ -263,6 +282,8 @@ def run_simple_270_load_test(num_transactions, rps=10.0):
         print(f"  Average latency: {avg_latency:.2f}ms")
         print(f"  Target RPS: {rps}, Actual RPS: {actual_rps:.1f}")
         print(f"  Duration: {actual_duration:.1f}s")
+        print(f"  Connection throttling: {throttled_requests} requests throttled")
+        print(f"  Max concurrent connections: {max_concurrent_reached}/{max_connections}")
 
         return {
             "payload_data": {
@@ -285,7 +306,10 @@ def run_simple_270_load_test(num_transactions, rps=10.0):
                 "avg_latency_ms": avg_latency,
                 "target_rps": rps,
                 "actual_rps": actual_rps,
-                "duration_seconds": actual_duration
+                "duration_seconds": actual_duration,
+                "throttled_requests": throttled_requests,
+                "max_concurrent_connections_used": max_concurrent_reached,
+                "max_concurrent_connections_limit": max_connections
             },
             "summary": {
                 "status": "completed",
@@ -293,7 +317,8 @@ def run_simple_270_load_test(num_transactions, rps=10.0):
                 "requests_sent": total_requests,
                 "edi_success_rate": edi_success_rate,
                 "performance": f"{actual_rps:.1f} RPS avg",
-                "completion": f"{total_requests}/{num_transactions} transactions sent"
+                "completion": f"{total_requests}/{num_transactions} transactions sent",
+                "throttling": f"{throttled_requests} requests throttled" if throttled_requests > 0 else "No throttling"
             }
         }
 
@@ -314,6 +339,11 @@ if __name__ == "__main__":
     parser.add_argument(
         "--rps", "-r", type=float, default=5.0,
         help="Requests per second rate (default: 5.0)"
+    )
+
+    parser.add_argument(
+        "--max-connections", "-c", type=int, default=150,
+        help="Maximum concurrent connections (default: 150)"
     )
 
     parser.add_argument(
@@ -341,16 +371,23 @@ if __name__ == "__main__":
         print("Error: RPS must be positive")
         sys.exit(1)
 
+    if args.max_connections <= 0:
+        print("Error: Max connections must be positive")
+        sys.exit(1)
+
     if args.preset:
         if args.preset == "quick":
             args.transactions = 50
             args.rps = 10.0
+            args.max_connections = 100
         elif args.preset == "stress":
             args.transactions = 1000
             args.rps = 50.0
+            args.max_connections = 200
         elif args.preset == "minimal":
             args.transactions = 10
             args.rps = 5.0
+            args.max_connections = 50
 
     print("=== Simple EDI 270 Load Testing ===\n")
     
@@ -361,11 +398,13 @@ if __name__ == "__main__":
     
     print(f"  Transactions: {args.transactions}")
     print(f"  RPS: {args.rps}")
+    print(f"  Max connections: {args.max_connections}")
     print()
 
     result = run_simple_270_load_test(
         num_transactions=args.transactions,
-        rps=args.rps
+        rps=args.rps,
+        max_connections=args.max_connections
     )
 
     if "error" in result:
@@ -377,6 +416,7 @@ if __name__ == "__main__":
         print(f"  Sent: {result['summary']['requests_sent']} requests")
         print(f"  EDI Success rate: {result['summary']['edi_success_rate']:.1f}%")
         print(f"  Performance: {result['summary']['performance']}")
+        print(f"  Throttling: {result['summary']['throttling']}")
 
         if args.verbose and result['payload_data']['transactions']:
             print(f"\nSample Transactions:")

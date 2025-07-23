@@ -109,6 +109,10 @@ class StatsCollector:
             "total_edi_transactions": edi_stats["total_transactions"],
             "edi_success_rate": edi_stats["success_rate"],
             "edi_error_rate": edi_stats["error_rate"],
+            "edi_success_count": edi_stats.get("success_count", 0),
+            "edi_error_count": edi_stats.get("error_count", 0),
+            "http_error_count": edi_stats.get("http_error_count", 0),
+            "edi_errors": edi_stats.get("error_breakdown", {}),
         }
 
 

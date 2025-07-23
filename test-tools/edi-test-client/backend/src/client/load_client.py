@@ -33,6 +33,7 @@ class LoadClient:
         self.transaction = cfg.transaction
         self.threads = cfg.threads
         self._configured_rps = cfg.rps
+        self._max_concurrent_connections = getattr(cfg, 'max_concurrent_connections', 150)
         self._trans_lock = threading.Lock()
 
         # Runtime state
@@ -88,18 +89,26 @@ class LoadClient:
         def handle_response(future):
             self._response_processor.process_response(future, self.rps)
 
-        self._scheduler = RPSScheduler(self._pool, make_request, handle_response)
+        # Create scheduler with connection throttling
+        self._scheduler = RPSScheduler(
+            self._pool, 
+            make_request, 
+            handle_response,
+            max_concurrent_connections=self._max_concurrent_connections,
+            stats_collector=self._stats_collector
+        )
         # Set the configured RPS value on the scheduler
         self._scheduler.update_rps(self._configured_rps)
         self._scheduler.start_scheduling()
 
         curr_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         self._log.info(
-            "Client started at %s → %s, %.1f rps, %d threads.",
+            "Client started at %s → %s, %.1f rps, %d threads, max %d concurrent connections.",
             curr_time,
             self.endpoints[self.transaction],
             self.rps,
             self.threads,
+            self._max_concurrent_connections,
         )
 
     def stop(self):
@@ -127,13 +136,6 @@ class LoadClient:
             result["codes"].get(200, 0),
         )
 
-    @property
-    def rps(self) -> float:
-        """Get current requests per second rate (thread-safe)."""
-        if self._scheduler:
-            return self._scheduler.rps
-        return 1.0
-
     def update_rps(self, new_rps: float):
         """Update request rate during runtime."""
         if self._scheduler:
@@ -148,3 +150,33 @@ class LoadClient:
             self.transaction = new_transaction
         curr_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         self._log.info("Transaction updated at %s to %d", curr_time, new_transaction)
+
+    def update_max_connections(self, max_connections: int):
+        """Update maximum concurrent connections limit during runtime."""
+        self._max_concurrent_connections = max_connections
+        if self._scheduler:
+            self._scheduler.update_max_connections(max_connections)
+        
+        curr_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        self._log.info("Max concurrent connections updated at %s to %d", curr_time, max_connections)
+
+    def get_throttle_stats(self) -> dict:
+        """Get connection throttling statistics."""
+        if self._scheduler:
+            return self._scheduler.get_throttle_stats()
+        return {
+            "throttled_requests": 0,
+            "max_concurrent_connections": self._max_concurrent_connections,
+        }
+
+    @property
+    def rps(self) -> float:
+        """Get current requests per second rate (thread-safe)."""
+        if self._scheduler:
+            return self._scheduler.rps
+        return 1.0
+
+    @property
+    def max_concurrent_connections(self) -> int:
+        """Get current maximum concurrent connections limit."""
+        return self._max_concurrent_connections

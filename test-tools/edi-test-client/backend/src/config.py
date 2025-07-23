@@ -14,11 +14,15 @@ class Setting:
     rps: float
     threads: int
     transaction: int
+    max_concurrent_connections: int = 150  # Default connection limit
 
 
 def load_settings():
     with open(DEFAULT_CONF, "rb") as f:
         data = tomllib.load(f)
         return Setting(
-            data["rps"], data["threads"], data["transaction"]
+            data["rps"], 
+            data["threads"], 
+            data["transaction"],
+            data.get("max_concurrent_connections", 150)
         )

@@ -26,6 +26,47 @@ graph TD
     class EDIGen,S3Upload,Markdown edi
 ```
 
+---
+
+## File Structure
+
+edi-x12-generator/
+├── Config/
+│ ├── Config.py (loads configuration)
+│ ├── config.toml (configuration file)
+│ ├── Data_Visualizer.py (creates graphs for Statistics_Visualizer.md)
+├── DataLayer/
+│ ├── Datatypes.py (Custom data types for database)
+│ ├── Interfaces.py (Interface definitions for data layer)
+├── Downloads/
+│ ├── import_270.csv (Input you CSV file here for specific users)
+│ ├── npidata_pfile_*.csv (NPI csv file extracted from zip)
+│ ├── NPPES_Data_Dissemination_*.zip (NPI data zip file downloaded from NPPES)
+├── FileCreation/
+│ ├── DataGenerator.py (Generates random or inputted data into the database)
+│ ├── EDIGenerator.py (Generates EDI files from transactions)
+│ ├── EDISegments.py (Defines EDI segments and their structure)
+│ ├── ErrorInjector.py (Handles error injection into EDI files)
+├── Output/
+│ ├── EDI270_Output/ (Generated 270 directory)
+│ │ ├── YYYY-MM-DD.HHMM/ (Generated 270 files)
+│ │ ├── ... 
+│ ├── EDI837_Output/ (Generated 837 files)
+├── Repository/
+│ ├── DatabaseFactory.py (Abstract factory for database connections)
+│ ├── JSON_Database_Functions.py (JSONL database functions)
+│ ├── SQLite_Database_Functions.py (SQLite database functions)
+│ ├── Mongo_Database_Functions.py (Mongo database functions - not implemented)
+│ ├── NPI_Functions.py (Functions for NPI data handling - retrieves from NPPES)
+├── UnitTests/
+│ ├── Test_EDIFiles.py (Unit tests for EDI file generation)
+│ ├── UnitTestSuite.py (Main test suite for running all tests)
+├── RunGenerator.py
+├── requirements.txt
+├── README.md
+
+---
+
 ## Database ERD
 
 ![ER Diagram](./Readme_Assets/Database-Relationships.png)

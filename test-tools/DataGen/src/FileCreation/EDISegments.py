@@ -59,7 +59,6 @@ class GS(NewLineToggle):
 
     def to_edi(self):
         logger.debug("Generating GS segment")
-        nl = "~\n" if self.nl_toggle else "~"
         segment = f"GS*{self.functional_id}*{self.sender}*{self.receiver}*{self.date}*{self.time}*61*X"
         match self.functional_id:
             case "HS":

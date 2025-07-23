@@ -31,6 +31,8 @@ edi999_file_template = "999.VFMP.{year}.{ymd}.{hm}.{full_date}1.edi"
 statistics_md = "Statistics_Visualizer.md"
 
 [constants]
+toggle_new_line = false
+total_error_rate = 0.005
 sender_id = "83-1002022"
 receiver_id = "841439824"
 sponsor_name = "OCC PAYER EDI"
@@ -38,8 +40,6 @@ sponsor_id = "841469824"
 payer_name = "CLAIMS XM"
 payer_id = "831002042"
 date_time_fmt_qualifier = "D8"
-toggle_new_line = false
-total_error_rate = 0.005
 max_beneficiaries = 4
 min_beneficiaries = 1
 max_deductibles = 100000.0

@@ -127,29 +127,34 @@ python RunGenerator.py cli 835 -n 500 -e 0.05
 
 Edit `Config/config.toml` to adjust:
 
-| Section         | Field                   | Description                      |
-|-----------------|-------------------------|----------------------------------|
-| `[seed]`        | `random_seed`           | Alter the seed                   |
-| `[aws]`         | `upload_to_s3`          | Enable/disable S3 upload         |
-| `[database]`    | `backend`               | Choose `sqlite` or `jsonl`       |
-| `[constants]`   | `sender_id`, `payer_id` | Required identifiers             |
-| `[paths]`       | `edi*_path`             | Output folders for EDI files     |
-| `[test_size.*]` | `avg`, `min`, `max`     | Bell curve message distributions |
+| Section         | Field                   | Description                       |
+|-----------------|-------------------------|-----------------------------------|
+| `[seed]`        | `random_seed`           | Alter the random seed             |
+|                 | `faker_seed`            | Alter the faker seed              |
+| `[aws]`         | `upload_to_s3`          | Enable/disable S3 upload          |
+|                 | `bucket_name`           | S3 bucket name                    |
+| `[database]`    | `backend`               | Choose `sqlite` or `jsonl`        |
+| `[paths]`       | `edi*_path`             | Output folders for EDI files      |
+| `[filenames]`   | `edi*_file_template`    | File names for EDI files          |
+| `[constants]`   | `sender_id`, `payer_id` | Required identifiers              |
+|                 | `toggle_new_line`       | Toggle new line `true` or `false` |
+|                 | `total_error_rate`      | Adjust error rate                 |
+| `[test_size.*]` | `avg`, `min`, `max`     | Bell curve message distributions  |
 
 ---
 
 ## Output Structure
 
-| File Type | Directory                | Description                             |
-|-----------|--------------------------|-----------------------------------------|
-| 270       | `Output/EDI270_Output/`  | Eligibility Inquiry                     |
-| 837P      | `Output/EDI837_Output/`  | Professional Claims                     |
-| 277CA     | `Output/EDI277CA_Output/`| Claim Acknowledgment                    |
-| 835       | `Output/EDI835_Output/`  | Remittance Advice                       |
-| 834       | `Output/EDI834_Output/`  | Enrollment Updates                      |
-| 999       | `Output/EDI999_Output/`  | Syntax Acknowledgment (coming)          |
-| Logs      | `Output/Logs/`           | Execution logging                       |
-| Markdown  | `Statistics_Visualizer.md`| Throughput, errors, relationships, etc. |
+| File Type | Directory                  | Description                             |
+|-----------|----------------------------|-----------------------------------------|
+| 270       | `Output/EDI270_Output/`    | Eligibility Inquiry                     |
+| 837P      | `Output/EDI837_Output/`    | Professional Claims                     |
+| 277CA     | `Output/EDI277CA_Output/`  | Claim Acknowledgment                    |
+| 835       | `Output/EDI835_Output/`    | Remittance Advice                       |
+| 834       | `Output/EDI834_Output/`    | Enrollment Updates                      |
+| 999       | `Output/EDI999_Output/`    | Syntax Acknowledgment                   |
+| Logs      | `Output/Logs/`             | Execution logging                       |
+| Markdown  | `Statistics_Visualizer.md` | Throughput, errors, relationships, etc. |
 
 ---
 

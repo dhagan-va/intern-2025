@@ -242,3 +242,5 @@ INFO:Config.Config:It took 0:00:00.140000 to generate 500 transactions for the 8
 INFO:Config.Config:It took 0:00:23.599000 to generate the output
 ```
 
+## Items I wanted to implement but did not have time for:
+

@@ -438,6 +438,9 @@ class EDI834Generator:
 
         logger.info(f"Generated total of {self.transaction_control_number} transactions")
         logger.info(f"There were {self.error_ctrl.error_count} errors")
+
+        claim_ids = [claim.claim_id for claim in self.claims]
+        self.transaction_funcs.update_claims_status(claim_ids, "834 Created")
         return all_segments
 
 class EDI999Generator:

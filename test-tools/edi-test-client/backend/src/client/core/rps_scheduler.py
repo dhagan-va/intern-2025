@@ -55,6 +55,7 @@ class RPSScheduler:
 
     def _scheduler_loop(self) -> None:
         """Background scheduler that maintains target RPS."""
+        #TODO cap concurrent connections 150, track sesssions still open, 278 placeholder
         last_time = time.perf_counter()
         requests_sent = 0
 
@@ -79,5 +80,3 @@ class RPSScheduler:
             if elapsed >= 1.0:
                 last_time = current_time
                 requests_sent = 0
-
-            time.sleep(0.001)

@@ -8,8 +8,8 @@ from Config import Config
 from Config.Config import logger
 
 
-class EDISegment:
-    def __init__(self, nl_toggle=True):
+class NewLineToggle:
+    def __init__(self, nl_toggle):
         self.nl_toggle = nl_toggle
 
     def get_nl(self):
@@ -17,8 +17,8 @@ class EDISegment:
 
 
 # File Header
-class ISA(EDISegment):
-    def __init__(self, sender=Config.SENDER_ID, receiver=Config.RECEIVER_ID, nl_toggle=True):
+class ISA(NewLineToggle):
+    def __init__(self, sender=Config.SENDER_ID, receiver=Config.RECEIVER_ID, nl_toggle=Config.TOGGLE_NEW_LINE):
         super().__init__(nl_toggle)
         now = datetime.now()
         self.sender = sender
@@ -27,14 +27,12 @@ class ISA(EDISegment):
         self.interCtrlNumber = now.strftime("%Y%m%d1")
         self.date = now.strftime("%y%m%d")
         self.time = now.strftime("%H%M")
-        self.nl_toggle = nl_toggle
 
     def to_edi(self):
-        nl = "~\n" if self.nl_toggle else "~"
         logger.debug("Generating ISA segment")
         return (
             f"ISA*00*          *00*          *{self.id_qualifier}*{self.sender:<15}*{self.id_qualifier}*"
-            f"{self.receiver:<15}*{self.date}*{self.time}*$*00501*{self.interCtrlNumber}*0*T*:{nl}")
+            f"{self.receiver:<15}*{self.date}*{self.time}*$*00501*{self.interCtrlNumber}*0*T*:{self.get_nl()}")
 
 
 # File Trailer
@@ -49,15 +47,15 @@ class IEA:
 
 
 # Group Header
-class GS:
-    def __init__(self, functional_id, sender=Config.SENDER_ID, receiver=Config.RECEIVER_ID, nl_toggle=True):
+class GS(NewLineToggle):
+    def __init__(self, functional_id, sender=Config.SENDER_ID, receiver=Config.RECEIVER_ID, nl_toggle=Config.TOGGLE_NEW_LINE):
+        super().__init__(nl_toggle)
         now = datetime.now()
         self.functional_id = functional_id
         self.sender = sender
         self.receiver = receiver
         self.date = now.strftime("%Y%m%d")
         self.time = now.strftime("%H%M%S")
-        self.nl_toggle = nl_toggle
 
     def to_edi(self):
         logger.debug("Generating GS segment")
@@ -78,22 +76,24 @@ class GS:
                 segment += "*005010X231"
             case _:
                 logger.warning(f"Unknown functional ID: {self.functional_id} in GS segment")
-        return segment + nl
+        return segment + self.get_nl()
 
 
 # Group Trailer
-class GE:
-    def __init__(self, num):
+class GE(NewLineToggle):
+    def __init__(self, num, nl_toggle=Config.TOGGLE_NEW_LINE):
+        super().__init__(nl_toggle)
         self.num = num
 
     def to_edi(self):
         logger.debug("Generating GE segment")
-        return f"GE*{self.num}*61~\n"
+        return f"GE*{self.num}*61{self.get_nl()}"
 
 
 # Transaction Set Header
-class ST:
-    def __init__(self, file_type, num):
+class ST(NewLineToggle):
+    def __init__(self, file_type, num, nl_toggle=Config.TOGGLE_NEW_LINE):
+        super().__init__(nl_toggle)
         self.file_type = file_type
         self.num = num
 
@@ -115,23 +115,25 @@ class ST:
                 segment += "*005010X231"
             case _:
                 logger.warning(f"Unknown file type: {self.file_type} in ST segment")
-        return segment + "~\n"
+        return segment + self.get_nl()
 
 
 # Transaction Set Trailer
-class SE:
-    def __init__(self, segment_count, control_num):
+class SE(NewLineToggle):
+    def __init__(self, segment_count, control_num, nl_toggle=Config.TOGGLE_NEW_LINE):
+        super().__init__(nl_toggle)
         self.segment_count = segment_count
         self.control_num = f"{control_num:06}"
 
     def to_edi(self):
         logger.debug(f"Generating SE segment with count {self.segment_count} and control {self.control_num}")
-        return f"SE*{self.segment_count}*{self.control_num}~\n"
+        return f"SE*{self.segment_count}*{self.control_num}{self.get_nl()}"
 
 
 # Beginning Segment
-class BGN:
-    def __init__(self, ref_id):
+class BGN(NewLineToggle):
+    def __init__(self, ref_id, nl_toggle=Config.TOGGLE_NEW_LINE):
+        super().__init__(nl_toggle)
         now = datetime.now()
         self.ref_id = ref_id
         self.date = now.strftime("%Y%m%d")
@@ -139,12 +141,13 @@ class BGN:
 
     def to_edi(self):
         logger.debug(f"Generating BGN segment with ref_id {self.ref_id}")
-        return f"BGN*00*{self.ref_id}*{self.date}*{self.time}*UT***2~\n"
+        return f"BGN*00*{self.ref_id}*{self.date}*{self.time}*UT***2{self.get_nl()}"
 
 
 # Sponsor Name
-class N1:
-    def __init__(self, entity_id_code, name, id_code_qualifier, id_code, error_ctrl, error_id):
+class N1(NewLineToggle):
+    def __init__(self, entity_id_code, name, id_code_qualifier, id_code, error_ctrl, error_id, nl_toggle=Config.TOGGLE_NEW_LINE):
+        super().__init__(nl_toggle)
         self.entity_id_code = entity_id_code
         self.name = name
         self.id_code_qualifier = id_code_qualifier
@@ -162,34 +165,37 @@ class N1:
             id_code = erroneous
         else:
             logger.debug("Generating N1 segment")
-        return f"N1*{self.entity_id_code}*{self.name}*{self.id_code_qualifier}*{id_code}~\n"
+        return f"N1*{self.entity_id_code}*{self.name}*{self.id_code_qualifier}*{id_code}{self.get_nl()}"
 
 
 # Insured Benefit
-class INS:
-    def __init__(self, relationship):
+class INS(NewLineToggle):
+    def __init__(self, relationship, nl_toggle=Config.TOGGLE_NEW_LINE):
+        super().__init__(nl_toggle)
         self.relationship = relationship
 
     def to_edi(self):
         logger.debug(f"Generating INS segment with relationship {self.relationship}")
-        return f"INS*Y*{self.relationship}*001**A***AC~\n"
+        return f"INS*Y*{self.relationship}*001**A***AC{self.get_nl()}"
 
 
 # Reference Identification
-class REF:
-    def __init__(self, qualifier, reference_id, error_ctrl):
+class REF(NewLineToggle):
+    def __init__(self, qualifier, reference_id, error_ctrl, nl_toggle=Config.TOGGLE_NEW_LINE):
+        super().__init__(nl_toggle)
         self.qualifier = qualifier
         self.reference_id = reference_id
         self.error_ctrl = error_ctrl
 
     def to_edi(self):
-        return f"REF*{self.qualifier}*{self.reference_id}~\n"
+        return f"REF*{self.qualifier}*{self.reference_id}{self.get_nl()}"
 
 
 # Organization Name
-class NM1:
+class NM1(NewLineToggle):
     def __init__(self, entity_id_code, entity_type, last_name=None, first_name=None, middle_name=None,
-                 id_qualifier=None, id_code=None, error_ctrl=None, error_id=None):
+                 id_qualifier=None, id_code=None, error_ctrl=None, error_id=None, nl_toggle=Config.TOGGLE_NEW_LINE):
+        super().__init__(nl_toggle)
         self.entity_id_code = entity_id_code
         self.entity_type = entity_type
         self.last_name = last_name
@@ -221,13 +227,14 @@ class NM1:
             logger.debug(f"Generating NM1 segment for {self.last_name}, {self.first_name}")
         return (
             f"NM1*{self.entity_id_code}*{self.entity_type}*{self.last_name}*{self.first_name}*{self.middle_name}*"
-            f"**{self.id_qualifier}*{id_code}~\n"
+            f"**{self.id_qualifier}*{id_code}{self.get_nl()}"
         )
 
 
 # Administrative Communications Contact
-class PER:
-    def __init__(self, contact_func, phone_number, error_ctrl, error_id):
+class PER(NewLineToggle):
+    def __init__(self, contact_func, phone_number, error_ctrl, error_id, nl_toggle=Config.TOGGLE_NEW_LINE):
+        super().__init__(nl_toggle)
         self.contact_func = contact_func
         self.phone_number = phone_number
         self.error_ctrl = error_ctrl
@@ -243,13 +250,14 @@ class PER:
             phone_number = erroneous
         else:
             logger.debug("Generating PER segment")
-        return f"PER*{self.contact_func}**TE*{phone_number}~\n"
+        return f"PER*{self.contact_func}**TE*{phone_number}{self.get_nl()}"
 
 
 # Address Information
-class N3:
+class N3(NewLineToggle):
     def __init__(self, building_number, street, apartment: Optional[str] = None, error_ctrl=None,
-                 error_id=None, npi=False):
+                 error_id=None, npi=False, nl_toggle=Config.TOGGLE_NEW_LINE):
+        super().__init__(nl_toggle)
         self.building_number = building_number
         self.street = street
         self.apartment = apartment if apartment else ""
@@ -268,12 +276,13 @@ class N3:
             logger.debug("Generating N3 segment")
         if self.npi:
             return f"N3*{self.building_number}*{street}~\n"
-        return f"N3*{self.building_number}{" "}{street}*{self.apartment}~\n"
+        return f"N3*{self.building_number}{" "}{street}*{self.apartment}{self.get_nl()}"
 
 
 # Location
-class N4:
-    def __init__(self, city, state, zipcode, error_ctrl, error_id):
+class N4(NewLineToggle):
+    def __init__(self, city, state, zipcode, error_ctrl, error_id, nl_toggle=Config.TOGGLE_NEW_LINE):
+        super().__init__(nl_toggle)
         self.city = city
         self.state = state
         self.zipcode = zipcode
@@ -289,12 +298,13 @@ class N4:
             city = erroneous
         else:
             logger.debug("Generating N4 segment")
-        return f"N4*{city}*{self.state}*{self.zipcode}~\n"
+        return f"N4*{city}*{self.state}*{self.zipcode}{self.get_nl()}"
 
 
 # Monetary Amount
-class AMT:
-    def __init__(self, amount_qualifier_code, amount, error_ctrl, error_id):
+class AMT(NewLineToggle):
+    def __init__(self, amount_qualifier_code, amount, error_ctrl, error_id, nl_toggle=Config.TOGGLE_NEW_LINE):
+        super().__init__(nl_toggle)
         self.amount_qualifier_code = amount_qualifier_code
         self.amount = amount
         self.error_ctrl = error_ctrl
@@ -309,23 +319,25 @@ class AMT:
             amount = erroneous
         else:
             logger.debug(f"Generating AMT segment for code {self.amount_qualifier_code}")
-        return f"AMT*{self.amount_qualifier_code}*{amount}~\n"
+        return f"AMT*{self.amount_qualifier_code}*{amount}{self.get_nl()}"
 
 
 # Health Coverage
-class HD:
-    def __init__(self, maintenance_type_code="001", plan_coverage_description="MCVA1003"):
+class HD(NewLineToggle):
+    def __init__(self, maintenance_type_code="001", plan_coverage_description="MCVA1003", nl_toggle=Config.TOGGLE_NEW_LINE):
+        super().__init__(nl_toggle)
         self.maintenance_type_code = maintenance_type_code
         self.plan_coverage_description = plan_coverage_description
 
     def to_edi(self):
         logger.debug("Generating HD segment")
-        return f"HD*{self.maintenance_type_code}**MM*{self.plan_coverage_description}~\n"
+        return f"HD*{self.maintenance_type_code}**MM*{self.plan_coverage_description}{self.get_nl()}"
 
 
 # Date/Time Period
-class DTP:
-    def __init__(self, date_type, date_format):
+class DTP(NewLineToggle):
+    def __init__(self, date_type, date_format, nl_toggle=Config.TOGGLE_NEW_LINE):
+        super().__init__(nl_toggle)
         now = datetime.now()
         self.date_type = date_type
         self.date_format = date_format
@@ -333,11 +345,12 @@ class DTP:
 
     def to_edi(self):
         logger.debug(f"Generating DTP segment for date {self.date}")
-        return f"DTP*{self.date_type}*{self.date_format}*{self.date}~\n"
+        return f"DTP*{self.date_type}*{self.date_format}*{self.date}{self.get_nl()}"
 
 
-class BHT:
-    def __init__(self, transaction_id, purpose_code, unique_id, file_type=None):
+class BHT(NewLineToggle):
+    def __init__(self, transaction_id, purpose_code, unique_id, file_type=None, nl_toggle=Config.TOGGLE_NEW_LINE):
+        super().__init__(nl_toggle)
         now = datetime.now()
         self.file_type = file_type
         self.transaction_id = transaction_id
@@ -353,11 +366,12 @@ class BHT:
             segment += "*CH"
         elif self.file_type == "277CA":
             segment += "*TH"
-        return segment + "~\n"
+        return segment + self.get_nl()
 
 
-class HL:
-    def __init__(self, hl_id=None, hl_parent=None, hl_code=None, children=None, error_ctrl=None, error_id=None):
+class HL(NewLineToggle):
+    def __init__(self, hl_id=None, hl_parent=None, hl_code=None, children=None, error_ctrl=None, error_id=None, nl_toggle=Config.TOGGLE_NEW_LINE):
+        super().__init__(nl_toggle)
         self.hl_id = hl_id
         self.hl_parent = hl_parent
         self.hl_code = hl_code
@@ -378,40 +392,44 @@ class HL:
         if self.children is not None:
             segment += f"*{self.children}"
 
-        return segment + "~\n"
+        return segment + self.get_nl()
 
 
-class EQ:
-    def __init__(self, service_code):
+class EQ(NewLineToggle):
+    def __init__(self, service_code, nl_toggle=Config.TOGGLE_NEW_LINE):
+        super().__init__(nl_toggle)
         self.service_code = service_code
 
     def to_edi(self):
         logger.debug("Generating EQ segment")
-        return f"EQ*{self.service_code}~\n"
+        return f"EQ*{self.service_code}{self.get_nl()}"
 
 
-class SBR:
-    def __init__(self, relationship_code, group_id):
+class SBR(NewLineToggle):
+    def __init__(self, relationship_code, group_id, nl_toggle=Config.TOGGLE_NEW_LINE):
+        super().__init__(nl_toggle)
         self.relationship_code = relationship_code
         self.group_id = group_id
 
     def to_edi(self):
         logger.debug(f"Generating SBR with relationship {self.relationship_code} segment")
-        return f"SBR*P*{self.relationship_code}*{self.group_id}******HM~\n"
+        return f"SBR*P*{self.relationship_code}*{self.group_id}******HM{self.get_nl()}"
 
 
-class DMG:
-    def __init__(self, dob, gender):
+class DMG(NewLineToggle):
+    def __init__(self, dob, gender, nl_toggle=Config.TOGGLE_NEW_LINE):
+        super().__init__(nl_toggle)
         self.dob = dob
         self.gender = gender
 
     def to_edi(self):
         logger.debug("Generating DMG segment")
-        return f"DMG*D8*{self.dob}*{self.gender}~\n"
+        return f"DMG*D8*{self.dob}*{self.gender}{self.get_nl()}"
 
 
-class CLM:
-    def __init__(self, claim_id, charge_amt, place_of_service, fac_code_qual, claim_freq):
+class CLM(NewLineToggle):
+    def __init__(self, claim_id, charge_amt, place_of_service, fac_code_qual, claim_freq, nl_toggle=Config.TOGGLE_NEW_LINE):
+        super().__init__(nl_toggle)
         self.claim_id = claim_id
         self.charge_amt = charge_amt
         self.place_of_service = place_of_service
@@ -421,41 +439,45 @@ class CLM:
     def to_edi(self):
         logger.debug("Generating CLM segment")
         return (f"CLM*{self.claim_id}*{self.charge_amt}***{self.place_of_service}:"
-                f"{self.fac_code_qual}:{self.claim_freq}*Y*A*Y*Y~\n")
+                f"{self.fac_code_qual}:{self.claim_freq}*Y*A*Y*Y{self.get_nl()}")
 
 
-class HI:
-    def __init__(self, qualifier, code):
+class HI(NewLineToggle):
+    def __init__(self, qualifier, code, nl_toggle=Config.TOGGLE_NEW_LINE):
+        super().__init__(nl_toggle)
         self.qualifier = qualifier
         self.code = code
 
     def to_edi(self):
         logger.debug("Generating HI segment")
-        return f"HI*{self.qualifier}:{self.code}~\n"
+        return f"HI*{self.qualifier}:{self.code}{self.get_nl()}"
 
 
-class PRV:
-    def __init__(self, provider_code, ref_type, taxonomy):
+class PRV(NewLineToggle):
+    def __init__(self, provider_code, ref_type, taxonomy, nl_toggle=Config.TOGGLE_NEW_LINE):
+        super().__init__(nl_toggle)
         self.provider_code = provider_code
         self.ref_type = ref_type
         self.taxonomy = taxonomy
 
     def to_edi(self):
         logger.debug("Generating PRV segment")
-        return f"PRV*{self.provider_code}*{self.ref_type}*{self.taxonomy}~\n"
+        return f"PRV*{self.provider_code}*{self.ref_type}*{self.taxonomy}{self.get_nl()}"
 
 
-class LX:
-    def __init__(self, number):
+class LX(NewLineToggle):
+    def __init__(self, number, nl_toggle=Config.TOGGLE_NEW_LINE):
+        super().__init__(nl_toggle)
         self.number = number
 
     def to_edi(self):
         logger.debug(f"Generating LX segment line {self.number}")
-        return f"LX*{self.number:04}~\n"
+        return f"LX*{self.number:04}{self.get_nl()}"
 
 
-class SV1:
-    def __init__(self, proc_code, charge_amt, unit, quantity, diagnosis_ptr):
+class SV1(NewLineToggle):
+    def __init__(self, proc_code, charge_amt, unit, quantity, diagnosis_ptr, nl_toggle=Config.TOGGLE_NEW_LINE):
+        super().__init__(nl_toggle)
         self.proc_code = proc_code
         self.charge_amt = charge_amt
         self.unit = unit
@@ -464,20 +486,22 @@ class SV1:
 
     def to_edi(self):
         logger.debug("Generating SV1 segment")
-        return f"SV1*{self.proc_code}*{self.charge_amt}*{self.unit}*{self.quantity}***{self.diagnosis_ptr}~\n"
+        return f"SV1*{self.proc_code}*{self.charge_amt}*{self.unit}*{self.quantity}***{self.diagnosis_ptr}{self.get_nl()}"
 
 
-class PAT:
-    def __init__(self, bene_relationship):
+class PAT(NewLineToggle):
+    def __init__(self, bene_relationship, nl_toggle=Config.TOGGLE_NEW_LINE):
+        super().__init__(nl_toggle)
         self.bene_relationship = bene_relationship
 
     def to_edi(self):
         logger.debug("Generating PAT segment")
-        return f"PAT*{self.bene_relationship}~\n"
+        return f"PAT*{self.bene_relationship}{self.get_nl()}"
 
 
-class TRN:
-    def __init__(self, trace_code, ref_id, payer_id=None, error_ctrl=None, error_id=None):
+class TRN(NewLineToggle):
+    def __init__(self, trace_code, ref_id, payer_id=None, error_ctrl=None, error_id=None, nl_toggle=Config.TOGGLE_NEW_LINE):
+        super().__init__(nl_toggle)
         self.trace_code = trace_code
         self.ref_id = ref_id
         self.payer_id = payer_id
@@ -496,11 +520,12 @@ class TRN:
         if self.payer_id is not None:
             segment += f"*1{self.payer_id}"
 
-        return segment + "~\n"
+        return segment + self.get_nl()
 
 
-class STC:
-    def __init__(self, status_info, action_code, units, error_ctrl, error_id):
+class STC(NewLineToggle):
+    def __init__(self, status_info, action_code, units, error_ctrl, error_id, nl_toggle=Config.TOGGLE_NEW_LINE):
+        super().__init__(nl_toggle)
         now = datetime.now()
         self.status_info = status_info
         self.action_code = action_code
@@ -518,11 +543,12 @@ class STC:
         else:
             logger.debug("Generating STC segment")
 
-        return f"STC*{status_info}*{self.date}*{self.action_code}*{self.units}~\n"
+        return f"STC*{status_info}*{self.date}*{self.action_code}*{self.units}{self.get_nl()}"
 
 
-class SVC:
-    def __init__(self, proc_code, charge_amt, quantity, unit, diagnosis_ptr):
+class SVC(NewLineToggle):
+    def __init__(self, proc_code, charge_amt, quantity, unit, diagnosis_ptr, nl_toggle=Config.TOGGLE_NEW_LINE):
+        super().__init__(nl_toggle)
         now = datetime.now()
         self.proc_code = proc_code
         self.charge_amt = charge_amt
@@ -533,11 +559,12 @@ class SVC:
 
     def to_edi(self):
         logger.debug("Generating SVC segment")
-        return f"SVC*{self.proc_code}*{self.charge_amt}*{self.quantity}*{self.unit}*{self.diagnosis_ptr}~\n"
+        return f"SVC*{self.proc_code}*{self.charge_amt}*{self.quantity}*{self.unit}*{self.diagnosis_ptr}{self.get_nl()}"
 
 
-class BPR:
-    def __init__(self, transaction_handling_code, amt, credit_debit_code, payment_method):
+class BPR(NewLineToggle):
+    def __init__(self, transaction_handling_code, amt, credit_debit_code, payment_method, nl_toggle=Config.TOGGLE_NEW_LINE):
+        super().__init__(nl_toggle)
         now = datetime.now()
         self.transaction_handling_code = transaction_handling_code
         self.amt = amt
@@ -548,11 +575,12 @@ class BPR:
     def to_edi(self):
         logger.debug("Generating BPR segment")
         return (f"BPR*{self.transaction_handling_code}*{self.amt}*{self.credit_debit_code}*{self.payment_method}******"
-                f"******{self.date}~\n")
+                f"******{self.date}{self.get_nl()}")
 
 
-class CLP:
-    def __init__(self, claim_id, claim_status, total_amt, paid_amt, filing_code, ctrl_num):
+class CLP(NewLineToggle):
+    def __init__(self, claim_id, claim_status, total_amt, paid_amt, filing_code, ctrl_num, nl_toggle=Config.TOGGLE_NEW_LINE):
+        super().__init__(nl_toggle)
         self.claim_id = claim_id
         self.claim_status = claim_status
         self.total_amt = total_amt
@@ -563,11 +591,12 @@ class CLP:
     def to_edi(self):
         logger.debug("Generating CLP segment")
         return (f"CLP*{self.claim_id}*{self.claim_status}*{self.total_amt}*{self.paid_amt}**{self.filing_code}*"
-                f"{self.ctrl_num}~\n")
+                f"{self.ctrl_num}{self.get_nl()}")
 
 
-class AK1:
-    def __init__(self, functional_id, group_ctrl_num):
+class AK1(NewLineToggle):
+    def __init__(self, functional_id, group_ctrl_num, nl_toggle=Config.TOGGLE_NEW_LINE):
+        super().__init__(nl_toggle)
         self.group_ctrl_num = group_ctrl_num
         self.functional_id = functional_id
 
@@ -583,11 +612,12 @@ class AK1:
             case _:
                 logger.warning(f"Unknown functional id: {self.functional_id} in AK1 segment")
 
-        return segment + "~\n"
+        return segment + self.get_nl()
 
 
-class AK9:
-    def __init__(self, functional_code, number_sets, number_received, number_accepted):
+class AK9(NewLineToggle):
+    def __init__(self, functional_code, number_sets, number_received, number_accepted, nl_toggle=Config.TOGGLE_NEW_LINE):
+        super().__init__(nl_toggle)
         self.functional_code = functional_code
         self.number_sets = number_sets
         self.number_received = number_received
@@ -595,4 +625,4 @@ class AK9:
 
     def to_edi(self):
         logger.debug("Generating AK9 segment")
-        return f"AK9*{self.functional_code}*{self.number_sets}*{self.number_received}*{self.number_accepted}~\n"
+        return f"AK9*{self.functional_code}*{self.number_sets}*{self.number_received}*{self.number_accepted}{self.get_nl()}"

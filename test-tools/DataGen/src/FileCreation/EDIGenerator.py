@@ -33,48 +33,56 @@ class EDI270Generator:
         self.error_ctrl = ErrorInjector(self.num_messages, error_rate)
         logger.info(f"Initializing EDI270Generator with {self.num_messages} claims")
 
+    # Information Source Level Loop
     def create_2000A_loop(self, error_ctrl, error_id):
         segments = [
             Seg.HL(hl_id=1, hl_parent="", hl_code=20, children=1, error_ctrl=error_ctrl, error_id=error_id).to_edi()]
         segments.extend(self.create_2100A_loop(error_ctrl, error_id))
         return segments
 
+    # Information Source Name Loop
     def create_2100A_loop(self, error_ctrl, error_id):
         return [Seg.NM1(Config.edi270_fields["payer_entity_identifier_code"],
                         Config.edi270_fields["payer_entity_type_qualifier"], Config.PAYER_NAME, "", "",
                         Config.edi270_fields["payer_id_code_qualifier"],
                         Config.PAYER_ID, error_ctrl, error_id).to_edi()]
 
+    # Information Receiver Level Loop
     def create_2000B_loop(self, claim, claim_last, claim_first, error_ctrl, error_id):
         segments = [
             Seg.HL(hl_id=2, hl_parent=1, hl_code=21, children=1, error_ctrl=error_ctrl, error_id=error_id).to_edi()]
         segments.extend(self.create_2100B_loop(claim, claim_last, claim_first, error_ctrl, error_id))
         return segments
 
+    # Information Receiver Name Loop
     def create_2100B_loop(self, claim, claim_last, claim_first, error_ctrl, error_id):
         return [Seg.NM1(Config.edi270_fields["provider_entity_identifier_code"], claim.provider_entity_type, claim_last,
                         claim_first, "", Config.edi270_fields["provider_id_code_qualifier"],
                         claim.provider_npi, error_ctrl,
                         error_id).to_edi()]
 
+    # Subscriber Level Loop
     def create_2000C_loop(self, sponsor, error_ctrl, error_id):
         segments = [
             Seg.HL(hl_id=3, hl_parent=2, hl_code=22, children=0, error_ctrl=error_ctrl, error_id=error_id).to_edi()]
         segments.extend(self.create_2100C_loop(sponsor, error_ctrl, error_id))
         return segments
 
+    # Subscriber Name Loop
     def create_2100C_loop(self, sponsor, error_ctrl, error_id):
         return [Seg.NM1(Config.edi270_fields["subscriber_entity_identifier_code"],
                         Config.edi270_fields["subscriber_entity_type_qualifier"], sponsor.last_name, sponsor.first_name,
                         sponsor.middle_name, Config.edi270_fields["subscriber_id_code_qualifier"], sponsor.sponsor_id,
                         error_ctrl, error_id).to_edi()]
 
+    # Dependent Level Loop
     def create_2000D_loop(self, bene, error_ctrl, error_id):
         segments = [
             Seg.HL(hl_id=4, hl_parent=3, hl_code=23, children=0, error_ctrl=error_ctrl, error_id=error_id).to_edi()]
         segments.extend(self.create_2100D_loop(bene, error_ctrl, error_id))
         return segments
 
+    # Dependent Name Loop
     def create_2100D_loop(self, bene, error_ctrl, error_id):
         segments = [Seg.NM1(Config.edi270_fields["dependent_entity_identifier_code"],
                             Config.edi270_fields["dependent_entity_type_qualifier"], bene.last_name, bene.first_name,
@@ -85,6 +93,7 @@ class EDI270Generator:
         segments.extend(self.create_2110D_loop())
         return segments
 
+    # Dependent Eligibility or Benefit Inquiry Loop
     def create_2110D_loop(self):
         return [Seg.EQ(Config.edi270_fields["eq_service_type_code"]).to_edi()]
 
@@ -167,6 +176,7 @@ class EDI837PGenerator:
     def get_num_messages(self):
         return self.num_messages
 
+    # Submitter and Receiver Loop
     def create_1000A_1000B_loop(self, error_ctrl, error_id):
         segments = [Seg.NM1(Config.edi837_fields['submitter_entity_identifier_code'],
                             Config.edi837_fields['submitter_entity_type_qualifier'],
@@ -182,11 +192,13 @@ class EDI837PGenerator:
                             error_ctrl).to_edi()]
         return segments
 
+    # Billing Provider Hierarchical Level Loop
     def create_2000A_loop(self, claim, claim_last, claim_first, error_ctrl, error_id):
         segments = [Seg.HL("1", "", 20, 1, error_ctrl, error_id).to_edi()]
         segments.extend(self.create_2010A_loop(claim, claim_last, claim_first, error_ctrl, error_id))
         return segments
 
+    # Billing Provider Name Loop
     def create_2010A_loop(self, claim, claim_last, claim_first, error_ctrl, error_id):
         segments = [
             Seg.NM1(Config.edi837_fields['billing_provider_entity_identifier_code'], claim.provider_entity_type,
@@ -201,6 +213,7 @@ class EDI837PGenerator:
                     Config.edi837_fields['ref_billing_provider_id'], error_ctrl).to_edi()]
         return segments
 
+    # Subscriber Hierarchical Level Loop
     def create_2000B_loop(self, sponsor, error_ctrl, error_id):
         segments = [Seg.HL("2", "1", 22, 1, error_ctrl, error_id).to_edi(),
                     Seg.SBR(Config.edi837_fields['sbr_payer_relationship_code'],
@@ -209,6 +222,7 @@ class EDI837PGenerator:
         segments.extend(self.create_2010BB_loop(error_ctrl, error_id))
         return segments
 
+    # Subscriber Name Loop
     def create_2010BA_loop(self, sponsor, error_ctrl, error_id):
         segments = [
             Seg.NM1(Config.edi837_fields['subscriber_entity_identifier_code'],
@@ -222,6 +236,7 @@ class EDI837PGenerator:
             Seg.DMG(sponsor.dob.strftime("%Y%m%d"), sponsor.gender).to_edi()]
         return segments
 
+    # Payer Name Loop
     def create_2010BB_loop(self, error_ctrl, error_id):
         segments = [Seg.NM1(Config.edi837_fields['payer_entity_identifier_code'],
                             Config.edi837_fields['payer_entity_type_qualifier'], Config.PAYER_NAME, "", "",
@@ -232,11 +247,13 @@ class EDI837PGenerator:
                            Config.edi837_fields['payer_zip'], error_ctrl, error_id).to_edi()]
         return segments
 
+    # Patient Hierarchical Level Loop
     def create_2000C_loop(self, bene, bene_relationship, error_ctrl, error_id):
         segments = [Seg.HL("3", "2", 23, 0, error_ctrl, error_id).to_edi(), Seg.PAT(bene_relationship).to_edi()]
         segments.extend(self.create_2010CA_loop(bene, error_ctrl, error_id))
         return segments
 
+    # Patient Name Loop
     def create_2010CA_loop(self, bene, error_ctrl, error_id):
         segments = [
             Seg.NM1(Config.edi837_fields['patient_entity_identifier_code'],
@@ -249,6 +266,7 @@ class EDI837PGenerator:
             Seg.DMG(bene.dob.strftime("%Y%m%d"), bene.gender).to_edi()]
         return segments
 
+    # Claim Information Loop
     def create_2300_loop(self, claim, claim_last, claim_first, error_ctrl):
         segments = [Seg.CLM(claim.claim_id, Config.edi837_fields['clm_charge_amount'],
                             Config.edi837_fields['clm_facility_code'], Config.edi837_fields['clm_facility_qualifier'],
@@ -259,6 +277,7 @@ class EDI837PGenerator:
         segments.extend(self.create_2310B_loop(claim, claim_last, claim_first, error_ctrl))
         return segments
 
+    # Rendering Provider Name Loop
     def create_2310B_loop(self, claim, claim_last, claim_first, error_ctrl):
         segments = [Seg.NM1(Config.edi837_fields['rendering_provider_entity_identifier_code'],
                             Config.edi837_fields['rendering_provider_entity_type_qualifier'], claim_last, claim_first,
@@ -269,6 +288,7 @@ class EDI837PGenerator:
                             Config.edi837_fields['prv_provider_taxonomy_code']).to_edi()]
         return segments
 
+    # Service Line Number Loop
     def create_2400_loop(self, claim, error_ctrl):
         service_date_qualifier = Config.edi837_fields['dtp_service_date_qualifier']
         segments = [Seg.LX("1").to_edi(),
@@ -345,18 +365,21 @@ class EDI277CAGenerator:
     def get_num_messages(self):
         return self.num_messages
 
+    # Information Source Level Loop
     def create_2000A_loop(self, claim, error_ctrl, error_id):
         segments = [Seg.HL("1", "", 20, 1).to_edi()]
         segments.extend(self.create_2100A_loop(error_ctrl, error_id))
         segments.extend(self.create_2200A_loop(claim, error_ctrl, error_id))
         return segments
 
+    # Information Source Name Loop
     def create_2100A_loop(self, error_ctrl, error_id):
         return [Seg.NM1(Config.edi277ca_fields['payer_entity_identifier_code'],
                         Config.edi277ca_fields['payer_entity_type_qualifier'], Config.PAYER_NAME, "", "",
                         Config.edi277ca_fields['payer_id_code_qualifier'],
                         Config.PAYER_ID, error_ctrl, error_id).to_edi()]
 
+    # Transmission Receipt Control Identifier Loop
     def create_2200A_loop(self, claim, error_ctrl, error_id):
         segments = [Seg.TRN(Config.edi277ca_fields['trn_originating_company_identifier'], claim.payer_claim_id,
                             error_ctrl=error_ctrl, error_id=error_id).to_edi(),
@@ -366,12 +389,14 @@ class EDI277CAGenerator:
                             Config.DATE_TIME_FMT_QUALIFIER).to_edi()]
         return segments
 
+    # Information Receiver Level Loop
     def create_2000B_loop(self, claim, error_ctrl, error_id):
         segments = [Seg.HL("2", "1", 21, 1).to_edi()]
         segments.extend(self.create_2100B_loop(error_ctrl))
         segments.extend(self.create_2200B_loop(claim, error_ctrl, error_id))
         return segments
 
+    # Information Receiver Name Loop
     def create_2100B_loop(self, error_ctrl):
         return [Seg.NM1(Config.edi277ca_fields['submitter_entity_identifier_code'],
                         Config.edi277ca_fields['submitter_entity_type_qualifier'],
@@ -379,6 +404,7 @@ class EDI277CAGenerator:
                         "", "", Config.edi277ca_fields['submitter_id_code_qualifier'],
                         Config.edi277ca_fields['submitter_id'], error_ctrl).to_edi()]
 
+    # Information Receiver Application Trace Identifier Loop
     def create_2200B_loop(self, claim, error_ctrl, error_id):
         segments = [Seg.TRN(Config.edi277ca_fields['trn_trace_type_code'], claim.claim_id, error_ctrl=error_ctrl,
                             error_id=error_id).to_edi(),
@@ -388,12 +414,14 @@ class EDI277CAGenerator:
                     Seg.AMT("YU", claim.amount, error_ctrl, error_id).to_edi()]
         return segments
 
+    # Billing Provider Level Loop
     def create_2000C_loop(self, claim, error_ctrl, error_id):
         segments = [Seg.HL("3", "2", 19, 1).to_edi()]
         segments.extend(self.create_2100C_loop(claim, error_ctrl, error_id))
         segments.extend(self.create_2200C_loop(claim, error_ctrl, error_id))
         return segments
 
+    # Provider Name Loop
     def create_2100C_loop(self, claim, error_ctrl, error_id):
         last, first = split_provider_name(claim.provider_name, claim.provider_entity_type)
         return [
@@ -401,22 +429,26 @@ class EDI277CAGenerator:
                     "", Config.edi277ca_fields['provider_id_code_qualifier'], claim.provider_npi, error_ctrl,
                     error_id).to_edi()]
 
+    # Provider of Service Information Trace Identifier Loop
     def create_2200C_loop(self, claim, error_ctrl, error_id):
         return [Seg.TRN(Config.edi277ca_fields['trn_originating_company_identifier'], claim.payer_claim_id,
                         error_ctrl=error_ctrl, error_id=error_id).to_edi()]
 
+    # Patient Level Loop
     def create_2000D_loop(self, claim, bene, error_ctrl, error_id):
         segments = [Seg.HL("4", "3", Config.edi277ca_fields['hl_patient_code']).to_edi()]
         segments.extend(self.create_2100D_loop(bene, error_ctrl))
         segments.extend(self.create_2200D_loop(claim, error_ctrl, error_id))
         return segments
 
+    # Patient Name Loop
     def create_2100D_loop(self, bene, error_ctrl):
         return [Seg.NM1(Config.edi277ca_fields['patient_entity_identifier_code'],
                         Config.edi277ca_fields['patient_entity_type_qualifier'], bene.last_name, bene.first_name,
                         bene.middle_name, Config.edi277ca_fields['patient_id_code_qualifier'],
                         bene.beneficiary_id, error_ctrl).to_edi()]
 
+    # Claim Statu Tracking Number Loop
     def create_2200D_loop(self, claim, error_ctrl, error_id):
         segments = [Seg.TRN(Config.edi277ca_fields['trn_trace_type_code'], claim.claim_id, error_ctrl=error_ctrl,
                             error_id=error_id).to_edi(),
@@ -430,6 +462,7 @@ class EDI277CAGenerator:
                     ]
         return segments
 
+    # Service Line Information Loop
     def create_2220D_loop(self, claim, error_ctrl, error_id):
         segments = [Seg.SVC("277CA", Config.edi277ca_fields['svc_procedure_identifier'], claim.amount,
                             Config.edi277ca_fields['svc_line_item_charge_amount']).to_edi(),

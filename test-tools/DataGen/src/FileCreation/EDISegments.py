@@ -200,8 +200,8 @@ class NM1(NewLineToggle):
         self.last_name = last_name
         self.first_name = first_name
         self.middle_name = middle_name
-        self.id_qualifier = id_qualifier
-        self.id_code = id_code
+        self.id_qualifier = id_qualifier if id_qualifier else ""
+        self.id_code = id_code if id_code else ""
         self.error_ctrl = error_ctrl
         self.error_id = error_id
 

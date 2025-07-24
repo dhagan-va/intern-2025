@@ -118,6 +118,87 @@ class EDI837PGenerator:
     def get_num_messages(self):
         return self.num_messages
 
+    def create_1000A_1000B_loop(self, error_ctrl, error_id):
+        segments = [Seg.NM1("41", "2", "Submitter Group",
+                            "", "", "46", "133052274", error_ctrl).to_edi(),
+                    Seg.PER("IC", "2403018701", error_ctrl, error_id).to_edi(),
+                    Seg.NM1("40", "2", "Receiver Group", "", "", "46", "84146", error_ctrl).to_edi()]
+        return segments
+
+    def create_2000A_loop(self, claim, claim_last, claim_first, error_ctrl, error_id):
+        segments = [Seg.HL("1", "", 20, 1, error_ctrl, error_id).to_edi()]
+        segments.extend(self.create_2010A_loop(claim, claim_last, claim_first, error_ctrl, error_id))
+        return segments
+
+    def create_2010A_loop(self, claim, claim_last, claim_first, error_ctrl, error_id):
+        segments = [Seg.NM1("85", claim.provider_entity_type, claim_last, claim_first, "", "XX", claim.provider_npi, error_ctrl,
+                            error_id).to_edi(),
+                    Seg.N3(claim.provider_address_1, claim.provider_address_2, "", error_ctrl, error_id,
+                           True).to_edi(),
+                    Seg.N4(claim.provider_city, claim.provider_state, claim.provider_zip, error_ctrl,
+                           error_id).to_edi(),
+                    Seg.REF("EI", "123456789", error_ctrl).to_edi()]
+        return segments
+
+    def create_2000B_loop(self, sponsor, error_ctrl, error_id):
+        segments = [Seg.HL("2", "1", 22, 1, error_ctrl, error_id).to_edi(),
+                    Seg.SBR("18", "123456").to_edi()]
+        segments.extend(self.create_2010BA_loop(sponsor, error_ctrl, error_id))
+        segments.extend(self.create_2010BB_loop(error_ctrl, error_id))
+        return segments
+
+    def create_2010BA_loop(self, sponsor, error_ctrl, error_id):
+        segments = [
+            Seg.NM1("IL", "1", sponsor.last_name, sponsor.first_name, sponsor.middle_name,
+                    "MI", sponsor.sponsor_id, error_ctrl).to_edi(),
+            Seg.N3(sponsor.address.building_number, sponsor.address.street, sponsor.address.apartment,
+                   error_ctrl).to_edi(),
+            Seg.N4(sponsor.address.city, sponsor.address.state, sponsor.address.zipcode, error_ctrl,
+                   error_id).to_edi(),
+            Seg.DMG(sponsor.dob.strftime("%Y%m%d"), sponsor.gender).to_edi()]
+        return segments
+
+    def create_2010BB_loop(self, error_ctrl, error_id):
+        segments = [Seg.NM1("PR", 2, Config.PAYER_NAME, "", "", "PI",
+                            Config.PAYER_ID, error_ctrl, error_id).to_edi(),
+                    Seg.N3("123", "Payer Ave").to_edi(),
+                    Seg.N4("Payer City", "MD", "99999", error_ctrl, error_id).to_edi()]
+        return segments
+
+    def create_2000C_loop(self, bene, bene_relationship, error_ctrl, error_id):
+        segments = [Seg.HL("3", "2", 23, 0, error_ctrl, error_id).to_edi(),
+                    Seg.PAT(bene_relationship).to_edi()]
+        segments.extend(self.create_2010CA_loop(bene, error_ctrl, error_id))
+        return segments
+
+    def create_2010CA_loop(self, bene, error_ctrl, error_id):
+        segments = [Seg.NM1("QC", "1", bene.last_name, bene.first_name, bene.middle_name, id_qualifier=None, id_code=None, error_ctrl=error_ctrl, error_id=bene.beneficiary_id).to_edi(),
+                    Seg.N3(bene.address.building_number, bene.address.street, bene.address.apartment, error_ctrl,
+                           error_id).to_edi(),
+                    Seg.N4(bene.address.city, bene.address.state, bene.address.zipcode, error_ctrl, error_id).to_edi(),
+                    Seg.DMG(bene.dob.strftime("%Y%m%d"), bene.gender).to_edi()]
+        return segments
+
+    def create_2300_loop(self, claim, claim_last, claim_first, error_ctrl):
+        segments = [Seg.CLM(claim.claim_id, "827", "22", "B", "1").to_edi(),
+                    Seg.REF("D9", claim.claim_id, error_ctrl).to_edi(),
+                    Seg.HI("BK", "36616").to_edi()]
+        segments.extend(self.create_2310B_loop(claim, claim_last, claim_first, error_ctrl))
+        return segments
+
+    def create_2310B_loop(self, claim, claim_last, claim_first, error_ctrl):
+        segments = [Seg.NM1("82", "1", claim_last, claim_first, "", "XX", claim.provider_npi, error_ctrl).to_edi(),
+                    Seg.PRV("PE", "PXC", "207L00000X").to_edi()]
+        return segments
+
+    def create_2400_loop(self, claim, error_ctrl):
+        service_date_qualifier = "472"
+        segments = [Seg.LX("1").to_edi(),
+                    Seg.SV1("HC:00142:QK:QS:P1", "827", "MJ", "61", 1).to_edi(),
+                    Seg.DTP(service_date_qualifier, Config.DATE_TIME_FMT_QUALIFIER).to_edi(),
+                    Seg.REF("6R", claim.claim_id, error_ctrl).to_edi()]
+        return segments
+
     def create_claim_anesthesia(self, num, error_ctrl):
         if num - 1 >= len(self.claims) or num <= 0:
             logger.error(f"Index out of range for claim {num}")
@@ -126,60 +207,22 @@ class EDI837PGenerator:
         claim = self.claims[num - 1]
         bene = self.transaction_funcs.get_beneficiary(claim.sponsor_id, claim.beneficiary_id)
         sponsor = self.transaction_funcs.get_sponsor_by_id(claim.sponsor_id)
-        last, first = split_provider_name(claim.provider_name, claim.provider_entity_type)
         bene_relationship = self.relationship_map.get(bene.relationship)
         error_id = bene.beneficiary_id
-        service_date_qualifier = "472"
+        last, first = split_provider_name(claim.provider_name, claim.provider_entity_type)
 
         if bene_relationship == "25" or bene_relationship == "26":
             bene_relationship = "G8"
 
         segments = [Seg.ST("837", num).to_edi(),
-                    Seg.BHT("19", "00", claim.claim_id, "837").to_edi(),
-                    Seg.NM1("41", "2", "Submitter Group",
-                            "", "", "46", "133052274", error_ctrl).to_edi(),
-                    Seg.PER("IC", "2403018701", error_ctrl, error_id).to_edi(),
-                    Seg.NM1("40", "2", "Receiver Group", "", "", "46", "84146", error_ctrl).to_edi(),
-                    Seg.HL("1", "", 20, 1, error_ctrl, error_id).to_edi(),
-                    Seg.NM1("85", claim.provider_entity_type, last, first, "", "XX", claim.provider_npi, error_ctrl,
-                            error_id).to_edi(),
-                    Seg.N3(claim.provider_address_1, claim.provider_address_2, "", error_ctrl, error_id,
-                           True).to_edi(),
-                    Seg.N4(claim.provider_city, claim.provider_state, claim.provider_zip, error_ctrl,
-                           error_id).to_edi(),
-                    Seg.REF("EI", "123456789", error_ctrl).to_edi(),
-                    Seg.HL("2", "1", 22, 1, error_ctrl, error_id).to_edi(),
-                    # add SBR for bene
-                    Seg.SBR("18", "123456").to_edi(),
-                    Seg.NM1("IL", "1", sponsor.last_name, sponsor.first_name, sponsor.middle_name,
-                            "MI", sponsor.sponsor_id, error_ctrl).to_edi(),
-                    Seg.N3(sponsor.address.building_number, sponsor.address.street, sponsor.address.apartment,
-                           error_ctrl).to_edi(),
-                    Seg.N4(sponsor.address.city, sponsor.address.state, sponsor.address.zipcode, error_ctrl,
-                           error_id).to_edi(),
-                    Seg.DMG(sponsor.dob.strftime("%Y%m%d"), sponsor.gender).to_edi(),
-                    Seg.NM1("PR", 2, Config.PAYER_NAME, "", "", "PI",
-                            Config.PAYER_ID, error_ctrl, error_id).to_edi(),
-                    Seg.N3("123", "Payer Ave").to_edi(),
-                    Seg.N4("Payer City", "MD", "99999", error_ctrl, error_id).to_edi(),
-                    Seg.HL("3", "2", 23, 0, error_ctrl, error_id).to_edi(),
-                    Seg.PAT(bene_relationship).to_edi(),
-                    Seg.NM1("QC", "1", bene.last_name, bene.first_name, bene.middle_name, "MI",
-                            bene.beneficiary_id, error_ctrl).to_edi(),
-                    Seg.N3(bene.address.building_number, bene.address.street, bene.address.apartment, error_ctrl,
-                           error_id).to_edi(),
-                    Seg.N4(bene.address.city, bene.address.state, bene.address.zipcode, error_ctrl, error_id).to_edi(),
-                    Seg.DMG(bene.dob.strftime("%Y%m%d"), bene.gender).to_edi(),
-                    Seg.CLM(claim.claim_id, "827", "22", "B", "1").to_edi(),
-                    Seg.REF("D9", claim.claim_id, error_ctrl).to_edi(),
-                    Seg.HI("BK", "36616").to_edi(),
-                    Seg.NM1("82", "1", last, first, "", "XX", claim.provider_npi, error_ctrl).to_edi(),
-                    Seg.PRV("PE", "PXC", "207L00000X").to_edi(),
-                    Seg.LX("1").to_edi(),
-                    Seg.SV1("HC:00142:QK:QS:P1", "827", "MJ", "61", 1).to_edi(),
-                    Seg.DTP(service_date_qualifier, Config.DATE_TIME_FMT_QUALIFIER).to_edi(),
-                    Seg.REF("6R", claim.claim_id, error_ctrl).to_edi()
-                    ]
+                    Seg.BHT("19", "00", claim.claim_id, "837").to_edi()]
+
+        segments.extend(self.create_1000A_1000B_loop(error_ctrl, error_id))
+        segments.extend(self.create_2000A_loop(claim, last, first, error_ctrl, error_id))
+        segments.extend(self.create_2000B_loop(sponsor, error_ctrl, error_id))
+        segments.extend(self.create_2000C_loop(bene, bene_relationship, error_ctrl, error_id))
+        segments.extend(self.create_2300_loop(claim, last, first, error_ctrl))
+        segments.extend(self.create_2400_loop(claim, error_ctrl))
 
         segments.append(Seg.SE(len(segments) + 1, self.transaction_control_number).to_edi())
         self.transaction_control_number += 1

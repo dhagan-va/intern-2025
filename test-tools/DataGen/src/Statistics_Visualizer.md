@@ -19,8 +19,8 @@ The 270 file is used to request information about a member's health insurance el
 xychart-beta
     title "Records Generated per Second"
     x-axis ["Claims", "Sponsors/Beneficiaries"]
-    y-axis "Records/Second" 0 --> 12.713571657286753
-    bar [2.713571657286754, 0.0]
+    y-axis "Records/Second" 0 --> 13.415300546448087
+    bar [3.4153005464480874, 0.0]
 ```
 
 
@@ -28,8 +28,8 @@ xychart-beta
 ```mermaid
 pie title Message type distribution
     "270" : 0
-    "837" : 0
-    "277" : 5
+    "837" : 5
+    "277" : 0
     "835" : 0
     "834" : 0
 ```
@@ -41,8 +41,8 @@ Total Number of Messages Generated: **5**
 xychart-beta
     title "Throughput (Transactions per Second)"
     x-axis ["270", "837", "277", "835", "834"]
-    y-axis "TPS" 0 --> 556.4938340184424
-    bar [0.0, 0.0, 555.4938340184424, 0.0, 0.0]
+    y-axis "TPS" 0 --> 626.0781347668459
+    bar [0.0, 625.0781347668459, 0.0, 0.0, 0.0]
 ```
 
 
@@ -62,7 +62,7 @@ xychart-beta
     title "Error Rate (%)"
     x-axis ["270", "837", "277", "835", "834"]
     y-axis "Percent" 0 --> 5
-    bar [0, 0, 0.0, 0, 0]
+    bar [0, 0.0, 0, 0, 0]
 ```
 
 

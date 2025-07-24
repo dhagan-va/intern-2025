@@ -105,7 +105,7 @@ DATE_TIME_FMT_QUALIFIER = config["constants"]["date_time_fmt_qualifier"]
 RELATIONSHIP_MAP = config["relationship_map"]
 
 edi270_fields = config["edi270_fields"]
-# edi837_fields = config["edi837_fields"]
+edi837_fields = config["edi837_fields"]
 # edi277ca_fields = config["edi277ca_fields"]
 # edi835_fields = config["edi835_fields"]
 # edi834_fields = config["edi834_fields"]

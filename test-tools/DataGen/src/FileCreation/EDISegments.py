@@ -523,9 +523,10 @@ class TRN(NewLineToggle):
 
 
 class STC(NewLineToggle):
-    def __init__(self, status_info, action_code, units, error_ctrl, error_id, nl_toggle=Config.TOGGLE_NEW_LINE):
+    def __init__(self, file_type, status_info, action_code, units, error_ctrl, error_id, nl_toggle=Config.TOGGLE_NEW_LINE):
         super().__init__(nl_toggle)
         now = datetime.now()
+        self.file_type = file_type
         self.status_info = status_info
         self.action_code = action_code
         self.date = now.strftime("%Y%m%d")
@@ -535,6 +536,7 @@ class STC(NewLineToggle):
 
     def to_edi(self):
         status_info = self.status_info
+        segment = f"STC*{status_info}"
         if self.error_ctrl and self.error_ctrl.should_insert():
             status_info = self.error_ctrl.insert(status_info, "format")
             logger.warning(
@@ -542,23 +544,31 @@ class STC(NewLineToggle):
         else:
             logger.debug("Generating STC segment")
 
-        return f"STC*{status_info}*{self.date}*{self.action_code}*{self.units}{self.get_nl()}"
+        if self.file_type == "277CA_2220D":
+            segment += f"**{self.action_code}*********"
+        else:
+            segment += f"*{self.date}*{self.action_code}*{self.units}"
+        return segment + self.get_nl()
 
 
 class SVC(NewLineToggle):
-    def __init__(self, proc_code, charge_amt, quantity, unit, diagnosis_ptr, nl_toggle=Config.TOGGLE_NEW_LINE):
+    def __init__(self, file_type, proc_code, charge_amt, quantity, unit=None, diagnosis_ptr=None, nl_toggle=Config.TOGGLE_NEW_LINE):
         super().__init__(nl_toggle)
-        now = datetime.now()
+        self.file_type = file_type
         self.proc_code = proc_code
         self.charge_amt = charge_amt
         self.unit = unit
         self.quantity = quantity
         self.diagnosis_ptr = diagnosis_ptr
-        self.date = now.strftime("%Y%m%d")
 
     def to_edi(self):
+        segment = f"SVC*{self.proc_code}*{self.charge_amt}"
+        if self.file_type == "277CA":
+            segment += f"*****{self.quantity}"
+        else:
+            segment += f"*{self.quantity}*{self.unit}*{self.diagnosis_ptr}"
         logger.debug("Generating SVC segment")
-        return f"SVC*{self.proc_code}*{self.charge_amt}*{self.quantity}*{self.unit}*{self.diagnosis_ptr}{self.get_nl()}"
+        return segment + self.get_nl()
 
 
 class BPR(NewLineToggle):
@@ -612,6 +622,25 @@ class AK1(NewLineToggle):
                 logger.warning(f"Unknown functional id: {self.functional_id} in AK1 segment")
 
         return segment + self.get_nl()
+
+class AK2(NewLineToggle):
+    def __init__(self, file_type, transaction_set_ctrl_num, nl_toggle=Config.TOGGLE_NEW_LINE):
+        super().__init__(nl_toggle)
+        self.file_type = file_type
+        self.transaction_set_ctrl_num = transaction_set_ctrl_num
+
+    def to_edi(self):
+        logger.debug("Generating AK2 segment")
+        return f"AK2*{self.file_type}*{self.transaction_set_ctrl_num:06}{self.get_nl()}"
+
+class IK5(NewLineToggle):
+    def __init__(self, transaction_set_id, nl_toggle=Config.TOGGLE_NEW_LINE):
+        super().__init__(nl_toggle)
+        self.transaction_set_id = transaction_set_id
+
+    def to_edi(self):
+        logger.debug("Generating IK5 segment")
+        return f"IK5*{self.transaction_set_id}{self.get_nl()}"
 
 
 class AK9(NewLineToggle):

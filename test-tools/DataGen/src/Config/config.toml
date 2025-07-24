@@ -31,7 +31,7 @@ edi999_file_template = "999.VFMP.{year}.{ymd}.{hm}.{full_date}1.edi"
 statistics_md = "Statistics_Visualizer.md"
 
 [constants]
-toggle_new_line = false
+toggle_new_line = true
 total_error_rate = 0.005
 sender_id = "83-1002022"
 receiver_id = "841439824"

@@ -34,47 +34,49 @@ class EDI270Generator:
         logger.info(f"Initializing EDI270Generator with {self.num_messages} claims")
 
     def create_2000A_loop(self, error_ctrl, error_id):
-        segments = [Seg.HL(1, "", 20, 1, error_ctrl, error_id).to_edi()]
+        segments = [Seg.HL(hl_id=1, hl_parent="", hl_code=20, children=1, error_ctrl=error_ctrl, error_id=error_id).to_edi()]
         segments.extend(self.create_2100A_loop(error_ctrl, error_id))
         return segments
 
     def create_2100A_loop(self, error_ctrl, error_id):
-        return [Seg.NM1("PR", 2, Config.PAYER_NAME, "", "", "PI",
-                Config.PAYER_ID, error_ctrl, error_id).to_edi()]
+        return [Seg.NM1(Config.edi270_fields["payer_entity_identifier_code"], Config.edi270_fields["payer_entity_type_qualifier"], Config.PAYER_NAME, "", "", Config.edi270_fields["payer_id_code_qualifier"],
+                        Config.PAYER_ID, error_ctrl, error_id).to_edi()]
 
     def create_2000B_loop(self, claim, claim_last, claim_first, error_ctrl, error_id):
-        segments = [Seg.HL(2, 1, 21, 1, error_ctrl, error_id).to_edi()]
+        segments = [Seg.HL(hl_id=2, hl_parent=1, hl_code=21, children=1, error_ctrl=error_ctrl, error_id=error_id).to_edi()]
         segments.extend(self.create_2100B_loop(claim, claim_last, claim_first, error_ctrl, error_id))
         return segments
 
     def create_2100B_loop(self, claim, claim_last, claim_first, error_ctrl, error_id):
-        return [Seg.NM1("1P", claim.provider_entity_type, claim_last, claim_first, "", "XX", claim.provider_npi, error_ctrl,
-                            error_id).to_edi()]
+        return [Seg.NM1(Config.edi270_fields["provider_entity_identifier_code"], claim.provider_entity_type, claim_last, claim_first, "", Config.edi270_fields["provider_id_code_qualifier"],
+                        claim.provider_npi, error_ctrl,
+                        error_id).to_edi()]
 
     def create_2000C_loop(self, sponsor, error_ctrl, error_id):
-        segments = [Seg.HL(3, 2, 22, 0, error_ctrl, error_id).to_edi()]
+        segments = [Seg.HL(hl_id=3, hl_parent=2, hl_code=22, children=0, error_ctrl=error_ctrl, error_id=error_id).to_edi()]
         segments.extend(self.create_2100C_loop(sponsor, error_ctrl, error_id))
         return segments
 
     def create_2100C_loop(self, sponsor, error_ctrl, error_id):
-        return [Seg.NM1("IL", "1", sponsor.last_name, sponsor.first_name,
-                            sponsor.middle_name, "MI", sponsor.sponsor_id, error_ctrl, error_id).to_edi()]
+        return [Seg.NM1(Config.edi270_fields["subscriber_entity_identifier_code"], Config.edi270_fields["subscriber_entity_type_qualifier"], sponsor.last_name, sponsor.first_name,
+                        sponsor.middle_name, Config.edi270_fields["subscriber_id_code_qualifier"], sponsor.sponsor_id, error_ctrl, error_id).to_edi()]
 
     def create_2000D_loop(self, bene, error_ctrl, error_id):
-        segments = [Seg.HL(4, 3, 23, 0, error_ctrl, error_id).to_edi()]
+        segments = [Seg.HL(hl_id=4, hl_parent=3, hl_code=23, children=0, error_ctrl=error_ctrl, error_id=error_id).to_edi()]
         segments.extend(self.create_2100D_loop(bene, error_ctrl, error_id))
         return segments
 
     def create_2100D_loop(self, bene, error_ctrl, error_id):
-        segments = [Seg.NM1("03", "1", bene.last_name, bene.first_name,
-                            bene.middle_name, id_qualifier=None, id_code=None, error_ctrl=error_ctrl, error_id=error_id).to_edi(),
+        segments = [Seg.NM1(Config.edi270_fields["dependent_entity_identifier_code"], Config.edi270_fields["dependent_entity_type_qualifier"], bene.last_name, bene.first_name,
+                            bene.middle_name, id_qualifier=None, id_code=None, error_ctrl=error_ctrl,
+                            error_id=error_id).to_edi(),
                     Seg.DMG(bene.dob.strftime("%Y%m%d"), bene.gender).to_edi(),
-                    Seg.DTP("291", Config.DATE_TIME_FMT_QUALIFIER).to_edi()]
+                    Seg.DTP(Config.edi270_fields["dtp_qualifier"], Config.DATE_TIME_FMT_QUALIFIER).to_edi()]
         segments.extend(self.create_2110D_loop())
         return segments
 
     def create_2110D_loop(self):
-        return [Seg.EQ("30").to_edi()]
+        return [Seg.EQ(Config.edi270_fields["eq_service_type_code"]).to_edi()]
 
     def create_transaction(self, num, error_ctrl):
         if num - 1 >= len(self.claims) or num <= 0:
@@ -89,7 +91,7 @@ class EDI270Generator:
         sponsor = self.transaction_funcs.get_sponsor_by_id(bene.sponsor_id)
 
         segments = [Seg.ST("270", num).to_edi(),
-                    Seg.BHT("22", "13", claim.claim_id).to_edi()]
+                    Seg.BHT(Config.edi270_fields["hierarchical_structure_code"], Config.edi270_fields["transaction_set_purpose_code"], claim.claim_id).to_edi()]
 
         segments.extend(self.create_2000A_loop(self.error_ctrl, error_id))
         segments.extend(self.create_2000B_loop(claim, last, first, self.error_ctrl, error_id))
@@ -109,7 +111,7 @@ class EDI270Generator:
         output_dir = os.path.join(Config.EDI270_PATH, Config.YMDHM)
         for i in range(1, self.num_messages + 1):
             transaction_segments = [Seg.ISA().to_edi(),
-                                    Seg.GS("HS").to_edi()
+                                    Seg.GS(Config.edi270_fields["gs_functional_identifier_code"]).to_edi()
                                     ]
             transaction_segments.extend(self.create_transaction(i, self.error_ctrl))
             transaction_segments += [Seg.GE(1).to_edi(),
@@ -167,13 +169,14 @@ class EDI837PGenerator:
         return segments
 
     def create_2010A_loop(self, claim, claim_last, claim_first, error_ctrl, error_id):
-        segments = [Seg.NM1("85", claim.provider_entity_type, claim_last, claim_first, "", "XX", claim.provider_npi, error_ctrl,
-                            error_id).to_edi(),
-                    Seg.N3(claim.provider_address_1, claim.provider_address_2, "", error_ctrl, error_id,
-                           True).to_edi(),
-                    Seg.N4(claim.provider_city, claim.provider_state, claim.provider_zip, error_ctrl,
-                           error_id).to_edi(),
-                    Seg.REF("EI", "123456789", error_ctrl).to_edi()]
+        segments = [
+            Seg.NM1("85", claim.provider_entity_type, claim_last, claim_first, "", "XX", claim.provider_npi, error_ctrl,
+                    error_id).to_edi(),
+            Seg.N3(claim.provider_address_1, claim.provider_address_2, "", error_ctrl, error_id,
+                   True).to_edi(),
+            Seg.N4(claim.provider_city, claim.provider_state, claim.provider_zip, error_ctrl,
+                   error_id).to_edi(),
+            Seg.REF("EI", "123456789", error_ctrl).to_edi()]
         return segments
 
     def create_2000B_loop(self, sponsor, error_ctrl, error_id):
@@ -208,11 +211,13 @@ class EDI837PGenerator:
         return segments
 
     def create_2010CA_loop(self, bene, error_ctrl, error_id):
-        segments = [Seg.NM1("QC", "1", bene.last_name, bene.first_name, bene.middle_name, id_qualifier=None, id_code=None, error_ctrl=error_ctrl, error_id=bene.beneficiary_id).to_edi(),
-                    Seg.N3(bene.address.building_number, bene.address.street, bene.address.apartment, error_ctrl,
-                           error_id).to_edi(),
-                    Seg.N4(bene.address.city, bene.address.state, bene.address.zipcode, error_ctrl, error_id).to_edi(),
-                    Seg.DMG(bene.dob.strftime("%Y%m%d"), bene.gender).to_edi()]
+        segments = [
+            Seg.NM1("QC", "1", bene.last_name, bene.first_name, bene.middle_name, id_qualifier=None, id_code=None,
+                    error_ctrl=error_ctrl, error_id=bene.beneficiary_id).to_edi(),
+            Seg.N3(bene.address.building_number, bene.address.street, bene.address.apartment, error_ctrl,
+                   error_id).to_edi(),
+            Seg.N4(bene.address.city, bene.address.state, bene.address.zipcode, error_ctrl, error_id).to_edi(),
+            Seg.DMG(bene.dob.strftime("%Y%m%d"), bene.gender).to_edi()]
         return segments
 
     def create_2300_loop(self, claim, claim_last, claim_first, error_ctrl):
@@ -307,7 +312,7 @@ class EDI277CAGenerator:
 
     def create_2100A_loop(self, error_ctrl, error_id):
         return [Seg.NM1("PR", 2, Config.PAYER_NAME, "", "", "PI",
-                            Config.PAYER_ID, error_ctrl, error_id).to_edi()]
+                        Config.PAYER_ID, error_ctrl, error_id).to_edi()]
 
     def create_2200A_loop(self, claim, error_ctrl, error_id):
         segments = [Seg.TRN("1", claim.payer_claim_id, error_ctrl=error_ctrl, error_id=error_id).to_edi(),
@@ -323,7 +328,7 @@ class EDI277CAGenerator:
 
     def create_2100B_loop(self, error_ctrl):
         return [Seg.NM1("41", "2", "Submitter Group",
-                            "", "", "46", "133052274", error_ctrl).to_edi()]
+                        "", "", "46", "133052274", error_ctrl).to_edi()]
 
     def create_2200B_loop(self, claim, error_ctrl, error_id):
         segments = [Seg.TRN("2", claim.claim_id, error_ctrl=error_ctrl, error_id=error_id).to_edi(),
@@ -340,7 +345,7 @@ class EDI277CAGenerator:
     def create_2100C_loop(self, claim, error_ctrl, error_id):
         last, first = split_provider_name(claim.provider_name, claim.provider_entity_type)
         return [Seg.NM1("85", claim.provider_entity_type, last, first, "", "XX", claim.provider_npi, error_ctrl,
-                error_id).to_edi()]
+                        error_id).to_edi()]
 
     def create_2200C_loop(self, claim, error_ctrl, error_id):
         return [Seg.TRN("1", claim.payer_claim_id, error_ctrl=error_ctrl, error_id=error_id).to_edi()]
@@ -353,7 +358,7 @@ class EDI277CAGenerator:
 
     def create_2100D_loop(self, bene, error_ctrl):
         return [Seg.NM1("QC", "1", bene.last_name, bene.first_name, bene.middle_name, "MI",
-                bene.beneficiary_id, error_ctrl).to_edi()]
+                        bene.beneficiary_id, error_ctrl).to_edi()]
 
     def create_2200D_loop(self, claim, error_ctrl, error_id):
         segments = [Seg.TRN("2", claim.claim_id, error_ctrl=error_ctrl, error_id=error_id).to_edi(),
@@ -489,7 +494,6 @@ class EDI835Generator:
             log_data["errors"]["error_ct_835"] += 1
 
         return segments
-
 
     def combine_segments(self):
         all_segments = []

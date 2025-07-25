@@ -23,9 +23,11 @@ class DataAccess(ABC):
     @abstractmethod
     def get_sponsor_by_id(self, sponsor_id): pass
 
-    # Beneficiary methods
     @abstractmethod
     def get_beneficiary(self, sponsor_id, beneficiary_id): pass
+
+    @abstractmethod
+    def get_beneficiaries_by_creation(self, creation_source, count): pass
 
     @abstractmethod
     def save_claim_transaction(self, claim, commit): pass

@@ -178,19 +178,20 @@ python RunGenerator.py cli 835 -n 500 -e 0.05
 
 Edit `Config/config.toml` to adjust:
 
-| Section         | Field                   | Description                       |
-|-----------------|-------------------------|-----------------------------------|
-| `[seed]`        | `random_seed`           | Alter the random seed             |
-|                 | `faker_seed`            | Alter the faker seed              |
-| `[aws]`         | `upload_to_s3`          | Enable/disable S3 upload          |
-|                 | `bucket_name`           | S3 bucket name                    |
-| `[database]`    | `backend`               | Choose `sqlite` or `jsonl`        |
-| `[paths]`       | `edi*_path`             | Output folders for EDI files      |
-| `[filenames]`   | `edi*_file_template`    | File names for EDI files          |
-| `[constants]`   | `sender_id`, `payer_id` | Required identifiers              |
-|                 | `toggle_new_line`       | Toggle new line `true` or `false` |
-|                 | `total_error_rate`      | Adjust error rate                 |
-| `[test_size.*]` | `avg`, `min`, `max`     | Bell curve message distributions  |
+| Section         | Field                   | Description                                             |
+|-----------------|-------------------------|---------------------------------------------------------|
+| `[seed]`        | `random_seed`           | Alter the random seed                                   |
+|                 | `faker_seed`            | Alter the faker seed                                    |
+| `[aws]`         | `upload_to_s3`          | Enable/disable S3 upload                                |
+|                 | `bucket_name`           | S3 bucket name                                          |
+| `[database]`    | `backend`               | Choose `sqlite` or `jsonl`                              |
+| `[paths]`       | `edi*_path`             | Output folders for EDI files                            |
+| `[filenames]`   | `edi*_file_template`    | File names for EDI files                                |
+| `[constants]`   | `sender_id`, `payer_id` | Required identifiers                                    |
+|                 | `toggle_new_line`       | Toggle new line `true` or `false`                       |
+|                 | `total_error_rate`      | Adjust error rate                                       |
+| `[edi*_fields]` | Various                 | EDI-Specific fields and codes for each transaction type |
+| `[test_size.*]` | `avg`, `min`, `max`     | Bell curve message distributions                        |
 
 ---
 
@@ -243,4 +244,4 @@ INFO:Config.Config:It took 0:00:23.599000 to generate the output
 ```
 
 ## Items I wanted to implement but did not have time for:
-
+- 

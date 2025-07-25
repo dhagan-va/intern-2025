@@ -18,13 +18,13 @@ class NewLineToggle:
 
 # File Header
 class ISA(NewLineToggle):
-    def __init__(self, sender=Config.SENDER_ID, receiver=Config.RECEIVER_ID, nl_toggle=Config.TOGGLE_NEW_LINE):
+    def __init__(self, inter_control_num=None, sender=Config.SENDER_ID, receiver=Config.RECEIVER_ID, nl_toggle=Config.TOGGLE_NEW_LINE):
         super().__init__(nl_toggle)
         now = datetime.now()
         self.sender = sender
         self.receiver = receiver
         self.id_qualifier = "ZZ"
-        self.interCtrlNumber = now.strftime("%Y%m%d1")
+        self.interCtrlNumber = now.strftime("%Y%m%d1") if inter_control_num is None else inter_control_num
         self.date = now.strftime("%y%m%d")
         self.time = now.strftime("%H%M")
 
@@ -37,9 +37,9 @@ class ISA(NewLineToggle):
 
 # File Trailer
 class IEA:
-    def __init__(self):
+    def __init__(self, inter_control_num=None):
         now = datetime.now()
-        self.interCtrlNumber = now.strftime("%Y%m%d1")
+        self.interCtrlNumber = now.strftime("%Y%m%d1") if inter_control_num is None else inter_control_num
 
     def to_edi(self):
         logger.debug("Generating IEA segment")
@@ -48,7 +48,7 @@ class IEA:
 
 # Group Header
 class GS(NewLineToggle):
-    def __init__(self, functional_id, sender=Config.SENDER_ID, receiver=Config.RECEIVER_ID, nl_toggle=Config.TOGGLE_NEW_LINE):
+    def __init__(self, functional_id, inter_control_num=None,sender=Config.SENDER_ID, receiver=Config.RECEIVER_ID, nl_toggle=Config.TOGGLE_NEW_LINE):
         super().__init__(nl_toggle)
         now = datetime.now()
         self.functional_id = functional_id
@@ -56,10 +56,11 @@ class GS(NewLineToggle):
         self.receiver = receiver
         self.date = now.strftime("%Y%m%d")
         self.time = now.strftime("%H%M%S")
+        self.inter_ctrl_num = now.strftime("%Y%m%d1") if inter_control_num is None else inter_control_num
 
     def to_edi(self):
         logger.debug("Generating GS segment")
-        segment = f"GS*{self.functional_id}*{self.sender}*{self.receiver}*{self.date}*{self.time}*61*X"
+        segment = f"GS*{self.functional_id}*{self.sender}*{self.receiver}*{self.date}*{self.time}*{self.inter_ctrl_num}*X"
         match self.functional_id:
             case "HS":
                 segment += "*005010X279A1"
@@ -80,13 +81,15 @@ class GS(NewLineToggle):
 
 # Group Trailer
 class GE(NewLineToggle):
-    def __init__(self, num, nl_toggle=Config.TOGGLE_NEW_LINE):
+    def __init__(self, num, inter_control_num=None,nl_toggle=Config.TOGGLE_NEW_LINE):
         super().__init__(nl_toggle)
+        now = datetime.now()
         self.num = num
+        self.inter_control_num = now.strftime("%Y%m%d1") if inter_control_num is None else inter_control_num
 
     def to_edi(self):
         logger.debug("Generating GE segment")
-        return f"GE*{self.num}*61{self.get_nl()}"
+        return f"GE*{self.num}*{self.inter_control_num}{self.get_nl()}"
 
 
 # Transaction Set Header

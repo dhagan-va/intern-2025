@@ -23,10 +23,11 @@ def split_provider_name(name, entity_type):
 
 class EDI270Generator:
     def __init__(self, transaction_funcs, error_rate=None):
+        self.today = date.today()
         self.transaction_funcs = transaction_funcs
         self.claims = self.transaction_funcs.get_claim_transactions(
             status="Created",
-            date=date.today().isoformat()
+            date=self.today.isoformat()
         )
         self.claims = sorted(self.claims, key=lambda c: c.creation != "CSV")
         self.num_messages = len(self.claims)
@@ -130,12 +131,12 @@ class EDI270Generator:
         file_paths = []
         output_dir = os.path.join(Config.EDI270_PATH, Config.YMDHM)
         for i in range(1, self.num_messages + 1):
-            transaction_segments = [Seg.ISA().to_edi(),
-                                    Seg.GS(Config.edi270_fields["gs_functional_identifier_code"]).to_edi()
+            transaction_segments = [Seg.ISA(f"{self.today.strftime("%m%d")}{i:05}").to_edi(),
+                                    Seg.GS(Config.edi270_fields["gs_functional_identifier_code"], f"{self.today.strftime("%m%d")}{i:05}").to_edi()
                                     ]
             transaction_segments.extend(self.create_transaction(i, self.error_ctrl))
-            transaction_segments += [Seg.GE(1).to_edi(),
-                                     Seg.IEA().to_edi()
+            transaction_segments += [Seg.GE(1, f"{self.today.strftime("%m%d")}{i:05}").to_edi(),
+                                     Seg.IEA(f"{self.today.strftime("%m%d")}{i:05}").to_edi()
                                      ]
 
             edi_content = "".join(transaction_segments)
@@ -353,7 +354,8 @@ class EDI837PGenerator:
 class EDI277CAGenerator:
     def __init__(self, transaction_funcs, error_rate=None):
         self.transaction_funcs = transaction_funcs
-        yesterday = date.today() - timedelta(days=1)
+        self.today = date.today()
+        yesterday = self.today - timedelta(days=1)
         self.claims = self.transaction_funcs.get_claim_transactions(
             status="837 Created",
             date=yesterday.isoformat()
@@ -509,12 +511,12 @@ class EDI277CAGenerator:
     def combine_segments(self):
         all_segments = []
         for i in range(1, self.num_messages + 1):
-            all_segments += [Seg.ISA().to_edi(),
-                             Seg.GS(Config.edi277ca_fields['gs_functional_identifier_code']).to_edi()
+            all_segments += [Seg.ISA(f"{self.today.strftime("%m%d")}{i:05}").to_edi(),
+                             Seg.GS(Config.edi277ca_fields['gs_functional_identifier_code'], f"{self.today.strftime("%m%d")}{i:05}").to_edi()
                              ]
             all_segments.extend(self.create_transaction(i, self.error_ctrl))
-            all_segments += [Seg.GE(1).to_edi(),
-                             Seg.IEA().to_edi()
+            all_segments += [Seg.GE(1, f"{self.today.strftime("%m%d")}{i:05}").to_edi(),
+                             Seg.IEA(f"{self.today.strftime("%m%d")}{i:05}").to_edi()
                              ]
 
         claim_ids = [claim.claim_id for claim in self.claims]
@@ -527,6 +529,7 @@ class EDI835Generator:
         self.transaction_funcs = transaction_funcs
         self.sender = sender
         self.receiver = receiver
+        self.today = date.today()
         week_and_day_before = date.today() - timedelta(days=8)
         self.claims = self.transaction_funcs.get_claim_transactions(
             status="277CA Created",
@@ -615,12 +618,12 @@ class EDI835Generator:
     def combine_segments(self):
         all_segments = []
         for i in range(1, self.num_messages + 1):
-            all_segments += [Seg.ISA().to_edi(),
-                             Seg.GS(Config.edi835_fields['gs_functional_identifier_code']).to_edi()
+            all_segments += [Seg.ISA(f"{self.today.strftime("%m%d")}{i:05}").to_edi(),
+                             Seg.GS(Config.edi835_fields['gs_functional_identifier_code'], f"{self.today.strftime("%m%d")}{i:05}").to_edi()
                              ]
             all_segments.extend(self.create_transaction(i, self.error_ctrl))
-            all_segments += [Seg.GE(1).to_edi(),
-                             Seg.IEA().to_edi()
+            all_segments += [Seg.GE(1, f"{self.today.strftime("%m%d")}{i:05}").to_edi(),
+                             Seg.IEA(f"{self.today.strftime("%m%d")}{i:05}").to_edi()
                              ]
 
         claim_ids = [claim.claim_id for claim in self.claims]
@@ -749,7 +752,8 @@ class EDI834Generator:
 class EDI999Generator:
     def __init__(self, transaction_funcs, error_rate=None):
         self.transaction_funcs = transaction_funcs
-        week_and_day_before = date.today() - timedelta(days=8)
+        self.today = date.today()
+        week_and_day_before = self.today - timedelta(days=8)
         self.claims = self.transaction_funcs.get_claim_transactions(
             status="834 Created",
             date=week_and_day_before
@@ -794,12 +798,12 @@ class EDI999Generator:
     def combine_segments(self):
         all_segments = []
         for i in range(1, self.num_messages + 1):
-            all_segments += [Seg.ISA().to_edi(),
-                             Seg.GS(Config.edi999_fields["gs_functional_identifier_code"]).to_edi()
+            all_segments += [Seg.ISA(f"{self.today.strftime("%m%d")}{i:05}").to_edi(),
+                             Seg.GS(Config.edi999_fields["gs_functional_identifier_code"], f"{self.today.strftime("%m%d")}{i:05}").to_edi()
                              ]
             all_segments.extend(self.create_transaction(i))
-            all_segments += [Seg.GE(1).to_edi(),
-                             Seg.IEA().to_edi()
+            all_segments += [Seg.GE(1, f"{self.today.strftime("%m%d")}{i:05}").to_edi(),
+                             Seg.IEA(f"{self.today.strftime("%m%d")}{i:05}").to_edi()
                              ]
 
         return all_segments

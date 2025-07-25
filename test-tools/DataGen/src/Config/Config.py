@@ -114,8 +114,6 @@ edi999_fields = config["edi999_fields"]
 
 def get_number_of_tests(section):
     return fit_range_to_half_bel(
-        avg=section["avg"],
-        std=section["std"],
         min_val=section["min"],
         max_val=section["max"],
         shape=BellShapes[section["shape"]]

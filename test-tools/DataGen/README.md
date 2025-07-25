@@ -244,4 +244,7 @@ INFO:Config.Config:It took 0:00:23.599000 to generate the output
 ```
 
 ## Items I wanted to implement but did not have time for:
-- 
+- Update 834 to match amount/visits after 835 creation
+- Create different types of claims for 837 (i.e. ambulance, dental, etc.)
+- Update unit tests
+- Remove claim data after 835/834 generation (or 999 generation)

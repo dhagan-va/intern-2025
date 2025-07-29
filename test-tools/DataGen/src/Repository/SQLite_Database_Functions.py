@@ -452,12 +452,6 @@ class SQLiteDBFunctions(DataAccess):
             creation=row["creation"]
         )
 
-    def get_sponsor_field(self, sponsor_id, field):
-        pass
-
-    def update_sponsor_field(self, sponsor_id, field, value):
-        pass
-
     def get_beneficiary(self, sponsor_id, beneficiary_id):
         self.cursor.execute("""
                 SELECT * FROM beneficiaries
@@ -507,21 +501,3 @@ class SQLiteDBFunctions(DataAccess):
             visit_counts=visit_counts,
             creation=row["creation"]
         )
-
-    def get_beneficiary_field(self, sponsor_id, beneficiary_id, field):
-        pass
-
-    def update_beneficiary_field(self, sponsor_id, beneficiary_id, field, value):
-        pass
-
-    def get_bene_visit(self, sponsor_id, beneficiary_id, code):
-        pass
-
-    def get_bene_deductible(self, sponsor_id, beneficiary_id, code):
-        pass
-
-    def update_bene_deductible(self, sponsor_id, beneficiary_id, code, value):
-        pass
-
-    def update_bene_visit(self, sponsor_id, beneficiary_id, code, value):
-        pass

@@ -12,7 +12,7 @@ def scale(g: float, min_g: float, max_g: float, low: float, high: float) -> floa
     return round((high - low) * ((g - min_g) / (max_g - min_g)) + low)
 
 
-def fit_range_to_half_bel(avg: float, std: float, min_val: int, max_val: int, shape: BellShapes = BellShapes.NORMAL) -> int:
+def fit_range_to_half_bel(min_val: int, max_val: int, shape: BellShapes = BellShapes.NORMAL) -> int:
     mean = 0
     sigma = 1
     match shape:

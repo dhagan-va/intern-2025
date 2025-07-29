@@ -50,13 +50,15 @@ EDI837_PATH = os.path.join(ROOT_PATH, config["paths"]["edi837_path"])
 EDI277CA_PATH = os.path.join(ROOT_PATH, config["paths"]["edi277ca_path"])
 EDI835_PATH = os.path.join(ROOT_PATH, config["paths"]["edi835_path"])
 EDI834_PATH = os.path.join(ROOT_PATH, config["paths"]["edi834_path"])
+EDI999_PATH = os.path.join(ROOT_PATH, config["paths"]["edi999_path"])
 NPI_CSV_PATH = download_weekly_npi_data(DOWNLOAD_DIRECTORY)
 
-EDI834_FILE_NAME = config["filenames"]["edi834_file_template"].format(year=YEAR, ymd=YMD, hm=HM, full_date=FULL_DATE)
 EDI270_FILE_NAME = config["filenames"]["edi270_file_template"].format(year=YEAR, ymd=YMD, hm=HM, claim_id="{claim_id}", full_date=FULL_DATE)
 EDI277CA_FILE_NAME = config["filenames"]["edi277ca_file_template"].format(year=YEAR, ymd=YMD, hm=HM,full_date=FULL_DATE)
 EDI837_FILE_NAME = config["filenames"]["edi837_file_template"].format(year=YEAR, ymd=YMD, hm=HM, full_date=FULL_DATE)
 EDI835_FILE_NAME = config["filenames"]["edi835_file_template"].format(year=YEAR, ymd=YMD, hm=HM, full_date=FULL_DATE)
+EDI834_FILE_NAME = config["filenames"]["edi834_file_template"].format(year=YEAR, ymd=YMD, hm=HM, full_date=FULL_DATE)
+EDI999_FILE_NAME = config["filenames"]["edi999_file_template"].format(year=YEAR, ymd=YMD, hm=HM, full_date=FULL_DATE)
 STATISTICS_MD = os.path.join(ROOT_PATH, config["filenames"]["statistics_md"])
 
 
@@ -71,13 +73,25 @@ def get_local_db_path(db_path, db_file):
     logger.debug(f"Directory ensured: {db_path}")
     return os.path.join(db_path, db_file)
 
-
+# Database/AWS configs
 UPLOAD_TO_S3 = config["aws"]["upload_to_s3"]
 BUCKET_NAME = config["aws"]["bucket_name"]
 DATABASE_BACKEND = config["database"]["backend"]
 FAMILY_DATABASE_JSONL = config["database"]["jsonl_path"]
 FAMILY_DATABASE_SQLITE = config["database"]["sqlite_path"]
 
+# Adjustable inputs
+TOGGLE_NEW_LINE = config["inputs"]["toggle_new_line"]
+TOTAL_ERROR_RATE = config["inputs"]["total_error_rate"]
+MAX_BENEFICIARIES = config["inputs"]["max_beneficiaries"]
+MIN_BENEFICIARIES = config["inputs"]["min_beneficiaries"]
+MAX_DEDUCTIBLES = config["inputs"]["max_deductibles"]
+MIN_DEDUCTIBLES = config["inputs"]["min_deductibles"]
+MAX_VISITS = config["inputs"]["max_visits"]
+MIN_VISITS = config["inputs"]["min_visits"]
+INITIAL_USERS = config["inputs"]["initial_beneficiaries"]
+
+# Constants
 FAKER_SEED = config["seed"]["faker_seed"]
 RANDOM_SEED = config["seed"]["random_seed"]
 SENDER_ID = config["constants"]["sender_id"]
@@ -86,26 +100,20 @@ SPONSOR_NAME = config["constants"]["sponsor_name"]
 SPONSOR_ID = config["constants"]["sponsor_id"]
 PAYER_NAME = config["constants"]["payer_name"]
 PAYER_ID = config["constants"]["payer_id"]
-TOGGLE_NEW_LINE = config["constants"]["toggle_new_line"]
-TOTAL_ERROR_RATE = config["constants"]["total_error_rate"]
 
 DATE_TIME_FMT_QUALIFIER = config["constants"]["date_time_fmt_qualifier"]
-
-MAX_BENEFICIARIES = config["constants"]["max_beneficiaries"]
-MIN_BENEFICIARIES = config["constants"]["min_beneficiaries"]
-MAX_DEDUCTIBLES = config["constants"]["max_deductibles"]
-MIN_DEDUCTIBLES = config["constants"]["min_deductibles"]
-MAX_VISITS = config["constants"]["max_visits"]
-MIN_VISITS = config["constants"]["min_visits"]
-INITIAL_USERS = config["constants"]["initial_beneficiaries"]
-
 RELATIONSHIP_MAP = config["relationship_map"]
+
+edi270_fields = config["edi270_fields"]
+edi837_fields = config["edi837_fields"]
+edi277ca_fields = config["edi277ca_fields"]
+edi835_fields = config["edi835_fields"]
+edi834_fields = config["edi834_fields"]
+edi999_fields = config["edi999_fields"]
 
 
 def get_number_of_tests(section):
     return fit_range_to_half_bel(
-        avg=section["avg"],
-        std=section["std"],
         min_val=section["min"],
         max_val=section["max"],
         shape=BellShapes[section["shape"]]

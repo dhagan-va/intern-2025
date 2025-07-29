@@ -26,6 +26,57 @@ graph TD
     class EDIGen,S3Upload,Markdown edi
 ```
 
+---
+
+## File Structure
+
+```
+DataGen/
+│ src/
+│ ├── Config/
+│ │ ├── Config.py (loads configuration)
+│ │ ├── config.toml (configuration file)
+│ │ ├── Data_Visualizer.py (creates graphs for Statistics_Visualizer.md)
+│ ├── DataLayer/
+│ │ ├── Datatypes.py (Custom data types for database)
+│ │ ├── Interfaces.py (Interface definitions for data layer)
+│ ├── Downloads/
+│ │ ├── import_270.csv (Input you CSV file here for specific users)
+│ │ ├── npidata_pfile_*.csv (NPI csv file extracted from zip)
+│ │ ├── NPPES_Data_Dissemination_*.zip (NPI data zip file downloaded from NPPES)
+│ ├── FileCreation/
+│ │ ├── DataGenerator.py (Generates random or inputted data into the database)
+│ │ ├── EDIGenerator.py (Generates EDI files from transactions)
+│ │ ├── EDISegments.py (Defines EDI segments and their structure)
+│ │ ├── ErrorInjector.py (Handles error injection into EDI files)
+│ ├── Output/
+│ │ ├── EDI270_Output/ (Generated 270 directory)
+│ │ │ ├── YYYY-MM-DD.HHMM/ (Generated 270 files)
+│ │ │ ├── ... 
+│ │ ├── .../ 
+│ │ ├── EDI999_Output/ (Generated 999 files)
+│ │ ├── Local_DB/ (Database files)
+│ │ ├── Log/ (Log files)
+│ ├── Repository/
+│ │ ├── DatabaseFactory.py (Abstract factory for database connections)
+│ │ ├── JSON_Database_Functions.py (JSONL database functions)
+│ │ ├── SQLite_Database_Functions.py (SQLite database functions)
+│ │ ├── Mongo_Database_Functions.py (Mongo database functions - not implemented)
+│ │ ├── NPI_Functions.py (Functions for NPI data handling - retrieves from NPPES)
+│ ├── UnitTests/
+│ │ ├── Test_EDIFiles.py (Unit tests for EDI file generation)
+│ │ ├── UnitTestSuite.py (Main test suite for running all tests)
+│ ├── RunGenerator.py
+│ ├── Statistics_Visualizer.md
+│ .env (Environment variables)
+│ poetry.lock (Dependency lock file)
+│ pyproject.toml (Poetry configuration)
+│ README.md (This file)
+│ setup.cfg (Setup configuration for flake8)
+```
+
+---
+
 ## Database ERD
 
 ![ER Diagram](./Readme_Assets/Database-Relationships.png)
@@ -127,29 +178,35 @@ python RunGenerator.py cli 835 -n 500 -e 0.05
 
 Edit `Config/config.toml` to adjust:
 
-| Section         | Field                   | Description                      |
-|-----------------|-------------------------|----------------------------------|
-| `[seed]`        | `random_seed`           | Alter the seed                   |
-| `[aws]`         | `upload_to_s3`          | Enable/disable S3 upload         |
-| `[database]`    | `backend`               | Choose `sqlite` or `jsonl`       |
-| `[constants]`   | `sender_id`, `payer_id` | Required identifiers             |
-| `[paths]`       | `edi*_path`             | Output folders for EDI files     |
-| `[test_size.*]` | `avg`, `min`, `max`     | Bell curve message distributions |
+| Section         | Field                   | Description                                             |
+|-----------------|-------------------------|---------------------------------------------------------|
+| `[seed]`        | `random_seed`           | Alter the random seed                                   |
+|                 | `faker_seed`            | Alter the faker seed                                    |
+| `[aws]`         | `upload_to_s3`          | Enable/disable S3 upload                                |
+|                 | `bucket_name`           | S3 bucket name                                          |
+| `[database]`    | `backend`               | Choose `sqlite` or `jsonl`                              |
+| `[paths]`       | `edi*_path`             | Output folders for EDI files                            |
+| `[filenames]`   | `edi*_file_template`    | File names for EDI files                                |
+| `[constants]`   | `sender_id`, `payer_id` | Required identifiers                                    |
+|                 | `toggle_new_line`       | Toggle new line `true` or `false`                       |
+|                 | `total_error_rate`      | Adjust error rate                                       |
+| `[edi*_fields]` | Various                 | EDI-Specific fields and codes for each transaction type |
+| `[test_size.*]` | `avg`, `min`, `max`     | Bell curve message distributions                        |
 
 ---
 
 ## Output Structure
 
-| File Type | Directory                | Description                             |
-|-----------|--------------------------|-----------------------------------------|
-| 270       | `Output/EDI270_Output/`  | Eligibility Inquiry                     |
-| 837P      | `Output/EDI837_Output/`  | Professional Claims                     |
-| 277CA     | `Output/EDI277CA_Output/`| Claim Acknowledgment                    |
-| 835       | `Output/EDI835_Output/`  | Remittance Advice                       |
-| 834       | `Output/EDI834_Output/`  | Enrollment Updates                      |
-| 999       | `Output/EDI999_Output/`  | Syntax Acknowledgment (coming)          |
-| Logs      | `Output/Logs/`           | Execution logging                       |
-| Markdown  | `Statistics_Visualizer.md`| Throughput, errors, relationships, etc. |
+| File Type | Directory                  | Description                             |
+|-----------|----------------------------|-----------------------------------------|
+| 270       | `Output/EDI270_Output/`    | Eligibility Inquiry                     |
+| 837P      | `Output/EDI837_Output/`    | Professional Claims                     |
+| 277CA     | `Output/EDI277CA_Output/`  | Claim Acknowledgment                    |
+| 835       | `Output/EDI835_Output/`    | Remittance Advice                       |
+| 834       | `Output/EDI834_Output/`    | Enrollment Updates                      |
+| 999       | `Output/EDI999_Output/`    | Syntax Acknowledgment                   |
+| Logs      | `Output/Logs/`             | Execution logging                       |
+| Markdown  | `Statistics_Visualizer.md` | Throughput, errors, relationships, etc. |
 
 ---
 
@@ -186,3 +243,8 @@ INFO:Config.Config:It took 0:00:00.140000 to generate 500 transactions for the 8
 INFO:Config.Config:It took 0:00:23.599000 to generate the output
 ```
 
+## Items I wanted to implement but did not have time for:
+- Update 834 to match amount/visits after 835 creation
+- Create different types of claims for 837 (i.e. ambulance, dental, etc.)
+- Update unit tests
+- Remove claim data after 835/834 generation (or 999 generation)

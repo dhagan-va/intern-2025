@@ -15,6 +15,7 @@ def get_logger(name):
     logging.basicConfig(
         level=logging.INFO,
         filename=log_path,
-        filemode='a'
+        filemode='a',
+        format = '%(asctime)s - %(levelname)s - %(name)s.%(funcName)s - %(message)s'
     )
     return logging.getLogger(name)

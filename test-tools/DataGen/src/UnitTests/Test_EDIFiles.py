@@ -5,7 +5,7 @@ import shutil
 import unittest
 from datetime import date
 
-from Config import Config, Log_Config
+from Config import Config
 from Config.Config import FAMILY_DATABASE_DIRECTORY, get_local_db_path
 from FileCreation.ErrorInjector import ErrorInjector
 from Repository.DatabaseFactory import get_database_backend
@@ -21,7 +21,7 @@ class Test270Message(unittest.TestCase):
         shutil.rmtree(output_dir, ignore_errors=True)
         shutil.rmtree(download_dir, ignore_errors=True)
 
-        os.makedirs(Log_Config.LOG_DIRECTORY, exist_ok=True)
+        os.makedirs(Config.log_dir, exist_ok=True)
         os.makedirs(Config.DOWNLOAD_DIRECTORY, exist_ok=True)
 
         from Repository.NPI_Functions import download_weekly_npi_data
@@ -87,7 +87,7 @@ class Test834Message(unittest.TestCase):
         if os.path.exists(output_dir):
             shutil.rmtree(output_dir)
 
-        os.makedirs(Log_Config.LOG_DIRECTORY, exist_ok=True)
+        os.makedirs(Config.log_dir, exist_ok=True)
         Config.get_edi_path(Config.EDI834_PATH, Config.EDI834_FILE_NAME)
         Config.get_local_db_path(Config.FAMILY_DATABASE_DIRECTORY, Config.FAMILY_DATABASE_JSONL)
         self.logger = Config.get_logger(__name__)
